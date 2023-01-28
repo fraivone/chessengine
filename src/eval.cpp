@@ -87,8 +87,18 @@ ExtMove EvalExtMove(ExtMove& extmove){
 
 
 MoveList EvalMoveList(MoveList& mvList){
+    Hashkey zob;
     for(int i = 0; i<mvList.size; i++){
-        mvList.list[i] = EvalExtMove(mvList.list[i]);
+        // MakeMove(mvList.list[i].move);
+        // zob = Position::st.ZobristHash;
+        // UndoMove(mvList.list[i].move);
+        // // the evaluation of this move can be taken from the transp table
+        // if(HashTables::tableMatch(zob))
+        //     mvList.list[i].value = HashTables::table[zob%TABLE_SIZE].eval();
+        
+        // // otherwise it's the material evaluation
+        // else
+            mvList.list[i] = EvalExtMove(mvList.list[i]);
     }
     return mvList;
 }
@@ -104,47 +114,77 @@ bool white_sorter(ExtMove const& lhs, ExtMove const& rhs) {
 ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t& counter, bool verbose){
     Hashkey zob = Position::st.ZobristHash;
     int index = zob % TABLE_SIZE;
-    ExtMove bestMove,newMove;
+    ExtMove bestMove,bestGuess;
+    bestMove = Move(0);
+    bestGuess = Move(0);
     int alphaOrig = alpha;
     int alphaBeta = beta;
-    // check for useful info in the transposition table
-    if( HashTables::tableMatch(zob,depth)){
-        if(HashTables::table[index].scoretype() == EXACT){
-            bestMove = HashTables::table[index].move();
-            bestMove.value = HashTables::table[index].eval();
-            return bestMove;
-        }
-        // Not all move in this position where searched
-        // all we know is that the score is at least "eval()"
-        // which means updating alpha if possible
-        else if(HashTables::table[index].scoretype() == P_BETA){
-            alpha = std::max(alpha, HashTables::table[index].eval());
-        }
-        // Not all move in this position where searched
-        // all we know is that the score is no more than "eval()"
-        // which means updating beta if possible
-        else if(HashTables::table[index].scoretype() == P_ALPHA){
-            beta = std::min(beta, HashTables::table[index].eval());
-        }
-
-        if (alpha >= beta){
-            bestMove = HashTables::table[index].move();
-            bestMove.value = HashTables::table[index].eval();
-            return bestMove;
-        }
-    }
-    
-    bestMove = Move(0);
-    MoveList legal = generate_legal(Us);
     
     // this is draw by repetition
     // don't store it in the transposition table
-    // as the same it is not always a draw
+    // as it is not always a draw
     // but depends on the game history
     if(Position::st.repetition >=3){
         bestMove.value = 0;
         return bestMove;
     }
+
+    // this position contains repetitions
+    // better to clean the transposition table
+    // TODO CHECKME
+
+    // check for useful info in the transposition table
+    // only if this position is not a repetition
+    if( HashTables::tableMatch(zob) & (Position::st.repetition == 0)){
+        // sufficient depth
+        if(HashTables::table[index].depth() >= depth){
+            if(HashTables::table[index].scoretype() == EXACT){
+                bestMove = HashTables::table[index].move();
+                bestMove.value = HashTables::table[index].eval();
+                // check for draw by repetition
+                MakeMove(bestMove.move);
+                // this move would lead to draw by repetition
+                if(Position::st.repetition >=3){
+                    UndoMove(bestMove.move);
+                }
+                else{
+                    UndoMove(bestMove.move);
+                    return bestMove;
+                }
+
+            }
+            // Not all move in this position where searched
+            // all we know is that the score is at least "eval()"
+            // which means updating alpha if possible
+            else if(HashTables::table[index].scoretype() == P_BETA){
+                alpha = std::max(alpha, HashTables::table[index].eval());
+            }
+            // Not all move in this position where searched
+            // all we know is that the score is no more than "eval()"
+            // which means updating beta if possible
+            else if(HashTables::table[index].scoretype() == P_ALPHA){
+                beta = std::min(beta, HashTables::table[index].eval());
+            }
+
+            // BUGGY PART
+            // if (alpha >= beta){
+            //     bestMove = HashTables::table[index].move();
+            //     bestMove.value = HashTables::table[index].eval();
+            //     // std::cout<<"Alpha is greater than beta on. Best move is "<<mvhuman(bestMove)<<" ev "<<bestMove.value<<std::endl;
+            //     return bestMove;
+            // }
+        }
+        
+        else{
+            // Insufficient depth
+            // however this move can be used for move ordering
+            // so that we can start searching from this one
+            bestGuess = HashTables::table[index].move();
+            bestGuess.value = HashTables::table[index].eval();
+        }
+    }
+    
+    MoveList legal = generate_legal(Us);
     
     // this is either checkmate or stalemate
     // this referes to the move previously mate
@@ -164,35 +204,30 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
     
     previousState = Position::st;
 
-
+    // white to play
     if(Us == WHITE){
         std::sort(&legal.list[0], &legal.list[legal.size], &white_sorter);
+        if(bestGuess!=MOVE_NONE)
+            legal.Add(bestGuess,0);
         if (depth == 0){
             counter +=legal.size;
-            if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
+            // if(verbose)
+                //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
         }
         bestMove.value = -VALUE_INFINITE;
         for(int i=0; i<legal.size; i++){
-            if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
+            // if(verbose)
+                //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             counter ++;
             MakeMove(legal.list[i].move);
-            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,counter, verbose);
-            // if mate is signaled, then the move
-            // returned is a null move with a valid score.
-            // The mate move is actually the one 
-            // currently indexed by i 
-            if(abs(newMove.value) >= VALUE_MATE_30) 
-                newMove.move = legal.list[i];
+            legal.list[i].value = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,counter, verbose).value;
 
-            legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);
-            if ( newMove.value >bestMove.value){
+            if ( legal.list[i].value >bestMove.value){
                 bestMove = legal.list[i].move;
-                bestMove.value = newMove.value;
+                bestMove.value = legal.list[i].value;
             }
             
             // Searching as white, I found a move that
@@ -202,6 +237,8 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             if (bestMove.value > beta)
                 break;
             alpha = std::max(alpha, bestMove.value);    
+            // if(((maxdepth - depth) == 0) & verbose)
+                //std::cout<<mvhuman(legal.list[i])<<" evaluated "<<legal.list[i].value<< " at depth "<<depth<<"\tBest is "<<mvhuman(bestMove)<<" "<<bestMove.value<<"\tLoadfactor "<<float(HashTables::tableLoadFactor)/TABLE_SIZE<<std::endl;
         } // searched all moves
 
         if (bestMove.value > beta)
@@ -210,38 +247,34 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, EXACT);
 
 
-        if(verbose)
-            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
+        // if(verbose)
+            //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
     }       
     
-    
+    // black to play
     else{
         std::sort(&legal.list[0], &legal.list[legal.size], &black_sorter);
+        if(bestGuess!=MOVE_NONE)
+            legal.Add(bestGuess,0);
         if (depth == 0){
             counter +=legal.size;
-            if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
+            // if(verbose)
+                //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
         }
         bestMove.value = VALUE_INFINITE;
         for(int i=0; i<legal.size; i++){
-            if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
+            // if(verbose)
+                //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             MakeMove(legal.list[i].move);
-            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, counter, verbose);
-            // if mate is signaled, then the move
-            // returned is a null move with a valid score.
-            // The mate move is actually the one 
-            // currently indexed by i 
-            if(abs(newMove.value) >= VALUE_MATE_30) 
-                newMove.move = legal.list[i];
-            legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
+            legal.list[i].value = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, counter, verbose).value;
+            
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);
-            if ( newMove.value <bestMove.value){
+            if ( legal.list[i].value <bestMove.value){
                 bestMove = legal.list[i].move;
-                bestMove.value = newMove.value;
+                bestMove.value = legal.list[i].value;
             }
 
             // Searching as black, I found a move that
@@ -251,6 +284,8 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             if (bestMove.value < alpha)
                 break;
             beta  = std::min(beta , bestMove.value);    
+            // if(((maxdepth - depth) == 0) & verbose)
+                //std::cout<<mvhuman(legal.list[i])<<" evaluated "<<legal.list[i].value<< " at depth "<<depth<<"\tBest is "<<mvhuman(bestMove)<<" "<<bestMove.value<<"\tLoadfactor "<<float(HashTables::tableLoadFactor)/TABLE_SIZE<<std::endl;
         } // searched all moves
         
         if (bestMove.value < alpha)
@@ -258,8 +293,19 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
         else
             HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, EXACT);
         
-        if(verbose)
-            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
+        // if(verbose)
+            //std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
     }
+}
+
+
+ExtMove iterativeDeepening(Color Us, int depth, uint64_t& counter, bool verbose){
+    uint8_t d = 1;
+    ExtMove best;
+    while(d<=depth){
+        best = minmax(Us, -10000000, +10000000, d,d, counter, verbose);
+        d++;
+    }
+    return best;
 }

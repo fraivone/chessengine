@@ -30,3 +30,7 @@ bool white_sorter(ExtMove const& lhs, ExtMove const& rhs);
 
 /// strings the move as stockfish does when perft
 std::string mvhuman(Move theMove);
+
+/// iteratively calls minmax based on the fact that 
+/// the transposition tables will improve the move ordering
+ExtMove iterativeDeepening(Color Us, int depth, uint64_t& counter, bool verbose);
