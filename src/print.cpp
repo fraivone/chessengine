@@ -171,11 +171,29 @@ void PrintTranspositionTable(){
         // don't print empty entries
         if(HashTables::table[i].move()==MOVE_NONE)
             continue;
-        std::cout<<"Zobrist 48MSB "<<std::hex<<HashTables::table[i].ms48b_zobrist()<<std::dec<<std::endl;
-        std::cout<<"Best move "<<mvhuman(HashTables::table[i].move())<<std::endl;
-        std::cout<<"Depth "<<+HashTables::table[i].depth()<<std::endl;
-        std::cout<<"Eval "<<HashTables::table[i].eval()<<std::endl;
-        std::cout<<"ScoreType "<<HashTables::table[i].scoretype()<<std::endl;
-        std::cout<<"-----------------------"<<std::dec<<std::endl;
+        PrintTTEntry(HashTables::table[i]);
     }
+}
+
+
+
+void PrintTTEntry(HashTables::TableEntry TTE){
+    std::cout<<"Zobrist 48MSB "<<std::hex<<TTE.ms48b_zobrist()<<std::dec<<std::endl;
+    std::cout<<"Best move "<<mvhuman(TTE.move())<<std::endl;
+    std::cout<<"Depth "<<+TTE.depth()<<std::endl;
+    std::cout<<"Eval "<<TTE.eval()<<std::endl;
+    std::cout<<"ScoreType "<<TTE.scoretype()<<std::endl;
+    std::cout<<"-----------------------"<<std::dec<<std::endl;
+
+}
+
+void PrintThisPositionInTransposition(){
+    int index = Position::st.ZobristHash % TABLE_SIZE;
+    // check if exists in the table
+    if (HashTables::tableMatch(Position::st.ZobristHash))
+        PrintTTEntry(HashTables::table[index]);
+    else{
+        std::cout<<"The current poisition is not found in the transposition table"<<std::endl;
+    }
+
 }

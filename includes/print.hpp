@@ -35,5 +35,12 @@ void PrintPinMap(Color Us);
 /// Print a Piece Square Table to ease the dev
 void PrintPST(Color c, PieceType pt);
 
-/// Print the hash table
+/// Verbosily print the content of the Transposition Table Entry
+void PrintTTEntry(HashTables::TableEntry);
+
+/// Prints the full transposition table
 void PrintTranspositionTable();
+
+/// Looks for the current position in the 
+/// transposition table. If found, prints the entry 
+void PrintThisPositionInTransposition();
