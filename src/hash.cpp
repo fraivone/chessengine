@@ -27,9 +27,12 @@ namespace HashTables{
             PRN_castling[cr] = rng.rand<Hashkey>();
         // init color
         whomoves = rng.rand<Hashkey>();
+        // initialize the transp table
+        init_transposition_table();
     }
 
     void init_transposition_table(){
+        std::cout<<"Cleaning table"<<std::endl;
         assert(TABLE_SIZE>MIN_TABLE_SIZE);
         table.clear();
         tableLoadFactor = 0;
@@ -51,10 +54,6 @@ namespace HashTables{
     }
 
     void addToTable(Hashkey ZobristHash, Move theMove, int depth, int evaluation, ScoreType st){
-        // only accept calls for positions that are either not in the table,
-        // or insufficient depth
-        // or score not exact        
-        assert( (tableMatch(ZobristHash, depth) == false) |  (  (tableMatch(ZobristHash, depth) == true) & (table[ZobristHash%TABLE_SIZE].scoretype()!=EXACT)  )  );
         // element is empty
         if (!tableKey(ZobristHash))
             tableLoadFactor++;
