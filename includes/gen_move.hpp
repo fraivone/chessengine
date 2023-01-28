@@ -37,6 +37,8 @@ struct MoveList{
     void Add(Move s) {list[size].move = s; size++;}
     // Append a ExtMove to this move list
     void Add(ExtMove s) {list[size] = s; size++;}
+    // Add ExtMove in a specific position of this move list
+    void Add(ExtMove s, int index) {if(index<size){std::move(list + index, list + size, list + index + 1 );list[index] = s; size++;}}
     void Append(MoveList s) {for(int i=0; i<s.size; i++){list[size] = s.list[i];size++;}}
     // pop element from this move list
     void Pop(int index) {if(index<size){std::move(list + index + 1, list + size, list + index );size--;}}
