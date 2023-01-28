@@ -13,8 +13,10 @@
 #include "gen_move.hpp"
 #include "move_maker.hpp"
 #include "eval.hpp"
-
+#include "hash.hpp"
+unsigned VERBOSE = 1;
 int main(int argc, char **argv){
+    HashTables::init();
     init_lut();
     init_magics();
     
@@ -40,84 +42,25 @@ int main(int argc, char **argv){
             depthString.clear();
         }
     }
-    else if(argc ==2){
-        std::string line;
-        MoveList legal;
-        bool moveIsLegal;
-        int i;
-        ExtMove theBest;
-        std::cout<<"Let's play"<<std::endl;
-        init_position("r3kb1r/pbp1p1pp/2p2p2/6B1/2P5/5B2/PP3PPP/3RK2R w Kkq - 0 12");
-        while(1){
-            moveIsLegal = false;
-            uint64_t move_counter = 0;
-            legal.Clear();
-            legal = generate_legal(Position::sideToMove);
-            RepresentBoard();
-
-            while(!moveIsLegal){        
-                std::cout<<"Enter move"<<std::endl;
-                std::getline(std::cin, line);
-                const char* charArray = line.c_str();
-                int colFrom = charArray[0] -'a';
-                int rowFrom = charArray[1] -'1';
-                int colTo = charArray[2] -'a';
-                int rowTo = charArray[3] -'1';
-                std::cout<<"You entered the move "<<charArray[0]<<charArray[1]<<charArray[2]<<charArray[3]<<".";
-
-                Square from = make_square(colFrom,rowFrom);
-                Square to = make_square(colTo,rowTo);
-                Move m = make_move(from,to);
-                for(i=0; i < legal.size; i++){
-                    if( (legal.list[i].move & 0xFFF) == m){
-                        moveIsLegal = true;
-                        break;
-                    }
-                }
-                if(!moveIsLegal)
-                    std::cout<<" Your move is illegal."<<std::endl;
-                else
-                    std::cout<<std::endl;
-            }
-            // make the move
-            std::cout<<"You play ";
-            PrintMove(legal.list[i].move,legal.list[i].value);
-            MakeMove(legal.list[i].move);
-
-            move_counter = 0;
-            legal.Clear();
-            legal = generate_legal(Position::sideToMove);
-            theBest = minmax(Position::sideToMove,-10000000, +10000000, 7,7,move_counter, false);
-            std::cout<<"I searched "<<move_counter<<" moves. I play the best move ";
-            PrintMove(theBest.move,theBest.value);
-            MakeMove(theBest);
-
-        }
-
-            // make_move(Square from, Square to)
-            // std::cout<<"Position is evaluated "<<float(EvalPosition())/PawnValue<<std::endl;
-            // auto theBest = minmax(Position::sideToMove,-10000000, +10000000, 7,7);
-            // PrintMove(theBest.move, theBest.value);
-            // ExtMove test;
-            // test = Move(1);
-            // std::cout<<test.value<<std::endl;
-            // RepresentBoard();
-    }
     else{
-
-        init_position("2r3k1/2r2pp1/4p2p/1B1p4/3P2P1/Pn3N2/5PP1/1R3RK1 b - - 2 26");
+        init_position("r1b5/p3R3/2pk4/1p6/4P1pP/1BP1P3/P1P3Pq/6K1 b - h3 0 25");
         MoveList legal = generate_legal(Position::sideToMove);
-        legal = EvalMoveList(legal);
-        if(Position::sideToMove == WHITE)
-            std::sort(&legal.list[0], &legal.list[legal.size], &white_sorter);
-        else
-            std::sort(&legal.list[0], &legal.list[legal.size], &black_sorter);
-        PrintMoveList(legal);
+
+
+        
+        
+
+        // std::cout<<"eval() "<< t[0].eval()<<std::endl;
+        // std::cout<<"Value(EvalPosition()) "<< Value(EvalPosition())<<std::endl;
+        // std::cout<<"Size of SearchSummary "<< sizeof(ss)<<std::endl;
+
+        // std::cout<<"Size of uint64_t"<< sizeof(s)<<std::endl;
+        // std::cout<<"Size of bool"<< sizeof(b)<<std::endl;
+        
+        
     }
         
     return 0;
 
 }
-
-
 
