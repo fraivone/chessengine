@@ -13,11 +13,9 @@ unsigned VERBOSE = 1;
 void PrintExtMoveScoreUCI(ExtMove extmv){
     Color c = Position::sideToMove;
 	// The score can be positive or negative
-	// Uci returns the score as relative to the side who moves
-	// Additionally  in the value, also the MATE in is stored
+	// Additionally the value stores "MATE in" as well
 	// So here I first establish if the number is negative
 	// If so, and there is a mate in, then to correctly unpack
-	// mate in we need to remove the sign -
 	bool isNegative = extmv.value  < 0;
 	int mateInMultiplier = 1;
 	if(isNegative & abs(extmv.value) >= VALUE_MATE_30 & abs(extmv.value)<=VALUE_MATE_0){
@@ -25,14 +23,6 @@ void PrintExtMoveScoreUCI(ExtMove extmv){
 		// Turn positive
 		extmv.value = -extmv.value;
 	}
-
-	// Special treatement 2
-	// in UCI the score is relative to who plays
-	// So I have to add a multiplication factor depending on who plays
-	// ColorScoreFactor[c]
-	// MATE IN is not affected by this thing
-	
-	
 	
     if((extmv.value == VALUE_MATE_0))
         std::cout<<" score mate 0";
@@ -50,11 +40,8 @@ void PrintExtMoveScoreUCI(ExtMove extmv){
             std::cout<<string_first<< " "<<"\tscore NONE\n";
         else if((abs(extmv.value) == VALUE_INFINITE))
             std::cout<<string_first<< " "<<"\tscore INFINITE\n";
-        // returns the score as from the point of view.
-        // so if it is white playing the score is correct
-        // if it is black playing the score has to be inverted
         else
-            std::cout<<" score cp "<<ColorScoreFactor[c]*int(100*float(extmv.value)/PawnValue);
+            std::cout<<" score cp "<<int(100*float(extmv.value)/PawnValue);
     }
 
 }
@@ -202,17 +189,21 @@ int main(int argc, char **argv){
 			// 	throw std::invalid_argument("No limit on search");
 			// } // TODO Implement time management
 			ExtMove theBest;
-			move_counter = 0;
-			theBest = minmax(Position::sideToMove,-10000000, +10000000, depth,depth,move_counter, false);
-			while (move_counter < 6000000){
-				depth +=1;
+			// depth = 0;
+			// while ((move_counter < 30000000)){
+			// 	move_counter = 0;
+			// 	depth +=1;
+			theBest = iterativeDeepening(Position::sideToMove, depth,move_counter, true);
+			while((move_counter<16000000) & (ColorScoreFactor[Position::sideToMove]*theBest.value<6*PawnValue*100)){
 				move_counter = 0;
-				theBest = minmax(Position::sideToMove,-10000000, +10000000, depth+1,depth+1,move_counter, false);
+				depth++;
+				theBest = iterativeDeepening(Position::sideToMove, depth,move_counter, false);
+				if (depth>16)
+					break;
 			}
-			
 			std::cout<<"info depth "<<depth;
 			PrintExtMoveScoreUCI(theBest);
-			std::cout<<" nodes "<<move_counter<<" pv "<<mvhuman(theBest.move) <<std::endl;
+			std::cout<<" nodes "<<move_counter<<" pv "<<mvhuman(theBest.move)<<" hashfull "<<int(1000*float(HashTables::tableLoadFactor)/TABLE_SIZE )<<std::endl;
 			std::cout << "bestmove "<<mvhuman(theBest.move)<<"\n";
 			
 		}
@@ -229,14 +220,7 @@ int main(int argc, char **argv){
 		}
 		// TODO searches the current position in the hashtable 
 		if (command == "lookup"){
-			throw std::invalid_argument("Lookup not supported");
-			// const auto hash_key = wtm ? (wtm_hash ^ board.EvalInfo.hash) : board.EvalInfo.hash;
-			// const auto hash_lookup_result = ht_lookup(hash_key);
-			// if (hash_lookup_result.has_value()) {
-			// 	std::cout << "Score: " << std::get<0>(hash_lookup_result.value()) << std::endl;
-			// 	std::cout << "Move: " << format_move_xboard(std::get<1>(hash_lookup_result.value())) << std::endl;
-			// 	std::cout << "Depth: " << (int) std::get<2>(hash_lookup_result.value()) << std::endl;
-			// } else { std::cout << "Miss" << std::endl; }
+			PrintThisPositionInTransposition();
 		}
 		if (command == "eval"){
 			std::cout<<"Current position evaluated on material relative to who plays "<< ColorScoreFactor[Position::sideToMove]*EvalPosition()<<std::endl;
