@@ -6,6 +6,7 @@
 
 #define stringify( name ) #name
 
+enum Color : bool {BLACK, WHITE};
 enum PieceType : signed int { PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING };
 const std::string convert_enum[] = {
   stringify( PAWN ),
@@ -25,12 +26,12 @@ const std::string convert_color[] ={
 
 struct Piece{
     std::string name;
-    bool color;  // true for white, false for black
+    Color color;  // true for white, false for black
     int piece_value;
     PieceType piece_type;
 
     // Constructor with member initialization
-    Piece(const std::string& str, bool b, int i, PieceType t) : name(str), color(b), piece_value(i), piece_type(t) {}
+    Piece(const std::string& str, Color b, int i, PieceType t) : name(str), color(b), piece_value(i), piece_type(t) {}
 
     
     bool operator ==(const Piece& other) const {
@@ -52,18 +53,18 @@ template<> struct std::hash<Piece> {
     }
 };
 
-const Piece whitePawn = {"pW", true, 1, PAWN};
-const Piece blackPawn = {"pB", false, 1, PAWN};
-const Piece whiteRook = {"rW", true, 5, ROOK};
-const Piece blackRook = {"rB", false, 5, ROOK};
-const Piece whiteBishop = {"bW", true, 3, BISHOP};
-const Piece blackBishop = {"bB", false, 3, BISHOP};
-const Piece whiteKnight = {"nW", true, 3, KNIGHT};
-const Piece blackKnight = {"nB", false, 3, KNIGHT};
-const Piece whiteQueen = {"qW", true, 9, QUEEN};
-const Piece blackQueen = {"qB", false, 9, QUEEN};
-const Piece whiteKing = {"kW", true, 200, KING};
-const Piece blackKing = {"kB", false, 200, KING};
+const Piece whitePawn = {"pW", WHITE, 1, PAWN};
+const Piece blackPawn = {"pB", BLACK, 1, PAWN};
+const Piece whiteRook = {"rW", WHITE, 5, ROOK};
+const Piece blackRook = {"rB", BLACK, 5, ROOK};
+const Piece whiteBishop = {"bW", WHITE, 3, BISHOP};
+const Piece blackBishop = {"bB", BLACK, 3, BISHOP};
+const Piece whiteKnight = {"nW", WHITE, 3, KNIGHT};
+const Piece blackKnight = {"nB", BLACK, 3, KNIGHT};
+const Piece whiteQueen = {"qW", WHITE, 9, QUEEN};
+const Piece blackQueen = {"qB", BLACK, 9, QUEEN};
+const Piece whiteKing = {"kW", WHITE, 200, KING};
+const Piece blackKing = {"kB", BLACK, 200, KING};
 
 
 #endif // PIECES_HPP_

@@ -98,27 +98,7 @@ std::array<uint64_t,64> knight_position_lut(){
     }
     return map_knight_landing;
 }
-
-uint64_t opponentboard_status(Board b, bool color ){
-    uint64_t opponent_status;
-    if (color)
-        opponent_status = b[blackPawn] | b[blackBishop] | b[blackKnight] | b[blackRook] | b[blackQueen] | b[blackKing];
-    else
-        opponent_status = b[whitePawn] | b[whiteBishop] | b[whiteKnight] | b[whiteRook] | b[whiteQueen] | b[whiteKing];
-    return opponent_status;
-}
-uint64_t ownboard_status(Board b, bool color ){
-    uint64_t my_status;
-    if (color)
-        my_status = b[whitePawn] | b[whiteBishop] | b[whiteKnight] | b[whiteRook] | b[whiteQueen] | b[whiteKing];
-    else
-        my_status = b[blackPawn] | b[blackBishop] | b[blackKnight] | b[blackRook] | b[blackQueen] | b[blackKing];
-    return my_status;
-}
-
-uint64_t straight_moves(int init_bit, Board b, bool color){
-    uint64_t opponent_status = opponentboard_status(b, color);
-    uint64_t my_status = ownboard_status(b,color);
+uint64_t straight_moves(int init_bit, Board b, Color color, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     
@@ -185,9 +165,7 @@ uint64_t straight_moves(int init_bit, Board b, bool color){
 
 }
 
-uint64_t diago_moves(int init_bit, Board b, bool color){
-    uint64_t opponent_status = opponentboard_status(b, color);
-    uint64_t my_status = ownboard_status(b,color);
+uint64_t diago_moves(int init_bit, Board b, Color color, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     uint64_t current_pos = initial_pos;
@@ -251,17 +229,16 @@ uint64_t diago_moves(int init_bit, Board b, bool color){
         }
 
     }
-
     return landing;
 
 }
 
-uint64_t rook_moves(int init_bit, Board b, bool color){
-    return straight_moves(init_bit, b, color);
+uint64_t rook_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return straight_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
 }
-uint64_t bishop_moves(int init_bit, Board b, bool color){
-    return diago_moves(init_bit, b, color);
+uint64_t bishop_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return diago_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
 }
-uint64_t queen_moves(int init_bit, Board b, bool color){
-    return diago_moves(init_bit, b, color) | straight_moves(init_bit, b, color);
+uint64_t queen_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return diago_moves(init_bit, b, color, own_occupancy, opponent_occupancy) | straight_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
 }

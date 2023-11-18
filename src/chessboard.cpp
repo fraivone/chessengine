@@ -18,9 +18,53 @@ ChessBoard::ChessBoard(uint64_t wps,uint64_t wbs,uint64_t wns,uint64_t wrs,uint6
     _black_queens(bqs),
     _black_king(bk) 
     {
+    fill_board();
     update_luts();   // load the look up tables
     legalPosition(); // check if starting position is valid    
 }
+
+ChessBoard::ChessBoard(const std::string& fen){
+    const size_t size = fen.size();
+    size_t iter = 0;
+    int index = 56;
+    std::unordered_map<char, uint64_t*> map_fen_chars ={
+        {'P',&_white_pawns},
+        {'B',&_white_bishops},
+        {'N',&_white_knights},
+        {'R',&_white_rooks},
+        {'Q',&_white_queens},
+        {'K',&_white_king},
+        {'p',&_black_pawns},
+        {'b',&_black_bishops},
+        {'n',&_black_knights},
+        {'r',&_black_rooks},
+        {'q',&_black_queens},
+        {'k',&_black_king},
+    };
+
+    // pieces on the board
+    for (; (iter < size) and (fen[iter] != ' '); iter++)
+    {
+        if (fen[iter] == '/'){
+            index = index -  16;
+            continue;
+        }
+        if (isdigit(fen[iter]))
+            index += (fen[iter] - '0'); // converts char digit to int. `5` to 5
+        else{
+            if (debugverbose)
+                std::cout<<"board["<<index<<"] = "<<fen[iter]<<std::endl;
+            *map_fen_chars[fen[iter]]  |=  uint64_t(pow(2,index));
+            
+            ++index;
+        }
+    }
+
+    fill_board();
+    update_luts();   // load the look up tables
+    legalPosition(); // check if starting position is valid    
+}
+
 
 ChessBoard::~ChessBoard() = default; 
 
@@ -31,6 +75,24 @@ ChessBoard::~ChessBoard() = default;
 //     else
 //         generate_black_moves();
 // }
+
+
+void ChessBoard::fill_board(){
+    board ={
+        {whitePawn, _white_pawns},
+        {whiteBishop, _white_bishops},
+        {whiteRook, _white_rooks},
+        {whiteKnight, _white_knights},
+        {whiteKing, _white_king},
+        {whiteQueen, _white_queens},
+        {blackPawn, _black_pawns},
+        {blackBishop, _black_bishops},
+        {blackRook, _black_rooks},
+        {blackKnight, _black_knights},
+        {blackKing, _black_king},
+        {blackQueen, _black_queens}
+    };
+};
 
 
 void ChessBoard::update_luts(){
@@ -133,56 +195,101 @@ bool ChessBoard::legalPosition(){
 }
 
 
-void ChessBoard::append_moves(Board b, Piece p, Moves& move_collector){
+uint64_t ChessBoard::opponentboard_status(Color color ){
+    uint64_t opponent_status;
+    if (color == WHITE)
+        opponent_status = board[blackPawn] | board[blackBishop] | board[blackKnight] | board[blackRook] | board[blackQueen] | board[blackKing];
+    else if (color == BLACK)
+        opponent_status = board[whitePawn] | board[whiteBishop] | board[whiteKnight] | board[whiteRook] | board[whiteQueen] | board[whiteKing];
+    return opponent_status;
+}
+uint64_t ChessBoard::ownboard_status(Color color ){
+    uint64_t my_status;
+    if (color == WHITE)
+        my_status = board[whitePawn] | board[whiteBishop] | board[whiteKnight] | board[whiteRook] | board[whiteQueen] | board[whiteKing];
+    else if (color == BLACK)
+        my_status = board[blackPawn] | board[blackBishop] | board[blackKnight] | board[blackRook] | board[blackQueen] | board[blackKing];
+    std::cout<<"My board is "<< my_status<<std::endl;
+    return my_status;
+}
+
+void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_status, uint64_t opponent_status){
     uint64_t all_moves;
-    while(board[p]){
-        auto piece_init_bit = pop_LSB(board[p]);
+    auto piece_positions = board[p];
+    // loop through all pieces of type p
+    while(piece_positions){
+        auto piece_init_bit = pop_LSB(piece_positions);
         switch (p.piece_type) {
             case QUEEN:
-                all_moves = queen_moves(piece_init_bit, b, p.color) & ~ownboard_status(b, p.color);
+                all_moves = queen_moves(piece_init_bit, board, p.color, own_status, opponent_status) & ~own_status;
                 break;
             case KING:
-                all_moves = king_lut[piece_init_bit] & ~ownboard_status(b, p.color);
+                all_moves = king_lut[piece_init_bit] & ~own_status;
                 break;
             case KNIGHT:
-                all_moves = king_lut[piece_init_bit] & ~ownboard_status(b, p.color);
+                all_moves = knight_lut[piece_init_bit] & ~own_status;
                 break;
             case PAWN:
-                all_moves = p.color ? wpawn_fw_lut[piece_init_bit] & ~ownboard_status(b, p.color) : bpawn_fw_lut[piece_init_bit] & ~ownboard_status(b, p.color);
+                all_moves = p.color ? wpawn_fw_lut[piece_init_bit] & ~own_status : bpawn_fw_lut[piece_init_bit] & ~own_status;
                 break;
             case BISHOP:
-                all_moves = bishop_moves(piece_init_bit, b, p.color) & ~ownboard_status(b, p.color);
+                all_moves = bishop_moves(piece_init_bit, board, p.color, own_status, opponent_status) & ~own_status;
                 break;
             case ROOK:
-                all_moves = rook_moves(piece_init_bit, b, p.color) & ~ownboard_status(b, p.color);
+                all_moves = rook_moves(piece_init_bit, board, p.color, own_status, opponent_status) & ~own_status;
                 break;
             default:
                 break;
         }
         while(all_moves){
             auto piece_end_bit = pop_LSB(all_moves);
-            move_collector.push_back(Move(piece_init_bit, piece_end_bit, p));
+            
+            if (p.color == WHITE){
+                if ( bool(get_bit(board[blackKing],piece_end_bit)) ){ // white piece checks black king
+                    move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
+                    if (debug)
+                        std::cout << "The " << convert_color[p.color] << " "
+                        << convert_enum[p.piece_type]
+                        << " is checking the king in " << bit2notation(piece_end_bit)<<std::endl;
+                }
+
+                else
+                    move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, false));
+            }
+            else if ( p.color == BLACK){
+                if( bool(get_bit(board[whiteKing],piece_end_bit)) ){ // white piece checks black king
+                move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
+                if (debug)
+                    std::cout << "The " << convert_color[p.color] << " "
+                      << convert_enum[p.piece_type]
+                      << " is checking the king in " << bit2notation(piece_end_bit)<<std::endl;
+            }
+            else
+                move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, false));
+            }
         }
     }
 }
 
-Moves ChessBoard::calculate_moves(){
+Moves ChessBoard::calculate_moves(Color color){
     Moves move_collector;
-    if (this->get_board_turn()){
-        append_moves(this->get_board(), whitePawn, move_collector);
-        append_moves(this->get_board(), whiteKnight, move_collector);
-        append_moves(this->get_board(), whiteBishop, move_collector);
-        append_moves(this->get_board(), whiteRook, move_collector);
-        append_moves(this->get_board(), whiteQueen, move_collector);
-        append_moves(this->get_board(), whiteKing, move_collector);
+    uint64_t ownstatus = ownboard_status(color);
+    uint64_t opponent_status = opponentboard_status(color);
+    if (color == WHITE){
+        append_moves(whitePawn, move_collector, ownstatus, opponent_status);
+        append_moves(whiteKnight, move_collector, ownstatus, opponent_status);
+        append_moves(whiteBishop, move_collector, ownstatus, opponent_status);
+        append_moves(whiteRook, move_collector, ownstatus, opponent_status);
+        append_moves(whiteQueen, move_collector, ownstatus, opponent_status);
+        append_moves(whiteKing, move_collector, ownstatus, opponent_status);
         }
-    else{
-        append_moves(this->get_board(), blackPawn, move_collector);
-        append_moves(this->get_board(), blackKnight, move_collector);
-        append_moves(this->get_board(), blackBishop, move_collector);
-        append_moves(this->get_board(), blackRook, move_collector);
-        append_moves(this->get_board(), blackQueen, move_collector);
-        append_moves(this->get_board(), blackKing, move_collector);
+    else if (color == BLACK){
+        append_moves(blackPawn, move_collector, ownstatus, opponent_status);
+        append_moves(blackKnight, move_collector, ownstatus, opponent_status);
+        append_moves(blackBishop, move_collector, ownstatus, opponent_status);
+        append_moves(blackRook, move_collector, ownstatus, opponent_status);
+        append_moves(blackQueen, move_collector, ownstatus, opponent_status);
+        append_moves(blackKing, move_collector, ownstatus, opponent_status);
     }
     return move_collector;
 }
