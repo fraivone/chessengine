@@ -8,8 +8,6 @@
 #include "utils.hpp"
 #include "lut.hpp"
 
-enum Castle
-{  king_side, queen_side };
 
 /*
 8   56 # # # # # # # # 63
@@ -55,6 +53,7 @@ private:
 
     int nRows = 8;
     int nCols = 8;
+    int en_passant_bit = -1;
     Color board_turn = BLACK;
     bool _islegal = true;
     bool castle_rights[2][2] = {false,false,false,false};
@@ -63,10 +62,12 @@ private:
     void update_luts();
     void append_moves(Piece, Moves&, uint64_t, uint64_t);
     void fill_board();
-    uint64_t opponentboard_status(Color);
-    uint64_t ownboard_status(Color);
+    void update_board_occupancy();
 
     Board board;    
+    std::unordered_map<Piece, Moves> test;
+
+    uint64_t board_occupancy[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
 
 	uint64_t _white_pawns = 0ULL;
 	uint64_t _white_bishops = 0ULL;

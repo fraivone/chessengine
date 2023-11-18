@@ -7,6 +7,7 @@
 #define stringify( name ) #name
 
 enum Color : bool {BLACK, WHITE};
+enum Castle : signed int { king_side, queen_side };
 enum PieceType : signed int { PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING };
 const std::string convert_enum[] = {
   stringify( PAWN ),
@@ -53,18 +54,18 @@ template<> struct std::hash<Piece> {
     }
 };
 
-const Piece whitePawn = {"pW", WHITE, 1, PAWN};
-const Piece blackPawn = {"pB", BLACK, 1, PAWN};
-const Piece whiteRook = {"rW", WHITE, 5, ROOK};
-const Piece blackRook = {"rB", BLACK, 5, ROOK};
-const Piece whiteBishop = {"bW", WHITE, 3, BISHOP};
-const Piece blackBishop = {"bB", BLACK, 3, BISHOP};
-const Piece whiteKnight = {"nW", WHITE, 3, KNIGHT};
-const Piece blackKnight = {"nB", BLACK, 3, KNIGHT};
-const Piece whiteQueen = {"qW", WHITE, 9, QUEEN};
-const Piece blackQueen = {"qB", BLACK, 9, QUEEN};
-const Piece whiteKing = {"kW", WHITE, 200, KING};
-const Piece blackKing = {"kB", BLACK, 200, KING};
+const Piece whitePawn = {"pW", WHITE, 100, PAWN};
+const Piece blackPawn = {"pB", BLACK, 100, PAWN};
+const Piece whiteRook = {"rW", WHITE, 500, ROOK};
+const Piece blackRook = {"rB", BLACK, 500, ROOK};
+const Piece whiteBishop = {"bW", WHITE, 330, BISHOP};
+const Piece blackBishop = {"bB", BLACK, 330, BISHOP};
+const Piece whiteKnight = {"nW", WHITE, 320, KNIGHT};
+const Piece blackKnight = {"nB", BLACK, 320, KNIGHT};
+const Piece whiteQueen = {"qW", WHITE, 900, QUEEN};
+const Piece blackQueen = {"qB", BLACK, 900, QUEEN};
+const Piece whiteKing = {"kW", WHITE, 20000, KING};
+const Piece blackKing = {"kB", BLACK, 20000, KING};
 
 
 #endif // PIECES_HPP_
