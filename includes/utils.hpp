@@ -14,6 +14,7 @@ typedef std::vector<Move> Moves;
 #define clear_bit(b, i) ((b) &= ~(1ULL << i))
 #define get_LSB(b) (__builtin_ctzll(b))
 #define chars_to_bit(letter,number) ((letter - 'a') + ((int(number - '0')) - 1)*8 )
+#define countBitsOn(v) (std::bitset<64>(v).count())
 
 inline int pop_LSB(uint64_t &b) {
     int i = get_LSB(b);

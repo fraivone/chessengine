@@ -30,24 +30,30 @@ public:
     ~ChessBoard();
     bool debug = true;
     bool debugverbose = false;
+    Color board_turn = BLACK;
 
     void legalMoves();
     void printBoard();
+    void printStatusInfo();
     void RepresentBitset(uint64_t );
     float evalPosition();
     bool legalStart() { return _islegal;};
-    bool isCheck();
-    bool isMate();
-    bool isStaleMate();
-    bool isDrawInsufficientMaterial();
-    bool isDrawForRepetition();
-    bool isDrawFor50MovesRule();
+
+    // GAME STATUSES
+    bool isCheck = false;
+    bool isMate = false;
+    bool isStaleMate = false;
+    bool isDraw50Moves = false;
+    bool isDrawRepetition = false;
+    bool isDrawInsufficientMaterial = false;
+    bool GameOver = false;
+    bool isDraw = false;
 
     int get_enpassant_bit() { return en_passant_bit;}
     Color get_board_turn() { return board_turn;}
 
     Moves calculate_moves(Color);
-    Board get_board() { return board;};
+    Board get_board() { return _board;};
 
     std::array<uint64_t,64> wpawn_fw_lut;
     std::array<uint64_t,64> wpawn_cap_lut;
@@ -61,23 +67,31 @@ private:
     int nRows = 8;
     int nCols = 8;
     int en_passant_bit = -1;
-    Color board_turn = BLACK;
+    int Mate_Score = 1000;
     bool _islegal = true;
     bool castle_rights[2][2] = {false,false,false,false};
     
-    bool legalPosition();  
-    void initializeCommon();
-    void ResetLandingSquares();
-    void ResetOccupancySquares();
-    void load_luts();
-    void append_moves(Piece, Moves&, uint64_t, uint64_t);
-    void fill_board();
-    void update_board_occupancy();
-    void update_landing_squares();
-    uint64_t get_landing_squares(Piece p, int init_bit, bool attacking_squares );
+    bool _legalPosition();  
+    bool _isCheck();
+    bool _isMate();
+    bool _isStaleMate();
+    bool _isDrawInsufficientMaterial();
+    bool _isDrawForRepetition();
+    bool _isDrawFor50MovesRule();
 
-    Board board;    
-    std::unordered_map<Piece, Moves> test;
+    void _initializeCommon();
+    void _ResetLandingSquares();
+    void _ResetOccupancySquares();
+    void _load_luts();
+    void append_moves(Piece, Moves&, uint64_t, uint64_t);
+    void _fill_board();
+    void _update_game_status();
+    void _update_board_occupancy();
+    void _update_landing_squares();
+
+    uint64_t _get_landing_squares(Piece p, int init_bit, bool attacking_squares );
+
+    Board _board;    
 
     /* 
     Current occupancies and landing squares help calculating check, mate, stalemate 
@@ -104,14 +118,7 @@ private:
 	uint64_t _black_rooks = 0ULL;
 	uint64_t _black_knights = 0ULL;
 	uint64_t _black_king = 0ULL;
-	uint64_t _black_queens = 0ULL;
-
-    // std::unordered_map<Piece, uint64_t> DEFAULT_STARTING_BOARD{
-    // {whitePawn, 65280},{whiteBishop, 36},{whiteRook, 129},{whiteKnight, 66},{whiteKing, 16},{whiteQueen, 8},
-    // {blackPawn, 71776119061217280},{blackBishop, 2594073385365405696},{blackRook, 9295429630892703744ULL},{blackKnight, 4755801206503243776},{blackKing, 1152921504606846976},{blackQueen, 576460752303423488}
-    // };
-
-    
+	uint64_t _black_queens = 0ULL;   
 };
 
 } // #end of chessboard

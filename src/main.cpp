@@ -18,13 +18,14 @@ int main(int argc, char **argv) {
     else if (argc == 2)
 	    p = new chessboard::ChessBoard(argv[1]);
     if (p->legalStart()){
-        std::cout<<"Eval = " <<p->evalPosition()<<std::endl;
+        
         p->printBoard();
         //p->RepresentBitset(p->bpawn_fw_lut[47]);
-        std::cout<<"enpassant "<<p->get_enpassant_bit()<<std::endl;
-        std::cout<<"is check? "<<p->isCheck()<<std::endl;
-        std::cout<<"is mate? "<<p->isMate()<<std::endl;
-        std::cout<<"is stalemate? "<<p->isStaleMate()<<std::endl;
+        p->printStatusInfo();
+        std::cout<<"Eval = " <<p->evalPosition()<<std::endl;
+        // std::cout<<"is check? "<<p->isCheck()<<std::endl;
+        // std::cout<<"is mate? "<<p->isMate()<<std::endl;
+        // std::cout<<"is stalemate? "<<p->isStaleMate()<<std::endl;
         //Moves vector_with_moves = p->calculate_moves(p->get_board_turn());
         //std::cout<<"Found "<<vector_with_moves.size()<<" moves"<<std::endl;
 

@@ -18,7 +18,7 @@ ChessBoard::ChessBoard(uint64_t wps,uint64_t wbs,uint64_t wns,uint64_t wrs,uint6
     _black_queens(bqs),
     _black_king(bk) 
     {
-        initializeCommon();
+        _initializeCommon();
 }
 
 ChessBoard::ChessBoard(const std::string& fen){
@@ -81,25 +81,26 @@ ChessBoard::ChessBoard(const std::string& fen){
         en_passant_bit = chars_to_bit(fen[iter + 1], fen[iter + 2]);
     //TODO Implemnt half move and full move for draw for repetition
 
-    initializeCommon();
+    _initializeCommon();
     
 }
 
 ChessBoard::~ChessBoard() = default; 
 
 
-void ChessBoard::initializeCommon(){
-    fill_board();
-    legalPosition(); // check if starting position is valid, 2 kings, Kings aren't in mutual check, pieces don't overlap
-    load_luts();   // load the look up tables for landing squares of leaping pieces
+void ChessBoard::_initializeCommon(){
+    _fill_board();
+    _legalPosition(); // check if starting position is valid, 2 kings, Kings aren't in mutual check, pieces don't overlap
+    _load_luts();   // load the look up tables for landing squares of leaping pieces
 
-    update_board_occupancy(); // all positions occupied by black/white
-    update_landing_squares(); // all possible landing squares for black/white
+    _update_board_occupancy(); // all positions occupied by black/white
+    _update_landing_squares(); // all possible landing squares for black/white
+    _update_game_status();
     
 }
 
-void ChessBoard::fill_board(){
-    board ={
+void ChessBoard::_fill_board(){
+    _board ={
         {whitePawn, _white_pawns},
         {whiteBishop, _white_bishops},
         {whiteRook, _white_rooks},
@@ -115,7 +116,7 @@ void ChessBoard::fill_board(){
     };
 };
 
-void ChessBoard::load_luts(){
+void ChessBoard::_load_luts(){
     knight_lut = knight_position_lut();
     wpawn_fw_lut = wpawn_straight_lut();
     wpawn_cap_lut = wpawn_diagcapture_lut();
@@ -125,7 +126,7 @@ void ChessBoard::load_luts(){
 }
 
 
-void ChessBoard::ResetLandingSquares(){
+void ChessBoard::_ResetLandingSquares(){
     pieces_landingsquares[BLACK] = 0ULL;
     pieces_landingsquares[WHITE] = 0ULL;
     king_landingsquares[BLACK] = 0ULL;
@@ -133,7 +134,7 @@ void ChessBoard::ResetLandingSquares(){
     pieces_landingsquares_throughKing[BLACK] = 0ULL;
     pieces_landingsquares_throughKing[WHITE] = 0ULL;
 }
-void ChessBoard::ResetOccupancySquares(){
+void ChessBoard::_ResetOccupancySquares(){
     board_occupancy[BLACK] = 0ULL;
     board_occupancy[WHITE] = 0ULL;
     board_occupancy_noKing[BLACK] = 0ULL;
@@ -143,10 +144,15 @@ void ChessBoard::ResetOccupancySquares(){
 float ChessBoard::evalPosition(){
     float white_score = 0.;
     float black_score = 0.;
-    for (const auto& pair : board) {
+    if (isMate)
+        return Mate_Score;
+    if (isDraw)
+        return 0;
+
+    for (const auto& pair : _board) {
         Piece this_piece = pair.first;
         uint64_t value = pair.second;
-        int number_of_pieces = std::bitset<64>(value).count();
+        int number_of_pieces = countBitsOn(value);
         
         // piece is white
         if (this_piece.color)     
@@ -168,7 +174,7 @@ void ChessBoard::printBoard(){
         }
     }
     // fill the grid
-    for (const auto& pair : board) {
+    for (const auto& pair : _board) {
         Piece key = pair.first;
         uint64_t value = pair.second;
         for (int i=0; i<nCols*nRows; i++){
@@ -219,30 +225,30 @@ void ChessBoard::RepresentBitset(uint64_t number){
     std::cout<<"\n";
 }
 
-bool ChessBoard::legalPosition(){
+bool ChessBoard::_legalPosition(){
     _islegal = true;
 
     // exactly one king each
-    if (std::bitset<64>(board[blackKing]).count() != 1 or std::bitset<64>(board[whiteKing]).count() != 1){
+    if ( countBitsOn(_board[blackKing]) != 1 or countBitsOn(_board[whiteKing]) != 1){
         _islegal = false;
         // std::cout<<"Too many/few kings on the board.Illegal position\nExiting..."<<std::endl;
         return false;
     }
-    int bking_bit = get_LSB(board[blackKing]);
-    int wking_bit = get_LSB(board[whiteKing]);
-    auto _x = king_lut[bking_bit] & board[whiteKing]; //white king is "seen" by the black king
-    auto _y = king_lut[wking_bit] & board[blackKing]; //black king is "seen" by the white king
+    int bking_bit = get_LSB(_board[blackKing]);
+    int wking_bit = get_LSB(_board[whiteKing]);
+    auto _x = king_lut[bking_bit] & _board[whiteKing]; //white king is "seen" by the black king
+    auto _y = king_lut[wking_bit] & _board[blackKing]; //black king is "seen" by the white king
     if( (_x !=0) | (_y !=0)  ){
         _islegal = false;
         // std::cout<<"Kings are checking each other.Illegal position.\nExiting..."<<std::endl;
     }
 
     // pieces don't overlap
-    for (const auto& first_pair : board) {
+    for (const auto& first_pair : _board) {
         if (_islegal == false) break;
         Piece firstkey = first_pair.first;
         uint64_t firstvalue = first_pair.second;
-        for (const auto& second_pair : board) {
+        for (const auto& second_pair : _board) {
             Piece secondkey = second_pair.first;
             uint64_t secondvalue = second_pair.second;
             if (secondkey == firstkey) continue;
@@ -259,13 +265,13 @@ bool ChessBoard::legalPosition(){
 }
 
 
-void ChessBoard::update_board_occupancy(){
-    ResetOccupancySquares();
-    board_occupancy[BLACK] = board[blackPawn] | board[blackBishop] | board[blackKnight] | board[blackRook] | board[blackQueen] | board[blackKing];
-    board_occupancy[WHITE] = board[whitePawn] | board[whiteBishop] | board[whiteKnight] | board[whiteRook] | board[whiteQueen] | board[whiteKing];
+void ChessBoard::_update_board_occupancy(){
+    _ResetOccupancySquares();
+    board_occupancy[BLACK] = _board[blackPawn] | _board[blackBishop] | _board[blackKnight] | _board[blackRook] | _board[blackQueen] | _board[blackKing];
+    board_occupancy[WHITE] = _board[whitePawn] | _board[whiteBishop] | _board[whiteKnight] | _board[whiteRook] | _board[whiteQueen] | _board[whiteKing];
     
-    board_occupancy_noKing[BLACK] = board[blackPawn] | board[blackBishop] | board[blackKnight] | board[blackRook] | board[blackQueen];
-    board_occupancy_noKing[WHITE] = board[whitePawn] | board[whiteBishop] | board[whiteKnight] | board[whiteRook] | board[whiteQueen];
+    board_occupancy_noKing[BLACK] = _board[blackPawn] | _board[blackBishop] | _board[blackKnight] | _board[blackRook] | _board[blackQueen];
+    board_occupancy_noKing[WHITE] = _board[whitePawn] | _board[whiteBishop] | _board[whiteKnight] | _board[whiteRook] | _board[whiteQueen];
 }
 
 /*
@@ -280,7 +286,7 @@ Additionaly pawns attack diagonal squares
 */
 
 
-uint64_t ChessBoard::get_landing_squares(Piece p, int piece_init_bit, bool attacking_squares = false){
+uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool attacking_squares = false){
     uint64_t own_status,opponent_status;
     own_status = p.color == WHITE ? board_occupancy[WHITE] : board_occupancy[BLACK];
     if (!attacking_squares){
@@ -330,7 +336,7 @@ uint64_t ChessBoard::get_landing_squares(Piece p, int piece_init_bit, bool attac
 
 void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_status, uint64_t opponent_status){
     uint64_t all_moves;
-    auto piece_positions = board[p];
+    auto piece_positions = _board[p];
     // loop through all pieces of type p
     while(piece_positions){
         auto piece_init_bit = pop_LSB(piece_positions);
@@ -360,7 +366,7 @@ void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_statu
             auto piece_end_bit = pop_LSB(all_moves);
             
             if (p.color == WHITE){
-                if ( bool(get_bit(board[blackKing],piece_end_bit)) ){ // white piece checks black king
+                if ( bool(get_bit(_board[blackKing],piece_end_bit)) ){ // white piece checks black king
                     move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
                     if (debug)
                         std::cout << "The " << convert_color[p.color] << " "
@@ -372,7 +378,7 @@ void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_statu
                     move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, false));
             }
             else if ( p.color == BLACK){
-                if( bool(get_bit(board[whiteKing],piece_end_bit)) ){ // white piece checks black king
+                if( bool(get_bit(_board[whiteKing],piece_end_bit)) ){ // white piece checks black king
                 move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
                 if (debug)
                     std::cout << "The " << convert_color[p.color] << " "
@@ -386,25 +392,24 @@ void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_statu
     }
 }
 
-void ChessBoard::update_landing_squares(){
-    ResetLandingSquares();
+void ChessBoard::_update_landing_squares(){
+    _ResetLandingSquares();
 
     int piece_init_bit;
     uint64_t piece_positions;
     for (Piece KindOfPiece : AllKindOfPieces){            // loop over all kindofpieces
         // if (KindOfPiece.piece_type == KING) continue;   // skip if king
-        piece_positions = board[KindOfPiece];
+        piece_positions = _board[KindOfPiece];
         while(piece_positions){                         // loop over each piece of that type
             piece_init_bit = pop_LSB(piece_positions);
             if (KindOfPiece.piece_type != KING){
-                pieces_landingsquares[KindOfPiece.color] |= get_landing_squares(KindOfPiece, piece_init_bit);   
-                pieces_landingsquares_throughKing[KindOfPiece.color] |= get_landing_squares(KindOfPiece, piece_init_bit, true);   
+                pieces_landingsquares[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit);   
+                pieces_landingsquares_throughKing[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit, true);   
             }
             else
-                king_landingsquares[KindOfPiece.color] |= get_landing_squares(KindOfPiece, piece_init_bit);
-            std::cout <<KindOfPiece.color << " king can land on squares" << king_landingsquares[KindOfPiece.color]<<std::endl;
+                king_landingsquares[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit);
 
-            // auto temp = get_landing_squares(KindOfPiece, piece_init_bit);
+            // auto temp = _get_landing_squares(KindOfPiece, piece_init_bit);
             // while(temp) {
             //     auto final_bit_value = pop_LSB(temp);
             //     std::cout << "The " << convert_color[KindOfPiece.color] << " "
@@ -419,42 +424,61 @@ void ChessBoard::update_landing_squares(){
 
 Moves ChessBoard::calculate_moves(Color color){
     Moves move_collector;
-    if (color == WHITE){
-        append_moves(whitePawn, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        append_moves(whiteKnight, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        append_moves(whiteBishop, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        append_moves(whiteRook, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        append_moves(whiteQueen, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        append_moves(whiteKing, move_collector, board_occupancy[WHITE], board_occupancy[BLACK]);
-        }
-    else if (color == BLACK){
-        append_moves(blackPawn, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-        append_moves(blackKnight, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-        append_moves(blackBishop, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-        append_moves(blackRook, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-        append_moves(blackQueen, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-        append_moves(blackKing, move_collector, board_occupancy[BLACK], board_occupancy[WHITE]);
-    }
     return move_collector;
 }
 
 
-bool ChessBoard::isCheck(){
+void ChessBoard::printStatusInfo(){
+    
+    std::cout<<"GameOver = "<<GameOver
+                 <<"\nMate = "<<isMate
+                 <<"\nDraw = "<<isDraw
+                 <<"\nStaleMate = "<<isStaleMate
+                 <<"\nFifty move rule = "<<isDraw50Moves
+                 <<"\nMove repetition = "<<isDrawRepetition
+                 <<"\nInsufficient Material = "<<isDrawInsufficientMaterial<<std::endl;
+    
+}
+
+
+void ChessBoard::_update_game_status(){
+    isCheck = _isCheck();
+    isMate = _isMate();
+    isStaleMate = _isStaleMate();
+    isDraw50Moves = _isDrawFor50MovesRule();
+    isDrawRepetition = _isDrawForRepetition();
+    isDrawInsufficientMaterial = _isDrawInsufficientMaterial();
+
+    if (isStaleMate | isDraw50Moves | isDrawRepetition | isDrawInsufficientMaterial){
+        isDraw = true;
+        GameOver = true;
+        if (debug)
+            std::cout<<"Game Over. Draw "<<std::endl;
+    }
+    if (isMate){
+        GameOver = true;
+        if (debug)
+            std::cout<<"Game Over. "<<convert_color[!board_turn]<<" wins by checkmate"<<std::endl;
+    }
+}
+
+
+bool ChessBoard::_isCheck(){
     if (board_turn == WHITE){
-        if ((board[whiteKing] & pieces_landingsquares[BLACK])!=0)
+        if ((_board[whiteKing] & pieces_landingsquares[BLACK])!=0)
             return true;
     }
     if (board_turn == BLACK){
-        if ((board[blackKing] & pieces_landingsquares[WHITE])!=0)
+        if ((_board[blackKing] & pieces_landingsquares[WHITE])!=0)
             return true;
     }
     return false;
 }
-bool ChessBoard::isMate(){
-    if (!isCheck())  return false;
+bool ChessBoard::_isMate(){
+    if (!isCheck)  return false;
     else{
         uint64_t evading_squares;
-        bool isMate = false;
+        bool _isMate = false;
         if (board_turn == WHITE){
             // legal evading squares are not occupied by own pieces, not in check, reachable by the king
             evading_squares = king_landingsquares[WHITE]  & ~(pieces_landingsquares_throughKing[BLACK] | king_landingsquares[BLACK]) & ~board_occupancy[WHITE];
@@ -464,8 +488,6 @@ bool ChessBoard::isMate(){
         if (board_turn == BLACK){
             // legal evading squares are not occupied by own pieces, not in check, reachable by the king
             evading_squares = king_landingsquares[BLACK]  & ~(pieces_landingsquares_throughKing[WHITE] | king_landingsquares[WHITE])& ~board_occupancy[BLACK];
-            // std::cout<<"evading squares"<<std::endl;
-            // PrintNumber(evading_squares);
             if ( !evading_squares )
                 return true;
         }
@@ -473,17 +495,15 @@ bool ChessBoard::isMate(){
     return false;
 }
 
-bool ChessBoard::isStaleMate(){
-    if (isCheck())  return false;
+bool ChessBoard::_isStaleMate(){
+    if (isCheck)  return false;
     else{
         uint64_t legal_king_moves;
         uint64_t legal_pieces_moves;
-        bool isMate = false;
+        bool _isMate = false;
         if (board_turn == WHITE){
             legal_king_moves = king_landingsquares[WHITE]  & ~(pieces_landingsquares_throughKing[BLACK] | king_landingsquares[BLACK]) & ~board_occupancy[WHITE];
             legal_pieces_moves = pieces_landingsquares[WHITE] & ~board_occupancy[WHITE];
-            std::cout<<"evading squares"<<king_landingsquares[WHITE]<<std::endl;
-            // RepresentBitset(king_landingsquares[WHITE]);
             if ( !(legal_king_moves) )
                 return true;
         }
@@ -495,4 +515,42 @@ bool ChessBoard::isStaleMate(){
         }
     }
     return false;
+}
+
+
+bool ChessBoard::_isDrawInsufficientMaterial(){
+    // from https://en.wikipedia.org/wiki/Draw_(chess)
+    int pawns_left = countBitsOn(_board[whitePawn]) + countBitsOn(_board[blackPawn]);
+    int rooks_left = countBitsOn(_board[whiteRook]) + countBitsOn(_board[blackRook]);
+    int queens_left = countBitsOn(_board[whiteQueen]) + countBitsOn(_board[blackQueen]);
+    if (pawns_left != 0 | rooks_left != 0 | queens_left != 0) //A king + any(pawn, rook, queen) is not draw
+        return false;
+    
+    int wbishops_left = countBitsOn(_board[whiteBishop]);
+    int bbishops_left = countBitsOn(_board[blackBishop]);
+    int wknights_left = countBitsOn(_board[whiteKnight]);
+    int bknights_left = countBitsOn(_board[blackKnight]);
+    
+    if (wbishops_left + bbishops_left + wknights_left + bknights_left == 0) // king vs king
+        return true;
+
+    if ( wbishops_left == 1 & (bbishops_left  + wknights_left + bknights_left) == 0) // king and bishop versus king
+        return true;
+    if ( bbishops_left == 1 & (wbishops_left  + wknights_left + bknights_left) == 0) // king and bishop versus king
+        return true;
+    if ( wknights_left == 1 & (bbishops_left  + wbishops_left + bknights_left) == 0) // king and knight versus king
+        return true;
+    if ( bknights_left == 1 & (wbishops_left  + wknights_left + bbishops_left) == 0) // king and knight versus king
+        return true;
+
+    // TODO king and bishop versus king and bishop with the bishops on the same color.
+
+    return false;
+
+}
+bool ChessBoard::_isDrawForRepetition(){
+    return false; // to be implemented
+}
+bool ChessBoard::_isDrawFor50MovesRule(){
+    return false; // to be implemented
 }
