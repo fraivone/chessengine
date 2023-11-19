@@ -31,10 +31,9 @@ public:
     bool debug = true;
     bool debugverbose = false;
 
-
-
     void legalMoves();
     void printBoard();
+    void RepresentBitset(uint64_t );
     float evalPosition();
     bool legalStart() { return _islegal;};
     bool isCheck();
@@ -44,6 +43,7 @@ public:
     bool isDrawForRepetition();
     bool isDrawFor50MovesRule();
 
+    int get_enpassant_bit() { return en_passant_bit;}
     Color get_board_turn() { return board_turn;}
 
     Moves calculate_moves(Color);
@@ -65,23 +65,33 @@ private:
     bool _islegal = true;
     bool castle_rights[2][2] = {false,false,false,false};
     
-    void initializeCommon();
     bool legalPosition();  
+    void initializeCommon();
+    void ResetLandingSquares();
+    void ResetOccupancySquares();
     void load_luts();
     void append_moves(Piece, Moves&, uint64_t, uint64_t);
     void fill_board();
     void update_board_occupancy();
     void update_landing_squares();
-    void PrintNumber(uint64_t );
-    uint64_t get_landing_squares(Piece p, int init_bit, bool through_king );
+    uint64_t get_landing_squares(Piece p, int init_bit, bool attacking_squares );
 
     Board board;    
     std::unordered_map<Piece, Moves> test;
 
-    uint64_t board_occupancy[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t board_occupancy_noKing[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t board_landingsquares[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t board_landingsquares_throughKing[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
+    /* 
+    Current occupancies and landing squares help calculating check, mate, stalemate 
+    Divided landing squares in pieces/king and through king or not 
+    1. through king -->i.e the rook "checks" the king even through it
+    2. pieces king --> stalemate has no available squares --> king can't be moved & other pieces can't be moved
+    */
+
+    uint64_t board_occupancy[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t board_occupancy_noKing[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    
+    uint64_t pieces_landingsquares[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t king_landingsquares[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t pieces_landingsquares_throughKing[2]; // idx 0 -> BLACK, idx 1 -> WHITE
 
 	uint64_t _white_pawns = 0ULL;
 	uint64_t _white_bishops = 0ULL;
