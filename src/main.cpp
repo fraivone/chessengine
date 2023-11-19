@@ -11,7 +11,7 @@
 #include <type_traits>
 
 int main(int argc, char **argv) {
-	std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
+	// std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
     Move theMove = {44,4, whiteRook};
     std::unique_ptr<chessboard::ChessBoard> thisInstance;
     if (argc == 1)
@@ -19,9 +19,13 @@ int main(int argc, char **argv) {
     else if (argc == 2)
         thisInstance = std::make_unique<chessboard::ChessBoard>(argv[1]);
     if (thisInstance->legalStart()){
-        thisInstance->printBoard();
-        thisInstance->printStatusInfo();
-        std::cout<<"Eval = " <<thisInstance->evalPosition()<<std::endl;
+        // thisInstance->printBoard();
+        // thisInstance->printStatusInfo();
+        std::cout<<"isCheck =  " <<thisInstance->isCheck
+                 <<"\tisMate = " << thisInstance->isMate
+                 <<"\tisStalemate = "<<thisInstance->isStaleMate
+                 <<"\tInsufficientMaterial = "<<thisInstance->isDrawInsufficientMaterial<<std::endl;
+        // std::cout<<"Eval = " <<thisInstance->evalPosition()<<std::endl;
         // Moves t = thisInstance->PublicBlocking();
         // std::cout<<"Blocking moves found "<<t.size()<<std::endl;
         

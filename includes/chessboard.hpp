@@ -57,8 +57,10 @@ public:
     bool isDraw = false;
 
     std::array<uint64_t,64> wpawn_fw_lut;
+    std::array<uint64_t,64> wpawn_doublefw_lut;
     std::array<uint64_t,64> wpawn_cap_lut;
     std::array<uint64_t,64> bpawn_fw_lut;
+    std::array<uint64_t,64> bpawn_doublefw_lut;
     std::array<uint64_t,64> bpawn_cap_lut;
     std::array<uint64_t,64> knight_lut;
     std::array<uint64_t,64> king_lut;
@@ -77,23 +79,33 @@ private:
     bool _isDrawInsufficientMaterial();
     bool _isDrawForRepetition();
     bool _isDrawFor50MovesRule();
+    bool _ChainAssertCheck(Board theBoard, 
+                           uint64_t (&bOcc)[2], 
+                           uint64_t (&bOcc_noKing)[2], 
+                           uint64_t (&landing_squares)[2],
+                           uint64_t (&landing_squares_throughKing)[2], 
+                           uint64_t (&king_landing_squares)[2], 
+                           Moves (&ps)[2][nPieceTypes],
+                           Color theColor);
+
 
     void _initializeCommon();
-    void _updateAfterMove();
-    void _ResetPseudoMoves();
-    void _ResetLandingSquares();
-    void _ResetOccupancySquares();
+    // void _updateAfterMove();
+    void _ResetPseudoMoves(Moves (&array)[2][nPieceTypes]);
+    void _ResetLandingSquares(uint64_t (&t)[2]);
+    // resets the occupancy array by reference
+    void _ResetOccupancySquares(uint64_t (&t)[2]);
     void _load_luts();
     void append_moves(Piece, Moves&, uint64_t, uint64_t);
     void _init_board();
     void _update_game_status();
-    void _update_board_occupancy();
-    void _update_landing_squares();
+    void _update_board_occupancy(uint64_t (&t)[2], Board theBoard);
+    void _update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board);
     
     // Move methods
     bool _ValidateMove(Move&);
-    Move _MakeMove(Move m);
-    Move _UndoMove(Move);
+    Board _MakeMove(Move&, Board);
+    Board _UndoMove(Move&, Board);
     // Color moves and blocks a check
     Moves _BlockingMoves();
 
@@ -108,23 +120,32 @@ private:
     1. through king -->i.e the rook "checks" the king even through it
     2. pieces king --> stalemate has no available squares --> king can't be moved & other pieces can't be moved
     */
-    uint64_t board_occupancy[2]; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t board_occupancy_noKing[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t board_occupancy[2]; 
+    uint64_t board_occupancy_noKing[2]; 
     
-    uint64_t pieces_landingsquares[2]; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t king_landingsquares[2]; // idx 0 -> BLACK, idx 1 -> WHITE
-    uint64_t pieces_landingsquares_throughKing[2]; // idx 0 -> BLACK, idx 1 -> WHITE
-    
+    uint64_t pieces_landingsquares[2]; 
+    uint64_t pieces_landingsquares_throughKing[2]; 
+    uint64_t king_landingsquares[2]; 
     /*
     PseudoMove Collectors of Pseudo Moves
     pseudo_move_collector[p.index].size()
     _ValidateMove will then check if a move is valid
     */
-    Moves PM_collector[2][nPieceTypes]; // idx 0 -> BLACK, idx 1 -> WHITE;
-    Moves PM_collector_throughKing[2][nPieceTypes]; // idx 0 -> BLACK, idx 1 -> WHITE;
+    Moves PM_collector[2][nPieceTypes]; ;
+    // Moves PM_collector_throughKing[2][nPieceTypes]; ;
 
-    Moves LegalMoves[2]; // idx 0 -> BLACK, idx 1 -> WHITE
-    Moves IllegalMoves[2]; // idx 0 -> BLACK, idx 1 -> WHITE
+    Board nextMove_board;
+    uint64_t nextMove_board_occupancy[2]; 
+    uint64_t nextMove_board_occupancy_noKing[2]; 
+    uint64_t nextMove_pieces_landingsquares[2]; 
+    uint64_t nextMove_pieces_landingsquares_throughKing[2]; 
+    uint64_t nextMove_king_landingsquares[2]; 
+    Moves nextMove_PM_collector[2][nPieceTypes];
+
+    // idx 0 -> BLACK, idx 1 -> WHITE
+    Moves LegalMoves[2]; 
+    Moves IllegalMoves[2]; 
 
 	uint64_t _white_pawns = 0ULL;
 	uint64_t _white_bishops = 0ULL;

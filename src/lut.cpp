@@ -26,11 +26,22 @@ std::array<uint64_t,64> wpawn_straight_lut(){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   (initial_pos << 8);
-        if (init_bit >=8 & init_bit<= 15 ) // paw is on its starting position
-            landing |=   (initial_pos << 16);
         map_wpawnstraight_landing[init_bit] = landing;
     }
     return map_wpawnstraight_landing;
+}
+std::array<uint64_t,64> wpawn_doublestraight_lut(){
+    uint64_t initial_pos,landing;
+    std::array<uint64_t,64> map_wpawndoublestraight_landing;
+    for(int init_bit =0; init_bit<64; init_bit++){
+        initial_pos = 0ULL;
+        landing = 0ULL;
+        set_bit(initial_pos,init_bit);
+        if (init_bit >=8 & init_bit<= 15 ) // paw is on its starting position
+            landing =   (initial_pos << 16);
+        map_wpawndoublestraight_landing[init_bit] = landing;
+    }
+    return map_wpawndoublestraight_landing;
 }
 
 std::array<uint64_t,64> bpawn_straight_lut(){
@@ -40,11 +51,22 @@ std::array<uint64_t,64> bpawn_straight_lut(){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   (initial_pos >> 8);
-        if (init_bit >=48 & init_bit<= 56 ) // paw is on its starting position
-            landing |=   (initial_pos >> 16);
         map_bpawnstraight_landing[init_bit] = landing;
     }
     return map_bpawnstraight_landing;
+}
+std::array<uint64_t,64> bpawn_doublestraight_lut(){
+    uint64_t initial_pos,landing;
+    std::array<uint64_t,64> map_bpawndoublestraight_landing;
+    for(int init_bit =0; init_bit<64; init_bit++){
+        initial_pos = 0ULL;
+        landing = 0ULL;
+        set_bit(initial_pos,init_bit);
+        if (init_bit >=48 & init_bit<= 56 ) // paw is on its starting position
+            landing =   (initial_pos >> 16);
+        map_bpawndoublestraight_landing[init_bit] = landing;
+    }
+    return map_bpawndoublestraight_landing;
 }
 
 std::array<uint64_t,64> wpawn_diagcapture_lut(){

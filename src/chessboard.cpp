@@ -95,28 +95,53 @@ void ChessBoard::_initializeCommon(){
     _init_board();
     _legalPosition(); // check if starting position is valid, 2 kings, Kings aren't in mutual check, pieces don't overlap
     _load_luts();   // load the look up tables for landing squares of leaping pieces
-
-    std::cout<<"Initialization\n";
-    _updateAfterMove();   
+    
+    // std::cout<<"Initialization\n";
+    // _updateAfterMove();   
+    isCheck = _ChainAssertCheck(_board, 
+                                board_occupancy, 
+                                board_occupancy_noKing, 
+                                pieces_landingsquares, 
+                                pieces_landingsquares_throughKing,
+                                king_landingsquares,
+                                PM_collector,
+                                board_turn);
     _update_game_status(); 
-
-    // RepresentBitset(king_landingsquares[WHITE]);
-    // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
     
 }
-void ChessBoard::_updateAfterMove(){
+// void ChessBoard::_updateAfterMove(){
 
-    _update_board_occupancy(); // all positions occupied by black/white
-    _update_landing_squares(); // all possible landing squares for black/white
-    isCheck = _isCheck(board_turn, pieces_landingsquares[!board_turn]); // isCheck?
+//     _update_board_occupancy(board_occupancy, _board); // all positions occupied by black/white
+//     _update_board_occupancy(board_occupancy_noKing, _board); // all positions occupied by black/white
+//     // _update_landing_squares(); // all possible landing squares for black/white
+//     _update_landing_squares(pieces_landingsquares, pieces_landingsquares_throughKing, king_landingsquares, PM_collector,_board);// all possible landing squares for black/white
+//     isCheck = _isCheck(board_turn, pieces_landingsquares[!board_turn]); // isCheck?
 
 
     
 
-    // RepresentBitset(king_landingsquares[WHITE]);
-    // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
+//     // RepresentBitset(king_landingsquares[WHITE]);
+//     // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
     
+// }
+
+bool ChessBoard::_ChainAssertCheck(Board theBoard, 
+                                   uint64_t (&bOcc)[2], 
+                                   uint64_t (&bOcc_noKing)[2], 
+                                   uint64_t (&landing_squares)[2],
+                                   uint64_t (&landing_squares_throughKing)[2], 
+                                   uint64_t (&king_landing_squares)[2], 
+                                   Moves (&ps)[2][nPieceTypes],
+                                   Color theColor)
+{   
+    _update_board_occupancy(bOcc, theBoard);
+    _update_board_occupancy(bOcc_noKing, theBoard);
+    _update_landing_squares(landing_squares, landing_squares_throughKing, king_landing_squares, ps,theBoard);
+    bool _temp_check = _isCheck(theColor, landing_squares[!theColor]); // isCheck?
+    return _temp_check;
+
 }
+
 
 void ChessBoard::_init_board(){
     _board ={
@@ -138,37 +163,31 @@ void ChessBoard::_init_board(){
 void ChessBoard::_load_luts(){
     knight_lut = knight_position_lut();
     wpawn_fw_lut = wpawn_straight_lut();
+    wpawn_doublefw_lut = wpawn_doublestraight_lut();
     wpawn_cap_lut = wpawn_diagcapture_lut();
     bpawn_fw_lut = bpawn_straight_lut();
+    bpawn_doublefw_lut = bpawn_doublestraight_lut();
     bpawn_cap_lut = bpawn_diagcapture_lut();
     king_lut =  king_position_lut();
 }
 
 
-void ChessBoard::_ResetLandingSquares(){
-    pieces_landingsquares[BLACK] = 0ULL;
-    pieces_landingsquares[WHITE] = 0ULL;
-    king_landingsquares[BLACK] = 0ULL;
-    king_landingsquares[WHITE] = 0ULL;
-    pieces_landingsquares_throughKing[BLACK] = 0ULL;
-    pieces_landingsquares_throughKing[WHITE] = 0ULL;
+void ChessBoard::_ResetLandingSquares(uint64_t (&t)[2]){
+    t[BLACK] = 0ULL;
+    t[WHITE] = 0ULL;
 }
-void ChessBoard::_ResetPseudoMoves(){
+void ChessBoard::_ResetPseudoMoves(Moves (&array)[2][nPieceTypes]){
     // Clear the vector and reduce its capacity
     for(int color = 0; color <2; color++){
         for (Piece pp : pieces_array){
-            PM_collector[color][pp.piece_type].clear();
-            PM_collector[color][pp.piece_type].shrink_to_fit();
-            PM_collector_throughKing[color][pp.piece_type].clear();
-            PM_collector_throughKing[color][pp.piece_type].shrink_to_fit();
+            array[color][pp.piece_type].clear();
+            array[color][pp.piece_type].shrink_to_fit();
             }
     }
 }
-void ChessBoard::_ResetOccupancySquares(){
-    board_occupancy[BLACK] = 0ULL;
-    board_occupancy[WHITE] = 0ULL;
-    board_occupancy_noKing[BLACK] = 0ULL;
-    board_occupancy_noKing[WHITE] = 0ULL;
+void ChessBoard::_ResetOccupancySquares(uint64_t (&t)[2]){
+    t[BLACK] = 0ULL;
+    t[WHITE] = 0ULL;
 }
 
 float ChessBoard::evalPosition(){
@@ -295,13 +314,11 @@ bool ChessBoard::_legalPosition(){
 }
 
 
-void ChessBoard::_update_board_occupancy(){
-    _ResetOccupancySquares();
-    board_occupancy[BLACK] = _board[blackPawn] | _board[blackBishop] | _board[blackKnight] | _board[blackRook] | _board[blackQueen] | _board[blackKing];
-    board_occupancy[WHITE] = _board[whitePawn] | _board[whiteBishop] | _board[whiteKnight] | _board[whiteRook] | _board[whiteQueen] | _board[whiteKing];
-    
-    board_occupancy_noKing[BLACK] = _board[blackPawn] | _board[blackBishop] | _board[blackKnight] | _board[blackRook] | _board[blackQueen];
-    board_occupancy_noKing[WHITE] = _board[whitePawn] | _board[whiteBishop] | _board[whiteKnight] | _board[whiteRook] | _board[whiteQueen];
+void ChessBoard::_update_board_occupancy(uint64_t (&t)[2], Board theBoard){
+    _ResetOccupancySquares(t);
+
+    t[BLACK] = theBoard[blackPawn] | theBoard[blackBishop] | theBoard[blackKnight] | theBoard[blackRook] | theBoard[blackQueen] | theBoard[blackKing];
+    t[WHITE] = _board[whitePawn] | theBoard[whiteBishop] | theBoard[whiteKnight] | theBoard[whiteRook] | theBoard[whiteQueen] | theBoard[whiteKing];
 }
 
 /*
@@ -342,7 +359,8 @@ uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool atta
                     // include forward movement if not opposed
                     // diagonal captures if opponent exists
                     // allow enpassant using enpassant info
-                    landing_squares |= p.color ? (wpawn_fw_lut[piece_init_bit] & ~opponent_status) | (wpawn_cap_lut[piece_init_bit] & opponent_status) : (bpawn_fw_lut[piece_init_bit] & ~opponent_status) | (bpawn_cap_lut[piece_init_bit] & opponent_status);
+                    // 2 squares fw if the 2 squares are free
+                    landing_squares |= p.color ? (wpawn_fw_lut[piece_init_bit] & ~opponent_status) | (wpawn_doublefw_lut[piece_init_bit] & ~opponent_status & ~(opponent_status << 8) & ~(own_status << 8)) |(wpawn_cap_lut[piece_init_bit] & opponent_status) : (bpawn_fw_lut[piece_init_bit] & ~opponent_status) | (bpawn_doublefw_lut[piece_init_bit] & ~opponent_status & ~(opponent_status >> 8) & ~(own_status >> 8)) | (bpawn_cap_lut[piece_init_bit] & opponent_status);
                     if (p.color == board_turn) // enable enpassant current turn color
                         landing_squares |= p.color ? ( wpawn_cap_lut[piece_init_bit] & uint64_t (pow(2,en_passant_bit)) ) : ( bpawn_cap_lut[piece_init_bit] & uint64_t (pow(2,en_passant_bit)) );
                 }
@@ -363,9 +381,11 @@ uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool atta
     return landing_squares;
 }
 
-void ChessBoard::_update_landing_squares(){
-    _ResetLandingSquares();
-    _ResetPseudoMoves();
+void ChessBoard::_update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board){
+    _ResetLandingSquares(landing_sq);
+    _ResetLandingSquares(landing_sq_throughKing);
+    _ResetLandingSquares(king_landing_sq);
+    _ResetPseudoMoves(pseudomoves);
     uint64_t temp_landing = 0ULL;
     uint64_t temp_landing_attack = 0ULL;
     uint64_t piece_positions;
@@ -374,44 +394,58 @@ void ChessBoard::_update_landing_squares(){
     ;
 
     for (Piece pp : pieces_array){            // loop over all kindofpieces
-        piece_positions = _board[pp];
+        piece_positions = current_board[pp];
         while(piece_positions){                         // loop over each piece of that type
             piece_init_bit = pop_LSB(piece_positions);
             temp_landing = _get_landing_squares(pp, piece_init_bit);
             temp_landing_attack = _get_landing_squares(pp, piece_init_bit, true);   
             if (pp.piece_type != KING){
-                pieces_landingsquares[pp.color] |= temp_landing;
-                pieces_landingsquares_throughKing[pp.color] |= temp_landing_attack;
-            }
-            else
-                king_landingsquares[pp.color] |= temp_landing;
-            
-            // can't move on its own piece
-            temp_landing = temp_landing & ~board_occupancy[pp.color];
-            // king can't move toward controlled square
-            // it works because KINGS are the last in pieces_array
-            // so pieces_landingsquares_throughKing is fully updated
-            if (pp.piece_type == KING)
-                temp_landing = temp_landing & ~pieces_landingsquares_throughKing[!pp.color];
-            // loop through all possible landing moves
-            while(temp_landing){
-                final_bit_value = pop_LSB(temp_landing);
-                // std::cout<<"Generating a MOVE with "<<piece_init_bit<<" "<<final_bit_value<<" "<< KindOfPiece.name<<std::endl;
-                Move theMove = {piece_init_bit, final_bit_value, pp};
-                // std::cout<<"Generated a MOVE with "<<theMove.initial_bit<<" "<<theMove.final_bit<<" "<< theMove.piece.name<<std::endl;    
-                PM_collector[pp.color][pp.piece_type].push_back(theMove);
-            }
-            // loop through all possible landing moves
-            while(temp_landing_attack){
-                final_bit_value = pop_LSB(temp_landing_attack);
-                PM_collector_throughKing[pp.color][pp.piece_type].push_back(Move(piece_init_bit, final_bit_value, pp));
-            }
+                landing_sq[pp.color] |= temp_landing;
+                landing_sq_throughKing[pp.color] |= temp_landing_attack;
+
+                // UPDATE PSEUDOMOVES AS WELL
+                // landing squares allow landing on its own pieces
+                // because it serves to "protect" a piece from capture
+                // not allowed for pseudo moves, so removing it
+                temp_landing = temp_landing & ~board_occupancy[pp.color];
+                
+                // loop through all possible landing moves
+                while(temp_landing){
+                    final_bit_value = pop_LSB(temp_landing);
+                    Move theMove = {piece_init_bit, final_bit_value, pp};
+                    pseudomoves[pp.color][pp.piece_type].push_back(theMove);
+                }
+            } // not king
+
+            else{
+                // king can't move to controlled square
+                // it works because KINGS are the last in pieces_array
+                // so landing_sq_throughKing is fully updated
+                temp_landing = temp_landing & ~landing_sq_throughKing[!pp.color];
+                king_landing_sq[pp.color] |= temp_landing;
+            } // is king
         }
     }
-
-    piece_positions = king_landingsquares[WHITE];  // reusing variable for temp storage
-    king_landingsquares[WHITE] = king_landingsquares[WHITE] & ~king_landingsquares[BLACK];
-    king_landingsquares[BLACK] = king_landingsquares[BLACK] & ~piece_positions;
+    // Prevents kings to check each other
+    piece_positions = king_landing_sq[WHITE];  // reusing variable for temp storage
+    king_landing_sq[WHITE] = king_landing_sq[WHITE] & ~king_landing_sq[BLACK];
+    king_landing_sq[BLACK] = king_landing_sq[BLACK] & ~piece_positions;
+    
+    // the KING pseudo moves have not been updated before
+    // now it's sure they won't try to check each other
+    // UPDATE PSEUDOMOVES AS WELL
+    for(int cc = 0; cc < 2; cc++){
+        uint64_t copy_king_landing = king_landing_sq[cc];
+        int theKingIndex = ColorlessKing|cc;
+        Piece theKingPiece = pieces_array[theKingIndex];
+        int king_init_bit = get_LSB(current_board[theKingPiece]);
+        
+        while(copy_king_landing){
+                    final_bit_value = pop_LSB(copy_king_landing);
+                    Move theMove = {king_init_bit, final_bit_value, theKingPiece};
+                    pseudomoves[theKingPiece.color][theKingPiece.piece_type].push_back(theMove);
+                }
+    } // update pseudo moves
 
 }
 

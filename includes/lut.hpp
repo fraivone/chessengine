@@ -31,7 +31,9 @@
 // TODO PAWN movement depends on the opponents pieces
 
 std::array<uint64_t,64> wpawn_straight_lut();
+std::array<uint64_t,64> wpawn_doublestraight_lut();
 std::array<uint64_t,64> bpawn_straight_lut();
+std::array<uint64_t,64> bpawn_doublestraight_lut();
 std::array<uint64_t,64> wpawn_diagcapture_lut();
 std::array<uint64_t,64> bpawn_diagcapture_lut();
 std::array<uint64_t,64> knight_position_lut();
