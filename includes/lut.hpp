@@ -38,14 +38,12 @@ std::array<uint64_t,64> bpawn_diagcapture_lut();
 std::array<uint64_t,64> knight_position_lut();
 std::array<uint64_t,64> king_position_lut();
 
-uint64_t opponentboard_status(Board, Color );
-uint64_t ownboard_status(Board, Color );
 
-uint64_t straight_moves(int, Board, Color, uint64_t, uint64_t);
-uint64_t diago_moves(int, Board, Color, uint64_t, uint64_t);
+uint64_t straight_lines(int, uint64_t, uint64_t);
+uint64_t diago_lines(int, uint64_t, uint64_t);
 
-uint64_t rook_moves(int, Board, Color, uint64_t, uint64_t);
-uint64_t bishop_moves(int, Board, Color, uint64_t, uint64_t);
-uint64_t queen_moves(int, Board, Color, uint64_t, uint64_t);
+uint64_t rook_landings(int, uint64_t, uint64_t);
+uint64_t bishop_landings(int, uint64_t, uint64_t);
+uint64_t queen_landings(int, uint64_t, uint64_t);
 
 #endif // LUT_HPP_

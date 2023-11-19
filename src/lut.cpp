@@ -11,6 +11,14 @@
 */
 #include "lut.hpp"
 
+/*
+Functions and LUT generators to determine the possible landing
+squares of the pieces. Landing on my own or my opponents pieces
+is allowed because:
+1. Landing on my own piece serves as Piece is defended
+2. Landing on my oppoenents pieces serves as Piece is captured
+*/
+
 std::array<uint64_t,64> wpawn_straight_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_wpawnstraight_landing;
@@ -61,7 +69,6 @@ std::array<uint64_t,64> bpawn_diagcapture_lut(){
     return map_bpawndiagcapture_landing;
 }
 
-
 std::array<uint64_t,64> king_position_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_king_landing;
@@ -98,147 +105,93 @@ std::array<uint64_t,64> knight_position_lut(){
     }
     return map_knight_landing;
 }
-uint64_t straight_moves(int init_bit, Board b, Color color, uint64_t my_status, uint64_t opponent_status){
+uint64_t straight_lines(int init_bit, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     
     uint64_t current_pos = initial_pos;
     uint64_t landing = 0;
     
-    while (current_pos)  // move up
-    {   
+    while (current_pos){  // move up
         current_pos = current_pos << 8;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction up
-        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break;
-        }
-
-    }
-    
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
+    }    
     current_pos = initial_pos;
-    while (current_pos)  // move down
-    {   
+    while (current_pos){  // move down
         current_pos = current_pos >> 8;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction down        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
 
     current_pos = initial_pos;
-    while (current_pos)  // move left
-    {   
+    while (current_pos){  // move left
         current_pos = (current_pos >> 1) & ~columnH;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction down        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
 
     current_pos = initial_pos;
-    while (current_pos)  // move right
-    {   
+    while (current_pos){ // move right
         current_pos = (current_pos << 1) & ~columnA;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction down        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
 
     return landing;
 
 }
 
-uint64_t diago_moves(int init_bit, Board b, Color color, uint64_t my_status, uint64_t opponent_status){
+uint64_t diago_lines(int init_bit, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     uint64_t current_pos = initial_pos;
     uint64_t landing = 0;
     
-    while (current_pos)  //  up right
-    {   
+    while (current_pos){  //  up right
         current_pos = (current_pos << 9) & ~columnA;;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction up
-        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break;
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
     
     current_pos = initial_pos;
-    while (current_pos)  // move down right
-    {   
+    while (current_pos){  // move down right
         current_pos = (current_pos >> 7) & ~columnA;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction down        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
 
     current_pos = initial_pos;
-    while (current_pos)  // move up left
-    {   
+    while (current_pos){ // move up left
         current_pos = (current_pos << 7) & ~columnH;
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            break; // end direction down        
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
 
     current_pos = initial_pos;
-    while (current_pos)  // move down left
-    {   
+    while (current_pos){  // move down left
         current_pos = (current_pos >> 9) & ~columnH;
-        
-        if ( (current_pos & my_status)) //current pos hits on my own pieces 
-            {
-                break; // end direction down        
-            }
-        else{
-            landing = landing | current_pos;
-            if (current_pos & opponent_status) //current pos hits on my opponents pieces
-                break; 
-        }
-
+        landing = landing | current_pos;
+        if ((current_pos & opponent_status) | (current_pos & my_status)) //current pos hits on mine or my opponents pieces
+            break;
     }
+
     return landing;
-
 }
 
-uint64_t rook_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
-    return straight_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
+uint64_t rook_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return straight_lines(init_bit, own_occupancy, opponent_occupancy);
 }
-uint64_t bishop_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
-    return diago_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
+uint64_t bishop_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return diago_lines(init_bit, own_occupancy, opponent_occupancy);
 }
-uint64_t queen_moves(int init_bit, Board b, Color color, uint64_t own_occupancy, uint64_t opponent_occupancy){
-    return diago_moves(init_bit, b, color, own_occupancy, opponent_occupancy) | straight_moves(init_bit, b, color, own_occupancy, opponent_occupancy);
+uint64_t queen_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    return diago_lines(init_bit, own_occupancy, opponent_occupancy) | straight_lines(init_bit, own_occupancy, opponent_occupancy);
 }

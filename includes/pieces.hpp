@@ -2,6 +2,7 @@
 #ifndef PIECES_HPP_
 #define PIECES_HPP_
 #include <iostream>
+#include<type_traits>
 #include <string>
 
 #define stringify( name ) #name
@@ -22,9 +23,6 @@ const std::string convert_color[] ={
     "Black", "White"
 };
 
-
-
-
 struct Piece{
     std::string name;
     Color color;  // true for white, false for black
@@ -42,8 +40,6 @@ struct Piece{
             (this->piece_type == other.piece_type);
     }
 };
-
-
 /* required to hash so that a map can have Piece as key */
 template<> struct std::hash<Piece> {
     std::size_t operator()(const Piece& p) const {
@@ -53,7 +49,6 @@ template<> struct std::hash<Piece> {
             std::hash<int>()(p.piece_type) ;
     }
 };
-
 const Piece whitePawn = {"pW", WHITE, 100, PAWN};
 const Piece blackPawn = {"pB", BLACK, 100, PAWN};
 const Piece whiteRook = {"rW", WHITE, 500, ROOK};
@@ -67,5 +62,5 @@ const Piece blackQueen = {"qB", BLACK, 900, QUEEN};
 const Piece whiteKing = {"kW", WHITE, 20000, KING};
 const Piece blackKing = {"kB", BLACK, 20000, KING};
 
-
+const Piece AllKindOfPieces[12] = { whitePawn,blackPawn,whiteRook,blackRook,whiteBishop,blackBishop,whiteKnight,blackKnight,whiteQueen,blackQueen,whiteKing,blackKing};
 #endif // PIECES_HPP_

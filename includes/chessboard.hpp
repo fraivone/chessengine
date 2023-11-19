@@ -37,6 +37,13 @@ public:
     void printBoard();
     float evalPosition();
     bool legalStart() { return _islegal;};
+    bool isCheck();
+    bool isMate();
+    bool isStaleMate();
+    bool isDrawInsufficientMaterial();
+    bool isDrawForRepetition();
+    bool isDrawFor50MovesRule();
+
     Color get_board_turn() { return board_turn;}
 
     Moves calculate_moves(Color);
@@ -58,16 +65,23 @@ private:
     bool _islegal = true;
     bool castle_rights[2][2] = {false,false,false,false};
     
+    void initializeCommon();
     bool legalPosition();  
-    void update_luts();
+    void load_luts();
     void append_moves(Piece, Moves&, uint64_t, uint64_t);
     void fill_board();
     void update_board_occupancy();
+    void update_landing_squares();
+    void PrintNumber(uint64_t );
+    uint64_t get_landing_squares(Piece p, int init_bit, bool through_king );
 
     Board board;    
     std::unordered_map<Piece, Moves> test;
 
     uint64_t board_occupancy[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t board_occupancy_noKing[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t board_landingsquares[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
+    uint64_t board_landingsquares_throughKing[2] = {0ULL,0ULL}; // idx 0 -> BLACK, idx 1 -> WHITE
 
 	uint64_t _white_pawns = 0ULL;
 	uint64_t _white_bishops = 0ULL;
