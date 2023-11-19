@@ -5,39 +5,27 @@
 #include <bitset>
 #include "chessboard.hpp"
 #include "lut.hpp"
-#include "utils.hpp"
-#include "pieces.hpp"
+#include "def.hpp"
 #include <typeinfo>
+#include <memory>
 #include <type_traits>
 
 int main(int argc, char **argv) {
-	// 
-    chessboard::ChessBoard* p;
+	std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
+    Move theMove = {44,4, whiteRook};
+    std::unique_ptr<chessboard::ChessBoard> thisInstance;
     if (argc == 1)
-        p = new chessboard::ChessBoard(0,0,0,578756592880516895,0,pow(2,49),0,0,0,0,0,pow(2,5));
+        thisInstance = std::make_unique<chessboard::ChessBoard>(0,0,0,578756592880516895,0,pow(2,49),0,0,0,0,0,pow(2,5));
     else if (argc == 2)
-	    p = new chessboard::ChessBoard(argv[1]);
-    if (p->legalStart()){
+        thisInstance = std::make_unique<chessboard::ChessBoard>(argv[1]);
+    if (thisInstance->legalStart()){
+        thisInstance->printBoard();
+        thisInstance->printStatusInfo();
+        std::cout<<"Eval = " <<thisInstance->evalPosition()<<std::endl;
+        // Moves t = thisInstance->PublicBlocking();
+        // std::cout<<"Blocking moves found "<<t.size()<<std::endl;
         
-        p->printBoard();
-        //p->RepresentBitset(p->bpawn_fw_lut[47]);
-        p->printStatusInfo();
-        std::cout<<"Eval = " <<p->evalPosition()<<std::endl;
-        // std::cout<<"is check? "<<p->isCheck()<<std::endl;
-        // std::cout<<"is mate? "<<p->isMate()<<std::endl;
-        // std::cout<<"is stalemate? "<<p->isStaleMate()<<std::endl;
-        //Moves vector_with_moves = p->calculate_moves(p->get_board_turn());
-        //std::cout<<"Found "<<vector_with_moves.size()<<" moves"<<std::endl;
-
-        // if (p->debug)
-        //     for (auto move: vector_with_moves) {
-        //         std::cout << "The " << convert_color[move.piece.color] << " "
-        //               << convert_enum[move.piece.piece_type]
-        //               << " moves from " << bit2notation(move.initial_bit)
-        //               << " to " << bit2notation(move.final_bit)<<std::endl;
-        // }
-
-    delete p;
+        
     } // legal starting position
 
     

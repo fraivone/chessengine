@@ -1,6 +1,9 @@
 #include <iostream>
-#include "chessboard.hpp"
 # include <bitset>
+#include <thread>
+#include <chrono>
+#include "chessboard.hpp"
+
 
 using chessboard::ChessBoard;
 
@@ -89,17 +92,33 @@ ChessBoard::~ChessBoard() = default;
 
 
 void ChessBoard::_initializeCommon(){
-    _fill_board();
+    _init_board();
     _legalPosition(); // check if starting position is valid, 2 kings, Kings aren't in mutual check, pieces don't overlap
     _load_luts();   // load the look up tables for landing squares of leaping pieces
 
+    std::cout<<"Initialization\n";
+    _updateAfterMove();   
+    _update_game_status(); 
+
+    // RepresentBitset(king_landingsquares[WHITE]);
+    // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
+    
+}
+void ChessBoard::_updateAfterMove(){
+
     _update_board_occupancy(); // all positions occupied by black/white
     _update_landing_squares(); // all possible landing squares for black/white
-    _update_game_status();
+    isCheck = _isCheck(board_turn, pieces_landingsquares[!board_turn]); // isCheck?
+
+
+    
+
+    // RepresentBitset(king_landingsquares[WHITE]);
+    // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
     
 }
 
-void ChessBoard::_fill_board(){
+void ChessBoard::_init_board(){
     _board ={
         {whitePawn, _white_pawns},
         {whiteBishop, _white_bishops},
@@ -133,6 +152,17 @@ void ChessBoard::_ResetLandingSquares(){
     king_landingsquares[WHITE] = 0ULL;
     pieces_landingsquares_throughKing[BLACK] = 0ULL;
     pieces_landingsquares_throughKing[WHITE] = 0ULL;
+}
+void ChessBoard::_ResetPseudoMoves(){
+    // Clear the vector and reduce its capacity
+    for(int color = 0; color <2; color++){
+        for (Piece pp : pieces_array){
+            PM_collector[color][pp.piece_type].clear();
+            PM_collector[color][pp.piece_type].shrink_to_fit();
+            PM_collector_throughKing[color][pp.piece_type].clear();
+            PM_collector_throughKing[color][pp.piece_type].shrink_to_fit();
+            }
+    }
 }
 void ChessBoard::_ResetOccupancySquares(){
     board_occupancy[BLACK] = 0ULL;
@@ -181,7 +211,7 @@ void ChessBoard::printBoard(){
             int row = i/nRows;
             int col = i%nCols;
                 if (get_bit(value,i) !=0 ){    
-                    grid[row][col] = key.name +" ";
+                    grid[row][col] = " " + std::string(1,key.name) +" ";
                 }
         }
     }
@@ -312,7 +342,6 @@ uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool atta
                     // include forward movement if not opposed
                     // diagonal captures if opponent exists
                     // allow enpassant using enpassant info
-                    
                     landing_squares |= p.color ? (wpawn_fw_lut[piece_init_bit] & ~opponent_status) | (wpawn_cap_lut[piece_init_bit] & opponent_status) : (bpawn_fw_lut[piece_init_bit] & ~opponent_status) | (bpawn_cap_lut[piece_init_bit] & opponent_status);
                     if (p.color == board_turn) // enable enpassant current turn color
                         landing_squares |= p.color ? ( wpawn_cap_lut[piece_init_bit] & uint64_t (pow(2,en_passant_bit)) ) : ( bpawn_cap_lut[piece_init_bit] & uint64_t (pow(2,en_passant_bit)) );
@@ -334,103 +363,70 @@ uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool atta
     return landing_squares;
 }
 
-void ChessBoard::append_moves(Piece p, Moves& move_collector, uint64_t own_status, uint64_t opponent_status){
-    uint64_t all_moves;
-    auto piece_positions = _board[p];
-    // loop through all pieces of type p
-    while(piece_positions){
-        auto piece_init_bit = pop_LSB(piece_positions);
-        switch (p.piece_type) {
-            case QUEEN:
-                all_moves = queen_landings(piece_init_bit, own_status, opponent_status) & ~own_status;
-                break;
-            case KING:
-                all_moves = king_lut[piece_init_bit] & ~own_status;
-                break;
-            case KNIGHT:
-                all_moves = knight_lut[piece_init_bit] & ~own_status;
-                break;
-            case PAWN:
-                all_moves = p.color ? wpawn_fw_lut[piece_init_bit] & ~own_status : bpawn_fw_lut[piece_init_bit] & ~own_status;
-                break;
-            case BISHOP:
-                all_moves = bishop_landings(piece_init_bit, own_status, opponent_status) & ~own_status;
-                break;
-            case ROOK:
-                all_moves = rook_landings(piece_init_bit, own_status, opponent_status) & ~own_status;
-                break;
-            default:
-                break;
-        }
-        while(all_moves){
-            auto piece_end_bit = pop_LSB(all_moves);
-            
-            if (p.color == WHITE){
-                if ( bool(get_bit(_board[blackKing],piece_end_bit)) ){ // white piece checks black king
-                    move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
-                    if (debug)
-                        std::cout << "The " << convert_color[p.color] << " "
-                        << convert_enum[p.piece_type]
-                        << " is checking the king in " << bit2notation(piece_end_bit)<<std::endl;
-                }
-
-                else
-                    move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, false));
-            }
-            else if ( p.color == BLACK){
-                if( bool(get_bit(_board[whiteKing],piece_end_bit)) ){ // white piece checks black king
-                move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, true));                
-                if (debug)
-                    std::cout << "The " << convert_color[p.color] << " "
-                      << convert_enum[p.piece_type]
-                      << " is checking the king in " << bit2notation(piece_end_bit)<<std::endl;
-            }
-            else
-                move_collector.push_back(Move(piece_init_bit, piece_end_bit, p, false));
-            }
-        }
-    }
-}
-
 void ChessBoard::_update_landing_squares(){
     _ResetLandingSquares();
-
-    int piece_init_bit;
+    _ResetPseudoMoves();
+    uint64_t temp_landing = 0ULL;
+    uint64_t temp_landing_attack = 0ULL;
     uint64_t piece_positions;
-    for (Piece KindOfPiece : AllKindOfPieces){            // loop over all kindofpieces
-        // if (KindOfPiece.piece_type == KING) continue;   // skip if king
-        piece_positions = _board[KindOfPiece];
+    int piece_init_bit;
+    int final_bit_value;
+    ;
+
+    for (Piece pp : pieces_array){            // loop over all kindofpieces
+        piece_positions = _board[pp];
         while(piece_positions){                         // loop over each piece of that type
             piece_init_bit = pop_LSB(piece_positions);
-            if (KindOfPiece.piece_type != KING){
-                pieces_landingsquares[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit);   
-                pieces_landingsquares_throughKing[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit, true);   
+            temp_landing = _get_landing_squares(pp, piece_init_bit);
+            temp_landing_attack = _get_landing_squares(pp, piece_init_bit, true);   
+            if (pp.piece_type != KING){
+                pieces_landingsquares[pp.color] |= temp_landing;
+                pieces_landingsquares_throughKing[pp.color] |= temp_landing_attack;
             }
             else
-                king_landingsquares[KindOfPiece.color] |= _get_landing_squares(KindOfPiece, piece_init_bit);
-
-            // auto temp = _get_landing_squares(KindOfPiece, piece_init_bit);
-            // while(temp) {
-            //     auto final_bit_value = pop_LSB(temp);
-            //     std::cout << "The " << convert_color[KindOfPiece.color] << " "
-            //           << convert_enum[KindOfPiece.piece_type]
-            //           << " lands from " << bit2notation(piece_init_bit)
-            //           << " to " << bit2notation(final_bit_value)<<std::endl;
-            // } 
+                king_landingsquares[pp.color] |= temp_landing;
+            
+            // can't move on its own piece
+            temp_landing = temp_landing & ~board_occupancy[pp.color];
+            // king can't move toward controlled square
+            // it works because KINGS are the last in pieces_array
+            // so pieces_landingsquares_throughKing is fully updated
+            if (pp.piece_type == KING)
+                temp_landing = temp_landing & ~pieces_landingsquares_throughKing[!pp.color];
+            // loop through all possible landing moves
+            while(temp_landing){
+                final_bit_value = pop_LSB(temp_landing);
+                // std::cout<<"Generating a MOVE with "<<piece_init_bit<<" "<<final_bit_value<<" "<< KindOfPiece.name<<std::endl;
+                Move theMove = {piece_init_bit, final_bit_value, pp};
+                // std::cout<<"Generated a MOVE with "<<theMove.initial_bit<<" "<<theMove.final_bit<<" "<< theMove.piece.name<<std::endl;    
+                PM_collector[pp.color][pp.piece_type].push_back(theMove);
+            }
+            // loop through all possible landing moves
+            while(temp_landing_attack){
+                final_bit_value = pop_LSB(temp_landing_attack);
+                PM_collector_throughKing[pp.color][pp.piece_type].push_back(Move(piece_init_bit, final_bit_value, pp));
+            }
         }
     }
+
+    piece_positions = king_landingsquares[WHITE];  // reusing variable for temp storage
+    king_landingsquares[WHITE] = king_landingsquares[WHITE] & ~king_landingsquares[BLACK];
+    king_landingsquares[BLACK] = king_landingsquares[BLACK] & ~piece_positions;
+
 }
 
 
-Moves ChessBoard::calculate_moves(Color color){
-    Moves move_collector;
-    return move_collector;
-}
+// Moves ChessBoard::calculate_moves(Color color){
+//     Moves move_collector;
+//     return move_collector;
+// }
 
 
 void ChessBoard::printStatusInfo(){
-    
-    std::cout<<"GameOver = "<<GameOver
+
+    std::cout<<convert_color[board_turn]<<" to move"
+                 <<"\nGameOver = "<<GameOver
+                 <<"\nCheck = "<<isCheck
                  <<"\nMate = "<<isMate
                  <<"\nDraw = "<<isDraw
                  <<"\nStaleMate = "<<isStaleMate
@@ -440,9 +436,7 @@ void ChessBoard::printStatusInfo(){
     
 }
 
-
 void ChessBoard::_update_game_status(){
-    isCheck = _isCheck();
     isMate = _isMate();
     isStaleMate = _isStaleMate();
     isDraw50Moves = _isDrawFor50MovesRule();
@@ -452,105 +446,10 @@ void ChessBoard::_update_game_status(){
     if (isStaleMate | isDraw50Moves | isDrawRepetition | isDrawInsufficientMaterial){
         isDraw = true;
         GameOver = true;
-        if (debug)
-            std::cout<<"Game Over. Draw "<<std::endl;
     }
-    if (isMate){
+    else if (isMate){
         GameOver = true;
-        if (debug)
-            std::cout<<"Game Over. "<<convert_color[!board_turn]<<" wins by checkmate"<<std::endl;
     }
-}
-
-
-bool ChessBoard::_isCheck(){
-    if (board_turn == WHITE){
-        if ((_board[whiteKing] & pieces_landingsquares[BLACK])!=0)
-            return true;
-    }
-    if (board_turn == BLACK){
-        if ((_board[blackKing] & pieces_landingsquares[WHITE])!=0)
-            return true;
-    }
-    return false;
-}
-bool ChessBoard::_isMate(){
-    if (!isCheck)  return false;
-    else{
-        uint64_t evading_squares;
-        bool _isMate = false;
-        if (board_turn == WHITE){
-            // legal evading squares are not occupied by own pieces, not in check, reachable by the king
-            evading_squares = king_landingsquares[WHITE]  & ~(pieces_landingsquares_throughKing[BLACK] | king_landingsquares[BLACK]) & ~board_occupancy[WHITE];
-            if ( !evading_squares )
-                return true;
-        }
-        if (board_turn == BLACK){
-            // legal evading squares are not occupied by own pieces, not in check, reachable by the king
-            evading_squares = king_landingsquares[BLACK]  & ~(pieces_landingsquares_throughKing[WHITE] | king_landingsquares[WHITE])& ~board_occupancy[BLACK];
-            if ( !evading_squares )
-                return true;
-        }
-    }
-    return false;
-}
-
-bool ChessBoard::_isStaleMate(){
-    if (isCheck)  return false;
-    else{
-        uint64_t legal_king_moves;
-        uint64_t legal_pieces_moves;
-        bool _isMate = false;
-        if (board_turn == WHITE){
-            legal_king_moves = king_landingsquares[WHITE]  & ~(pieces_landingsquares_throughKing[BLACK] | king_landingsquares[BLACK]) & ~board_occupancy[WHITE];
-            legal_pieces_moves = pieces_landingsquares[WHITE] & ~board_occupancy[WHITE];
-            if ( !(legal_king_moves) )
-                return true;
-        }
-        if (board_turn == BLACK){
-            legal_king_moves = king_landingsquares[BLACK]  & ~(pieces_landingsquares_throughKing[WHITE] | king_landingsquares[WHITE]) & ~board_occupancy[BLACK];
-            legal_pieces_moves = pieces_landingsquares[BLACK] & ~board_occupancy[BLACK];
-            if ( !(legal_king_moves | legal_pieces_moves) )
-                return true;
-        }
-    }
-    return false;
-}
-
-
-bool ChessBoard::_isDrawInsufficientMaterial(){
-    // from https://en.wikipedia.org/wiki/Draw_(chess)
-    int pawns_left = countBitsOn(_board[whitePawn]) + countBitsOn(_board[blackPawn]);
-    int rooks_left = countBitsOn(_board[whiteRook]) + countBitsOn(_board[blackRook]);
-    int queens_left = countBitsOn(_board[whiteQueen]) + countBitsOn(_board[blackQueen]);
-    if (pawns_left != 0 | rooks_left != 0 | queens_left != 0) //A king + any(pawn, rook, queen) is not draw
-        return false;
-    
-    int wbishops_left = countBitsOn(_board[whiteBishop]);
-    int bbishops_left = countBitsOn(_board[blackBishop]);
-    int wknights_left = countBitsOn(_board[whiteKnight]);
-    int bknights_left = countBitsOn(_board[blackKnight]);
-    
-    if (wbishops_left + bbishops_left + wknights_left + bknights_left == 0) // king vs king
-        return true;
-
-    if ( wbishops_left == 1 & (bbishops_left  + wknights_left + bknights_left) == 0) // king and bishop versus king
-        return true;
-    if ( bbishops_left == 1 & (wbishops_left  + wknights_left + bknights_left) == 0) // king and bishop versus king
-        return true;
-    if ( wknights_left == 1 & (bbishops_left  + wbishops_left + bknights_left) == 0) // king and knight versus king
-        return true;
-    if ( bknights_left == 1 & (wbishops_left  + wknights_left + bbishops_left) == 0) // king and knight versus king
-        return true;
-
-    // TODO king and bishop versus king and bishop with the bishops on the same color.
-
-    return false;
-
-}
-bool ChessBoard::_isDrawForRepetition(){
-    return false; // to be implemented
-}
-bool ChessBoard::_isDrawFor50MovesRule(){
-    return false; // to be implemented
+    else
+        GameOver = false;
 }

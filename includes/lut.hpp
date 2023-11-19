@@ -2,8 +2,7 @@
 #ifndef LUT_HPP_
 #define LUT_HPP_
 #include <iostream>
-#include "utils.hpp"
-#include "pieces.hpp"
+#include "def.hpp"
 #include <cstdint>
 #include <array>
 
