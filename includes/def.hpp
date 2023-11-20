@@ -8,13 +8,14 @@
 #include <unordered_map>
 
 // MISC CONSTANTS
-const uint64_t Mate_Score = 1000;
+const float Mate_Score = 1000;
 const int16_t  nAllPieces = 12;
 const int16_t  nPieceTypes = 6;
 // END MISC CONSTANTS
 
 // COLOR
 enum Color : bool {BLACK, WHITE};
+const Color ColorArray[2] = { BLACK, WHITE}; 
 const std::string convert_color[] ={"Black", "White"};
 // define ! operator for Color
 inline Color operator!(Color value){
@@ -84,7 +85,7 @@ const Piece whiteQueen = {'Q', WHITE, 900, QUEEN};
 const Piece blackQueen = {'q', BLACK, 900, QUEEN};
 const Piece whiteKing = {'K', WHITE, 20000, KING};
 const Piece blackKing = {'k', BLACK, 20000, KING};
-const Piece nullPiece = {' ',BLACK,0,NOTHING};
+const Piece nullPiece = {'0',BLACK,0,NOTHING};
 // pieces ordered by index so that KindOfPieces[piece.index] == piece
 const Piece pieces_array[nAllPieces] = { blackPawn,whitePawn,blackBishop,whiteBishop,blackKnight,whiteKnight,blackRook,whiteRook,blackQueen,whiteQueen,blackKing,whiteKing}; 
 
@@ -129,6 +130,7 @@ struct Move{
     // Constructor with member initialization
     Move(const int ii, int ff, Piece p) : initial_bit(ii), final_bit(ff), piece(p), captured_piece(nullPiece), isValid(false), isChecked(false) {}
 };
+const Move NULL_MOVE{0,0,nullPiece};
 typedef std::vector<Move> Moves;
 
 inline void printMove(Move m){

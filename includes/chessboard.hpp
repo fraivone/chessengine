@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <array>
 #include "def.hpp"
 #include "lut.hpp"
 
@@ -25,6 +26,7 @@ namespace chessboard {
 class ChessBoard {
 public:
 	explicit ChessBoard(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t);
+	explicit ChessBoard(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,Color);
 	explicit ChessBoard(const std::string& fen);
     ~ChessBoard();
     bool debug = true;
@@ -33,21 +35,21 @@ public:
 
     // UTILS
     void legalMoves();
-    void printBoard();
+    void printBoard(Board);
     void printStatusInfo();
     void RepresentBitset(uint64_t );
-    Move PublicMove(Move);
-    Move PublicUndo(Move);
-    Moves PublicBlocking();
-    bool PublicValidate(Move&);
+    Moves getLegalMoves(Color color, Moves (&ps)[2][nPieceTypes]);
+    Moves tempFunc(){    return getLegalMoves(board_turn, PM_collector); }
     bool legalStart() { return _islegal;};
-    float evalPosition();
+    float evalBoard(Board);
     int get_enpassant_bit() { return en_passant_bit;}
     Color get_board_turn() { return board_turn;}
     Board get_board() { return _board;};
+    Board PublicMakeMove(Move&, Board);
 
     // GAME STATUSES
     bool isCheck = false; // current position is in check
+    bool nextMove_isCheck=false;
     bool isMate = false;
     bool isStaleMate = false;
     bool isDraw50Moves = false;
@@ -55,6 +57,7 @@ public:
     bool isDrawInsufficientMaterial = false;
     bool GameOver = false;
     bool isDraw = false;
+    float score=0;
 
     std::array<uint64_t,64> wpawn_fw_lut;
     std::array<uint64_t,64> wpawn_doublefw_lut;
@@ -73,7 +76,7 @@ private:
     bool castle_rights[2][2] = {false,false,false,false};
     
     bool _legalPosition();  
-    bool _isCheck(Color , uint64_t);
+    bool _isCheck(Board, Color , uint64_t);
     bool _isMate();
     bool _isStaleMate();
     bool _isDrawInsufficientMaterial();
@@ -99,17 +102,15 @@ private:
     void append_moves(Piece, Moves&, uint64_t, uint64_t);
     void _init_board();
     void _update_game_status();
-    void _update_board_occupancy(uint64_t (&t)[2], Board theBoard);
-    void _update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board);
+    void _update_board_occupancy(uint64_t (&t)[2], Board theBoard, bool noking );
+    void _update_landing_squares(uint64_t bOcc[2], uint64_t bOcc_noKing[2], uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board);
     
     // Move methods
     bool _ValidateMove(Move&);
     Board _MakeMove(Move&, Board);
     Board _UndoMove(Move&, Board);
-    // Color moves and blocks a check
-    Moves _BlockingMoves();
 
-    uint64_t _get_landing_squares(Piece p, int init_bit, bool attacking_squares );
+    uint64_t _get_landing_squares(uint64_t bOcc[2], uint64_t bOcc_noKing[2], Piece p, int init_bit, bool attacking_squares );
     uint64_t piece_landing_squares[12][64];
 
     Board _board;    
@@ -145,7 +146,7 @@ private:
 
     // idx 0 -> BLACK, idx 1 -> WHITE
     Moves LegalMoves[2]; 
-    Moves IllegalMoves[2]; 
+
 
 	uint64_t _white_pawns = 0ULL;
 	uint64_t _white_bishops = 0ULL;
@@ -162,5 +163,8 @@ private:
 };
 
 } // #end of chessboard
+
+
+float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls = 0 );
 
 #endif // CHESSBOARD

@@ -8,24 +8,23 @@
 #include "def.hpp"
 #include <typeinfo>
 #include <memory>
+// #include "movesearcher.cpp"
 #include <type_traits>
 
 int main(int argc, char **argv) {
 	// std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
-    Move theMove = {44,4, whiteRook};
-    std::unique_ptr<chessboard::ChessBoard> thisInstance;
+    chessboard::ChessBoard* thisInstance;
     if (argc == 1)
-        thisInstance = std::make_unique<chessboard::ChessBoard>(0,0,0,578756592880516895,0,pow(2,49),0,0,0,0,0,pow(2,5));
+        thisInstance = new chessboard::ChessBoard(0,0,0,578756592880516895,0,pow(2,49),0,0,0,0,0,pow(2,5));
     else if (argc == 2)
-        thisInstance = std::make_unique<chessboard::ChessBoard>(argv[1]);
+        thisInstance = new chessboard::ChessBoard(argv[1]);
     if (thisInstance->legalStart()){
         // thisInstance->printBoard();
         // thisInstance->printStatusInfo();
-        std::cout<<"isCheck =  " <<thisInstance->isCheck
-                 <<"\tisMate = " << thisInstance->isMate
-                 <<"\tisStalemate = "<<thisInstance->isStaleMate
-                 <<"\tInsufficientMaterial = "<<thisInstance->isDrawInsufficientMaterial<<std::endl;
-        // std::cout<<"Eval = " <<thisInstance->evalPosition()<<std::endl;
+        std::cout<<searchBestMove(thisInstance, 1)<<std::endl;
+        // Moves legals = thisInstance->tempFunc();
+        // Color turn = thisInstance->get_board_turn();
+        // thisInstance->searchBestMove(turn, legals, thisInstance->get_board(), 1);
         // Moves t = thisInstance->PublicBlocking();
         // std::cout<<"Blocking moves found "<<t.size()<<std::endl;
         

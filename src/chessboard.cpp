@@ -23,6 +23,23 @@ ChessBoard::ChessBoard(uint64_t wps,uint64_t wbs,uint64_t wns,uint64_t wrs,uint6
     {
         _initializeCommon();
 }
+ChessBoard::ChessBoard(uint64_t wps,uint64_t wbs,uint64_t wns,uint64_t wrs,uint64_t wqs,uint64_t wk,uint64_t bps,uint64_t bbs,uint64_t bns,uint64_t brs,uint64_t bqs,uint64_t bk, Color c): 
+    _white_pawns(wps), 
+    _white_bishops(wbs),
+    _white_knights(wns),
+    _white_rooks(wrs),
+    _white_queens(wqs),
+    _white_king(wk),
+    _black_pawns(bps),
+    _black_bishops(bbs),
+    _black_knights(bns),
+    _black_rooks(brs),
+    _black_queens(bqs),
+    _black_king(bk) ,
+    board_turn(c)
+    {
+        _initializeCommon();
+}
 
 ChessBoard::ChessBoard(const std::string& fen){
     const size_t size = fen.size();
@@ -96,8 +113,6 @@ void ChessBoard::_initializeCommon(){
     _legalPosition(); // check if starting position is valid, 2 kings, Kings aren't in mutual check, pieces don't overlap
     _load_luts();   // load the look up tables for landing squares of leaping pieces
     
-    // std::cout<<"Initialization\n";
-    // _updateAfterMove();   
     isCheck = _ChainAssertCheck(_board, 
                                 board_occupancy, 
                                 board_occupancy_noKing, 
@@ -107,23 +122,17 @@ void ChessBoard::_initializeCommon(){
                                 PM_collector,
                                 board_turn);
     _update_game_status(); 
+    score = evalBoard(_board);
+    std::cout<<"isCheck =  " <<isCheck
+                 <<"\tisMate = " <<isMate
+                 <<"\tisStalemate = "<<isStaleMate
+                 <<"\tInsufficientMaterial = "<<isDrawInsufficientMaterial
+                 <<"\tscore = "<<score
+                 <<"\tMoves = "<<convert_color[board_turn]<<std::endl;
+    // std::cout<<"Current Score "<<score<<std::endl;
+    // printBoard(_board);
     
 }
-// void ChessBoard::_updateAfterMove(){
-
-//     _update_board_occupancy(board_occupancy, _board); // all positions occupied by black/white
-//     _update_board_occupancy(board_occupancy_noKing, _board); // all positions occupied by black/white
-//     // _update_landing_squares(); // all possible landing squares for black/white
-//     _update_landing_squares(pieces_landingsquares, pieces_landingsquares_throughKing, king_landingsquares, PM_collector,_board);// all possible landing squares for black/white
-//     isCheck = _isCheck(board_turn, pieces_landingsquares[!board_turn]); // isCheck?
-
-
-    
-
-//     // RepresentBitset(king_landingsquares[WHITE]);
-//     // RepresentBitset(pieces_landingsquares_throughKing[BLACK] & pieces_landingsquares[WHITE]);
-    
-// }
 
 bool ChessBoard::_ChainAssertCheck(Board theBoard, 
                                    uint64_t (&bOcc)[2], 
@@ -134,10 +143,17 @@ bool ChessBoard::_ChainAssertCheck(Board theBoard,
                                    Moves (&ps)[2][nPieceTypes],
                                    Color theColor)
 {   
-    _update_board_occupancy(bOcc, theBoard);
-    _update_board_occupancy(bOcc_noKing, theBoard);
-    _update_landing_squares(landing_squares, landing_squares_throughKing, king_landing_squares, ps,theBoard);
-    bool _temp_check = _isCheck(theColor, landing_squares[!theColor]); // isCheck?
+    _ResetOccupancySquares(bOcc);
+    _ResetOccupancySquares(bOcc_noKing);
+    _update_board_occupancy(bOcc, theBoard, false);
+    _update_board_occupancy(bOcc_noKing, theBoard, true);
+    
+    _ResetLandingSquares(landing_squares);
+    _ResetLandingSquares(landing_squares_throughKing);
+    _ResetLandingSquares(king_landing_squares);
+    _ResetPseudoMoves(ps);
+    _update_landing_squares(bOcc, bOcc_noKing, landing_squares, landing_squares_throughKing, king_landing_squares, ps,theBoard);
+    bool _temp_check = _isCheck(theBoard, theColor, landing_squares[!theColor]); // isCheck?
     return _temp_check;
 
 }
@@ -190,7 +206,7 @@ void ChessBoard::_ResetOccupancySquares(uint64_t (&t)[2]){
     t[WHITE] = 0ULL;
 }
 
-float ChessBoard::evalPosition(){
+float ChessBoard::evalBoard(Board theBoard){
     float white_score = 0.;
     float black_score = 0.;
     if (isMate)
@@ -198,7 +214,7 @@ float ChessBoard::evalPosition(){
     if (isDraw)
         return 0;
 
-    for (const auto& pair : _board) {
+    for (const auto& pair : theBoard) {
         Piece this_piece = pair.first;
         uint64_t value = pair.second;
         int number_of_pieces = countBitsOn(value);
@@ -214,7 +230,7 @@ float ChessBoard::evalPosition(){
     return (white_score - black_score)/100.;
 }
 
-void ChessBoard::printBoard(){
+void ChessBoard::printBoard(Board theBoard){
     // init the grid
     std::string grid[nRows][nCols];
     for(int ri=nRows-1; ri>=0; ri--){
@@ -223,7 +239,7 @@ void ChessBoard::printBoard(){
         }
     }
     // fill the grid
-    for (const auto& pair : _board) {
+    for (const auto& pair : theBoard) {
         Piece key = pair.first;
         uint64_t value = pair.second;
         for (int i=0; i<nCols*nRows; i++){
@@ -314,11 +330,14 @@ bool ChessBoard::_legalPosition(){
 }
 
 
-void ChessBoard::_update_board_occupancy(uint64_t (&t)[2], Board theBoard){
+void ChessBoard::_update_board_occupancy(uint64_t (&t)[2], Board theBoard, bool noking = false){
     _ResetOccupancySquares(t);
-
-    t[BLACK] = theBoard[blackPawn] | theBoard[blackBishop] | theBoard[blackKnight] | theBoard[blackRook] | theBoard[blackQueen] | theBoard[blackKing];
-    t[WHITE] = _board[whitePawn] | theBoard[whiteBishop] | theBoard[whiteKnight] | theBoard[whiteRook] | theBoard[whiteQueen] | theBoard[whiteKing];
+    t[BLACK] = theBoard[blackPawn] | theBoard[blackBishop] | theBoard[blackKnight] | theBoard[blackRook] | theBoard[blackQueen];
+    t[WHITE] = theBoard[whitePawn] | theBoard[whiteBishop] | theBoard[whiteKnight] | theBoard[whiteRook] | theBoard[whiteQueen];
+    if (!noking){
+        t[BLACK] |= theBoard[blackKing];
+        t[WHITE] |= theBoard[whiteKing];
+    }
 }
 
 /*
@@ -333,14 +352,14 @@ Additionaly pawns attack diagonal squares
 */
 
 
-uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool attacking_squares = false){
+uint64_t ChessBoard::_get_landing_squares(uint64_t bOcc[2], uint64_t bOcc_noKing[2], Piece p, int piece_init_bit, bool attacking_squares = false){
     uint64_t own_status,opponent_status;
-    own_status = p.color == WHITE ? board_occupancy[WHITE] : board_occupancy[BLACK];
+    own_status = p.color == WHITE ? bOcc[WHITE] : bOcc[BLACK];
     if (!attacking_squares){
-        opponent_status = p.color == WHITE ? board_occupancy[BLACK] : board_occupancy[WHITE];
+        opponent_status = p.color == WHITE ? bOcc[BLACK] : bOcc[WHITE];
     }
     else{
-        opponent_status = p.color == WHITE ? board_occupancy_noKing[BLACK] : board_occupancy_noKing[WHITE];
+        opponent_status = p.color == WHITE ? bOcc_noKing[BLACK] : bOcc_noKing[WHITE];
     }
     uint64_t landing_squares = 0ULL;
     switch (p.piece_type) {
@@ -381,11 +400,7 @@ uint64_t ChessBoard::_get_landing_squares(Piece p, int piece_init_bit, bool atta
     return landing_squares;
 }
 
-void ChessBoard::_update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board){
-    _ResetLandingSquares(landing_sq);
-    _ResetLandingSquares(landing_sq_throughKing);
-    _ResetLandingSquares(king_landing_sq);
-    _ResetPseudoMoves(pseudomoves);
+void ChessBoard::_update_landing_squares(uint64_t bOcc[2], uint64_t bOcc_noKing[2], uint64_t (&landing_sq)[2],uint64_t (&landing_sq_throughKing)[2],uint64_t (&king_landing_sq)[2],Moves (&pseudomoves)[2][nPieceTypes],Board current_board){
     uint64_t temp_landing = 0ULL;
     uint64_t temp_landing_attack = 0ULL;
     uint64_t piece_positions;
@@ -397,8 +412,8 @@ void ChessBoard::_update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&la
         piece_positions = current_board[pp];
         while(piece_positions){                         // loop over each piece of that type
             piece_init_bit = pop_LSB(piece_positions);
-            temp_landing = _get_landing_squares(pp, piece_init_bit);
-            temp_landing_attack = _get_landing_squares(pp, piece_init_bit, true);   
+            temp_landing = _get_landing_squares(bOcc,bOcc_noKing, pp, piece_init_bit);
+            temp_landing_attack = _get_landing_squares(bOcc, bOcc_noKing, pp, piece_init_bit, true);   
             if (pp.piece_type != KING){
                 landing_sq[pp.color] |= temp_landing;
                 landing_sq_throughKing[pp.color] |= temp_landing_attack;
@@ -407,7 +422,7 @@ void ChessBoard::_update_landing_squares(uint64_t (&landing_sq)[2],uint64_t (&la
                 // landing squares allow landing on its own pieces
                 // because it serves to "protect" a piece from capture
                 // not allowed for pseudo moves, so removing it
-                temp_landing = temp_landing & ~board_occupancy[pp.color];
+                temp_landing = temp_landing & ~bOcc[pp.color];
                 
                 // loop through all possible landing moves
                 while(temp_landing){
@@ -486,4 +501,78 @@ void ChessBoard::_update_game_status(){
     }
     else
         GameOver = false;
+}
+float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
+    Board theBoard = b->get_board();
+    Color turn = b->get_board_turn();
+    Moves legals = b->tempFunc();
+    float best_score;
+    std::cout<<"To move"<< turn<<std::endl;
+
+    if (depth==0 | b->isMate | b->isDraw){
+        if(b->isMate)
+            std::cout<<"MAAAAATE"<<std::endl;;
+        return b->evalBoard(theBoard);
+
+    }
+    
+    if (turn == WHITE){
+        best_score = -pow(2,20);
+
+        
+        for (Move mv : legals){
+            Board newBoard = b->PublicMakeMove(mv,theBoard);
+            chessboard::ChessBoard* newChessboard;
+            newChessboard = new chessboard::ChessBoard(newBoard[whitePawn],
+                                                       newBoard[whiteBishop],
+                                                       newBoard[whiteKnight],
+                                                       newBoard[whiteRook],
+                                                       newBoard[whiteQueen],
+                                                       newBoard[whiteKing],
+                                                       newBoard[blackPawn],
+                                                       newBoard[blackBishop],
+                                                       newBoard[blackKnight],
+                                                       newBoard[blackRook],
+                                                       newBoard[blackQueen],
+                                                       newBoard[blackKing],
+                                                       turn
+                                                       );
+
+            best_score = std::max(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1 )  );
+
+        }
+        return best_score;
+    }
+
+    else{
+        best_score = +pow(2,20);
+
+        
+        for (Move mv : legals){
+            Board newBoard = b->PublicMakeMove(mv,theBoard);
+            chessboard::ChessBoard* newChessboard;
+            newChessboard = new chessboard::ChessBoard(newBoard[whitePawn],
+                                                       newBoard[whiteBishop],
+                                                       newBoard[whiteKnight],
+                                                       newBoard[whiteRook],
+                                                       newBoard[whiteQueen],
+                                                       newBoard[whiteKing],
+                                                       newBoard[blackPawn],
+                                                       newBoard[blackBishop],
+                                                       newBoard[blackKnight],
+                                                       newBoard[blackRook],
+                                                       newBoard[blackQueen],
+                                                       newBoard[blackKing],
+                                                       ColorArray[!turn]
+                                                       );
+
+            best_score = std::min(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1)  );
+
+        }
+        return best_score;
+    }
+
+
+
+
 }

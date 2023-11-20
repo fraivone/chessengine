@@ -11,26 +11,28 @@ using chessboard::ChessBoard;
 // generic method to evaluate a check
 // check if the King of color c is in check
 // based on the opponent landings
-bool ChessBoard::_isCheck(Color c, uint64_t opponent_landings){
+bool ChessBoard::_isCheck(Board theBoard, Color c, uint64_t opponent_landings){
     Piece theMovingKing = pieces_array[ColorlessKing|c];
-    if ((_board[theMovingKing] & opponent_landings)!=0)
+    if ((theBoard[theMovingKing] & opponent_landings)!=0)
             return true;
     return false;
 }
 // to be fixed
 bool ChessBoard::_isMate(){
-    Moves blkMoves;
+    Moves lmvs;
     if (!isCheck)  return false;
     else{
         uint64_t evading_squares;
         bool _isMate = false;
         // legal evading squares are not occupied by own pieces, not in check, reachable by the king
         evading_squares = king_landingsquares[board_turn]  & ~(pieces_landingsquares_throughKing[!board_turn] | king_landingsquares[!board_turn]) & ~board_occupancy[board_turn];
-        if ( !evading_squares ){
+        // RepresentBitset(pieces_landingsquares_throughKing[!board_turn]);
+        if ( evading_squares == 0 ){
             // check for blocking moves
-            Moves blocking_moves = _BlockingMoves();
-            // if no blocking moves available --> mate
-            if (blocking_moves.size() == 0)
+            lmvs = getLegalMoves(board_turn, PM_collector);
+            
+            // if no legal moves available --> mate
+            if (lmvs.size() == 0)
                 return true;
             }
         }
@@ -42,10 +44,9 @@ bool ChessBoard::_isStaleMate(){
     else{
         uint64_t legal_king_moves;
         uint64_t legal_pieces_moves;
-        bool _isMate = false;
         legal_king_moves = king_landingsquares[board_turn]  & ~(pieces_landingsquares_throughKing[!board_turn] | king_landingsquares[!board_turn]) & ~board_occupancy[board_turn];
-        legal_pieces_moves = pieces_landingsquares[board_turn] & ~board_occupancy[board_turn];
-        if ( !(legal_king_moves) )
+        legal_pieces_moves = pieces_landingsquares[board_turn] & ~board_occupancy[!board_turn];
+        if ( !(legal_king_moves) & !legal_pieces_moves )
             return true;
         }
     return false;
@@ -92,23 +93,31 @@ bool ChessBoard::_isDrawFor50MovesRule(){
 bool ChessBoard::_ValidateMove(Move &m){
     if (m.isChecked == true)
         return m.isValid;
+    
     else{
         m.isChecked = true;
         Piece theOpponentKing = pieces_array[ColorlessKing|!m.piece.color];
         //The move would capture the opponent king
         //Illegal and most likely previous moves were illegal too
-        if (( _board[theOpponentKing] & (1ULL << m.final_bit)) )
+        if (( _board[theOpponentKing] & (1ULL << m.final_bit)) ){
+            // printMove(m);
+            // std::cout<<"Invalid because it captures a king"<<std::endl;
             return false;
+        }
 
         // move ends on its onw pieces
-        if ( (1ULL << m.final_bit) & board_occupancy[m.piece.color])
+        if ( (1ULL << m.final_bit) & board_occupancy[m.piece.color]){
+            // printMove(m);
+            // std::cout<<"Invalid because it ends on its onw pieces"<<std::endl;
             return false;
+        }
 
         //check whether the move leaves its own king in check        
         
         nextMove_board = _board;
         nextMove_board = _MakeMove(m,nextMove_board);
-        bool MoveLeavesCheck = _ChainAssertCheck(nextMove_board, 
+        // printBoard(nextMove_board);
+        nextMove_isCheck = _ChainAssertCheck(nextMove_board, 
                                                  nextMove_board_occupancy, 
                                                  nextMove_board_occupancy_noKing, 
                                                  nextMove_pieces_landingsquares, 
@@ -118,7 +127,9 @@ bool ChessBoard::_ValidateMove(Move &m){
                                                  m.piece.color);
         // despite having just moved, m.piece.color is still in check
         // thereofore this move isn't legal
-        if (MoveLeavesCheck){
+        if (nextMove_isCheck){
+            // printMove(m);
+            // std::cout<<"Invalid because still in check"<<std::endl;
             return false;
     }
 
@@ -129,7 +140,7 @@ bool ChessBoard::_ValidateMove(Move &m){
     }
 }
 
-// Move goes on the board and board is updated
+// Move goes on the next_board and next_board is returned
 // board_turn stays untouched 
 Board ChessBoard::_MakeMove(Move &m, Board theBoard){
     Color thisColorMoves = m.piece.color;
@@ -154,6 +165,10 @@ Board ChessBoard::_MakeMove(Move &m, Board theBoard){
     return theBoard;
 }
 
+Board ChessBoard::PublicMakeMove(Move &m, Board theBoard){
+    return _MakeMove(m, theBoard);
+}
+
 Board ChessBoard::_UndoMove(Move &m, Board theBoard){
     if( m.captured_piece.piece_type != NOTHING){
         theBoard[m.captured_piece] = set_bit(theBoard[m.captured_piece],m.final_bit);
@@ -165,36 +180,22 @@ Board ChessBoard::_UndoMove(Move &m, Board theBoard){
     return theBoard;
 }
 
-// legalizes valid moves that block a check
-Moves ChessBoard::_BlockingMoves(){
-    Moves blockingMoves;
+// legalizes moves, discard the illegals
+Moves ChessBoard::getLegalMoves(Color color, Moves (&ps)[2][nPieceTypes]){
+    Moves local_legalMoves;
     int moves_checked = 0;
-    // Blocking Moves done by other than king
     for (PieceType pt : piecetypes_array){
-        if (pt == KING ) continue; 
-        for(Move mv : PM_collector[board_turn][pt]){
-            // std::cout<<"Checked "<<moves_checked<<" moves"<<std::endl;
+        // Loop to pop all color moves
+        while (!ps[color][pt].empty()) {
+            Move mv = ps[color][pt].back();
+            ps[color][pt].pop_back();
             moves_checked++;
-            // printMove(mv);
             if(_ValidateMove(mv)){
-                blockingMoves.push_back(mv);
+                local_legalMoves.push_back(mv);
             }
         }
     }
-    return blockingMoves;
+    //append to vector of legal moves
+    LegalMoves[color].insert(LegalMoves[color].end(), local_legalMoves.begin(), local_legalMoves.end());
+    return LegalMoves[color];
 }
-
-
-bool ChessBoard::PublicValidate(Move &theMove){
-    return _ValidateMove(theMove);
-}
-// Move ChessBoard::PublicMove(Move theMove){
-//     return _MakeMove(theMove);
-// }
-// Move ChessBoard::PublicUndo(Move theMove){
-//     return _UndoMove(theMove);
-// }
-Moves ChessBoard::PublicBlocking(){
-    return _BlockingMoves();
-}
-
