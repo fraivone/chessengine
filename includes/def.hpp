@@ -6,11 +6,16 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <chrono>
+#include <utility>
+#include <limits>
 
 // MISC CONSTANTS
 const float Mate_Score = 1000;
 const int16_t  nAllPieces = 12;
 const int16_t  nPieceTypes = 6;
+const int PLUS_INF = std::numeric_limits<int>::max();
+const int MINUS_INF = std::numeric_limits<int>::min();
 // END MISC CONSTANTS
 
 // COLOR
@@ -132,6 +137,7 @@ struct Move{
 };
 const Move NULL_MOVE{0,0,nullPiece};
 typedef std::vector<Move> Moves;
+typedef std::pair<float, Move> ScorenMove;
 
 inline void printMove(Move m){
     std::cout << "The " << convert_color[m.piece.color] << " "
@@ -163,5 +169,6 @@ const uint64_t columnH = columnA << 7;
 const uint64_t columnAB = columnA | (columnA<<1);
 const uint64_t columnGH = columnH | (columnH>>1);
 // END CONVENIENT BIT 
+
 
 #endif // DEF_HPP_

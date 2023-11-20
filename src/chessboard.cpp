@@ -442,9 +442,8 @@ void ChessBoard::_update_landing_squares(uint64_t bOcc[2], uint64_t bOcc_noKing[
         }
     }
     // Prevents kings to check each other
-    piece_positions = king_landing_sq[WHITE];  // reusing variable for temp storage
-    king_landing_sq[WHITE] = king_landing_sq[WHITE] & ~king_landing_sq[BLACK];
-    king_landing_sq[BLACK] = king_landing_sq[BLACK] & ~piece_positions;
+    king_landing_sq[WHITE] = king_landing_sq[WHITE] & ~king_lut[get_LSB(current_board[blackKing])];
+    king_landing_sq[BLACK] = king_landing_sq[BLACK] & ~king_lut[get_LSB(current_board[whiteKing])];
     
     // the KING pseudo moves have not been updated before
     // now it's sure they won't try to check each other
@@ -535,9 +534,6 @@ float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
                                                        newBoard[blackKing],
                                                        ColorArray[!turn]
                                                        );
-            std::cout<<"score "<<newChessboard->evalBoard(newBoard, turn)<<convert_color[turn]<<"\tisMate ? "<<newChessboard->isMate<<"\t "<<std::endl;
-            printMove(mv);
-
             best_score = std::max(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1 )  );
 
         }
@@ -566,16 +562,72 @@ float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
                                                        newBoard[blackKing],
                                                        ColorArray[!turn]
                                                        );
-            std::cout<<"score "<<newChessboard->evalBoard(newBoard, turn)<<convert_color[turn]<<"\t isMate ? "<<newChessboard->isMate<<"\t "<<std::endl;
-            printMove(mv);
             best_score = std::min(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1)  );
 
 
         }
         return best_score;
     }
+}
 
 
 
+ScorenMove searchBestMove2(Board theBoard, Color theColor,float alpha, float beta, int depth){
+    Board theNewBoard;
+    chessboard::ChessBoard* newClassInstance;
+    newClassInstance = new chessboard::ChessBoard(theBoard[whitePawn],
+                                                  theBoard[whiteBishop],
+                                                  theBoard[whiteKnight],
+                                                  theBoard[whiteRook],
+                                                  theBoard[whiteQueen],
+                                                  theBoard[whiteKing],
+                                                  theBoard[blackPawn],
+                                                  theBoard[blackBishop],
+                                                  theBoard[blackKnight],
+                                                  theBoard[blackRook],
+                                                  theBoard[blackQueen],
+                                                  theBoard[blackKing],
+                                                  theColor
+                                                       );
+    Moves legals = newClassInstance->tempFunc();
+    float best_score,new_score;
+    Move best_move = NULL_MOVE;
 
+    // exiting
+    if (depth==0 | newClassInstance->isMate | newClassInstance->isDraw)
+        return std::make_pair(newClassInstance->evalBoard(theBoard, theColor), best_move);
+    
+    if (theColor == WHITE){
+        best_score = MINUS_INF;
+        for (Move mv : legals){
+            Board theNewBoard = newClassInstance->PublicMakeMove(mv,theBoard);
+            delete newClassInstance; // free up some memory.... each class instance is some 11kB
+            new_score = searchBestMove2(theNewBoard, (!theColor),alpha,beta, depth - 1).first;
+            if ( new_score >best_score){
+                best_score = new_score;
+                best_move = mv;
+            }
+            if (best_score > beta)
+                break;
+            alpha = std::max(alpha, best_score);
+        }
+        return std::make_pair(best_score, best_move);;
+    }
+    else{
+        best_score = PLUS_INF;
+        for (Move mv : legals){
+            Board theNewBoard = newClassInstance->PublicMakeMove(mv,theBoard);
+            delete newClassInstance; // free up some memory.... each class instance holds some 11kB
+            new_score = searchBestMove2(theNewBoard, (!theColor),alpha,beta, depth - 1).first;
+            if(new_score < best_score){
+            best_score = new_score;
+            best_move = mv;
+            }
+            if (best_score < alpha)
+                break;
+            beta = std::min(beta, best_score);
+        }
+
+        return std::make_pair(best_score, best_move);
+    }
 }

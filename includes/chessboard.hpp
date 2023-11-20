@@ -166,5 +166,6 @@ private:
 
 
 float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls = 0 );
+ScorenMove searchBestMove2(Board theBoard, Color theColor,float alpha, float beta, int depth);
 
 #endif // CHESSBOARD

@@ -9,6 +9,9 @@ echo "MATE FENs"
 ./chessengine "4r1k1/ppp3pp/2p5/8/5P2/8/PP3R2/R1Q2K1q w - - 2 34"
 ./chessengine "k6R/P7/K7/8/8/8/8/8 b - - 0 1"
 
+echo "MATE in 2"
+./chessengine "kbK5/pp6/1P6/8/8/8/8/R7 w - -"
+
 echo "SINGLE CHECK FENs"
 
 ./chessengine "3Rk3/5prp/p5b1/6B1/r6P/2P5/PP3P2/2K3R1 b - - 2 23"
