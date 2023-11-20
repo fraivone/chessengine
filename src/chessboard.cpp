@@ -122,13 +122,13 @@ void ChessBoard::_initializeCommon(){
                                 PM_collector,
                                 board_turn);
     _update_game_status(); 
-    score = evalBoard(_board);
-    std::cout<<"isCheck =  " <<isCheck
-                 <<"\tisMate = " <<isMate
-                 <<"\tisStalemate = "<<isStaleMate
-                 <<"\tInsufficientMaterial = "<<isDrawInsufficientMaterial
-                 <<"\tscore = "<<score
-                 <<"\tMoves = "<<convert_color[board_turn]<<std::endl;
+    score = evalBoard(_board, board_turn);
+    // std::cout<<"isCheck =  " <<isCheck
+    //              <<"\tisMate = " <<isMate
+    //              <<"\tisStalemate = "<<isStaleMate
+    //              <<"\tInsufficientMaterial = "<<isDrawInsufficientMaterial
+    //              <<"\tscore = "<<score
+    //              <<"\tMoves = "<<convert_color[board_turn]<<std::endl;
     // std::cout<<"Current Score "<<score<<std::endl;
     // printBoard(_board);
     
@@ -206,11 +206,11 @@ void ChessBoard::_ResetOccupancySquares(uint64_t (&t)[2]){
     t[WHITE] = 0ULL;
 }
 
-float ChessBoard::evalBoard(Board theBoard){
+float ChessBoard::evalBoard(Board theBoard, Color turn){
     float white_score = 0.;
     float black_score = 0.;
     if (isMate)
-        return Mate_Score;
+        return Mate_Score * (!turn*2 -1); // the previous player as scored a mate
     if (isDraw)
         return 0;
 
@@ -504,15 +504,12 @@ void ChessBoard::_update_game_status(){
 }
 float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
     Board theBoard = b->get_board();
-    Color turn = b->get_board_turn();
+    Color turn = (b->get_board_turn());
     Moves legals = b->tempFunc();
     float best_score;
-    std::cout<<"To move"<< turn<<std::endl;
 
     if (depth==0 | b->isMate | b->isDraw){
-        if(b->isMate)
-            std::cout<<"MAAAAATE"<<std::endl;;
-        return b->evalBoard(theBoard);
+        return b->evalBoard(theBoard, turn);
 
     }
     
@@ -522,34 +519,7 @@ float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
         
         for (Move mv : legals){
             Board newBoard = b->PublicMakeMove(mv,theBoard);
-            chessboard::ChessBoard* newChessboard;
-            newChessboard = new chessboard::ChessBoard(newBoard[whitePawn],
-                                                       newBoard[whiteBishop],
-                                                       newBoard[whiteKnight],
-                                                       newBoard[whiteRook],
-                                                       newBoard[whiteQueen],
-                                                       newBoard[whiteKing],
-                                                       newBoard[blackPawn],
-                                                       newBoard[blackBishop],
-                                                       newBoard[blackKnight],
-                                                       newBoard[blackRook],
-                                                       newBoard[blackQueen],
-                                                       newBoard[blackKing],
-                                                       turn
-                                                       );
-
-            best_score = std::max(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1 )  );
-
-        }
-        return best_score;
-    }
-
-    else{
-        best_score = +pow(2,20);
-
-        
-        for (Move mv : legals){
-            Board newBoard = b->PublicMakeMove(mv,theBoard);
+            
             chessboard::ChessBoard* newChessboard;
             newChessboard = new chessboard::ChessBoard(newBoard[whitePawn],
                                                        newBoard[whiteBishop],
@@ -565,8 +535,41 @@ float searchBestMove(chessboard::ChessBoard* b, int depth, int ncalls ){
                                                        newBoard[blackKing],
                                                        ColorArray[!turn]
                                                        );
+            std::cout<<"score "<<newChessboard->evalBoard(newBoard, turn)<<convert_color[turn]<<"\tisMate ? "<<newChessboard->isMate<<"\t "<<std::endl;
+            printMove(mv);
 
+            best_score = std::max(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1 )  );
+
+        }
+        return best_score;
+    }
+
+    else{
+        best_score = +pow(2,20);
+
+        
+        for (Move mv : legals){
+            Board newBoard = b->PublicMakeMove(mv,theBoard);
+            
+            chessboard::ChessBoard* newChessboard;
+            newChessboard = new chessboard::ChessBoard(newBoard[whitePawn],
+                                                       newBoard[whiteBishop],
+                                                       newBoard[whiteKnight],
+                                                       newBoard[whiteRook],
+                                                       newBoard[whiteQueen],
+                                                       newBoard[whiteKing],
+                                                       newBoard[blackPawn],
+                                                       newBoard[blackBishop],
+                                                       newBoard[blackKnight],
+                                                       newBoard[blackRook],
+                                                       newBoard[blackQueen],
+                                                       newBoard[blackKing],
+                                                       ColorArray[!turn]
+                                                       );
+            std::cout<<"score "<<newChessboard->evalBoard(newBoard, turn)<<convert_color[turn]<<"\t isMate ? "<<newChessboard->isMate<<"\t "<<std::endl;
+            printMove(mv);
             best_score = std::min(best_score,  searchBestMove(newChessboard, depth - 1, ncalls+1)  );
+
 
         }
         return best_score;

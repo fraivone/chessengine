@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     if (thisInstance->legalStart()){
         // thisInstance->printBoard();
         // thisInstance->printStatusInfo();
-        std::cout<<searchBestMove(thisInstance, 1)<<std::endl;
+        std::cout<<searchBestMove(thisInstance, 2)<<std::endl;
         // Moves legals = thisInstance->tempFunc();
         // Color turn = thisInstance->get_board_turn();
         // thisInstance->searchBestMove(turn, legals, thisInstance->get_board(), 1);

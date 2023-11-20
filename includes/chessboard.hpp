@@ -41,7 +41,7 @@ public:
     Moves getLegalMoves(Color color, Moves (&ps)[2][nPieceTypes]);
     Moves tempFunc(){    return getLegalMoves(board_turn, PM_collector); }
     bool legalStart() { return _islegal;};
-    float evalBoard(Board);
+    float evalBoard(Board, Color);
     int get_enpassant_bit() { return en_passant_bit;}
     Color get_board_turn() { return board_turn;}
     Board get_board() { return _board;};
