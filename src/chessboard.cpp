@@ -601,7 +601,6 @@ ScorenMove searchBestMove2(Board theBoard, Color theColor,float alpha, float bet
         best_score = MINUS_INF;
         for (Move mv : legals){
             Board theNewBoard = newClassInstance->PublicMakeMove(mv,theBoard);
-            delete newClassInstance; // free up some memory.... each class instance is some 11kB
             new_score = searchBestMove2(theNewBoard, (!theColor),alpha,beta, depth - 1).first;
             if ( new_score >best_score){
                 best_score = new_score;
@@ -617,7 +616,6 @@ ScorenMove searchBestMove2(Board theBoard, Color theColor,float alpha, float bet
         best_score = PLUS_INF;
         for (Move mv : legals){
             Board theNewBoard = newClassInstance->PublicMakeMove(mv,theBoard);
-            delete newClassInstance; // free up some memory.... each class instance holds some 11kB
             new_score = searchBestMove2(theNewBoard, (!theColor),alpha,beta, depth - 1).first;
             if(new_score < best_score){
             best_score = new_score;
