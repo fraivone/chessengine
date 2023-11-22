@@ -133,7 +133,7 @@ private:
     pseudo_move_collector[p.index].size()
     _ValidateMove will then check if a move is valid
     */
-    Moves PM_collector[2][nPieceTypes]; ;
+    Moves PM_collector[2][nPieceTypes];
     // Moves PM_collector_throughKing[2][nPieceTypes]; ;
 
     Board nextMove_board;

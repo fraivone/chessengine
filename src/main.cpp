@@ -9,10 +9,17 @@
 #include <typeinfo>
 #include <chrono>
 #include <memory>
+#include  "attempt.hpp"
 // #include "movesearcher.cpp"
 #include <type_traits>
 
 int main(int argc, char **argv) {
+
+    LUT king_lut =  king_position_lut();
+    BoardStatus sisisi = BoardStatusFromFEN("kbK5/pp6/1P6/8/8/8/8/R7 w - -");
+    std::cout<<"legal? " <<BoardisLegal(sisisi.board, king_lut)<<std::endl;
+
+
 	std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
     chessboard::ChessBoard* thisInstance;
     if (argc == 1)

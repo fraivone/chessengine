@@ -75,7 +75,7 @@ template<> struct std::hash<Piece> {
             std::hash<int>()(p.piece_type) ;
     }
 };
-typedef std::unordered_map<Piece, uint64_t> Board;
+typedef std::array<uint64_t,64> LUT;
 const int ColorlessKing = KING << 1;
 
 const Piece whitePawn = {'P', WHITE, 100, PAWN};
@@ -111,6 +111,7 @@ const std::unordered_map<char, Piece> KindOfPiecesLUT = {
 // END PIECE
 
 // BOARD NOTATION
+typedef std::unordered_map<Piece, uint64_t> Board;
 const std::string bit2notation[64] = {
 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
 "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -121,6 +122,22 @@ const std::string bit2notation[64] = {
 "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
 };
+
+struct BoardStatus{
+    Board board;
+    Color whoMoves;
+    bool castle_rights[2][2];
+    uint8_t enpassant_bit;
+    uint8_t MoveCounter;
+    uint8_t ply;
+    BoardStatus(){
+        castle_rights[0][0] = false;
+        castle_rights[0][1] = false;
+        castle_rights[1][0] = false;
+        castle_rights[1][1] = false;
+    }
+};
+
 // END BOARD NOTATION
 
 
@@ -138,6 +155,7 @@ struct Move{
 const Move NULL_MOVE{0,0,nullPiece};
 typedef std::vector<Move> Moves;
 typedef std::pair<float, Move> ScorenMove;
+
 
 inline void printMove(Move m){
     std::cout << "The " << convert_color[m.piece.color] << " "
