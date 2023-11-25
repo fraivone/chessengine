@@ -29,6 +29,9 @@ inline Color operator!(Color value){
     else
         return WHITE;
 }
+inline int ColorMultiplier(Color c){
+    return ((c)*2 -1);
+}
 //END COLOR
 
 // CASTLE
@@ -55,11 +58,10 @@ struct Piece{
     Color color;  // true for white, false for black
     int piece_value;
     PieceType piece_type;
-    std::uint16_t index = static_cast<int>(piece_type) << 1 | static_cast<int>(color)  ;
+    std::uint16_t index = static_cast<int>(piece_type) << 1 | static_cast<int>(color)  ; // |- - -|-| (3bit piece type, 1 bit oclor)
 
     // Constructor with member initialization
     Piece(const char c, Color b, int i, PieceType t) : name(c), color(b), piece_value(i), piece_type(t) {}
-
     
     bool operator ==(const Piece& other) const {
         return (this->color == other.color) &&
@@ -130,6 +132,9 @@ struct BoardStatus{
     uint8_t enpassant_bit;
     uint8_t MoveCounter;
     uint8_t ply;
+    int check = -1;
+    int draw = -1;
+    int mate = -1;
     BoardStatus(){
         castle_rights[0][0] = false;
         castle_rights[0][1] = false;
@@ -149,8 +154,9 @@ struct Move{
     Piece captured_piece;
     bool isValid;
     bool isChecked;
+    int guessedScore;
     // Constructor with member initialization
-    Move(const int ii, int ff, Piece p) : initial_bit(ii), final_bit(ff), piece(p), captured_piece(nullPiece), isValid(false), isChecked(false) {}
+    Move(const int ii, int ff, Piece p) : initial_bit(ii), final_bit(ff), piece(p), captured_piece(nullPiece), isValid(false), isChecked(false), guessedScore(0) {}
 };
 const Move NULL_MOVE{0,0,nullPiece};
 typedef std::vector<Move> Moves;
@@ -174,7 +180,7 @@ inline void printMove(Move m){
 #define get_bit(b, i) ((b) & (1ULL << i))
 #define clear_bit(b, i) ((b) &= ~(1ULL << i))
 #define get_LSB(b) (__builtin_ctzll(b))
-#define chars_to_bit(letter,number) ((letter - 'a') + ((int(number - '0')) - 1)*8 )
+#define chars_to_bit(letter,number) ((letter - 'a') + ((number - '0') - 1)*8 )
 #define countBitsOn(v) (std::bitset<64>(v).count())
 
 inline int pop_LSB(uint64_t &b) {
