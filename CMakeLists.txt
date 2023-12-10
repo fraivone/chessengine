@@ -7,8 +7,12 @@ project(chessengine-cmake)
 # creates the variable EXEC and sets it to chessengine
 set(EXEC chessengine)
 
+
 # set the C++14 standard
 set(CMAKE_CXX_STANDARD 14)
+
+# Compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -march=native -ftree-vectorize -lstdc++")
 
 # I../includes
 include_directories(includes)
