@@ -1,48 +1,84 @@
 // main.cpp
 #include <iostream>
-#include <unordered_map>
-#include <string>
-#include <bitset>
-#include "chessboard.hpp"
-#include "lut.hpp"
-#include "def.hpp"
-#include <typeinfo>
+#include <vector>
 #include <chrono>
-#include <memory>
-#include  "attempt.hpp"
-// #include "movesearcher.cpp"
-#include <type_traits>
+// #include <immintrin.h>
 
-int main(int argc, char **argv) {
+using Vector=std::vector<int>;
 
-    LUT king_lut =  king_position_lut();
-    BoardStatus sisisi = BoardStatusFromFEN("kbK5/pp6/1P6/8/8/8/8/R7 w - -");
-    std::cout<<"legal? " <<BoardisLegal(sisisi.board, king_lut)<<std::endl;
+// Vector simAdd(const Vector& a, const Vector& b){
+//     Vector result(a.size());
+
+//     constexpr auto FLOATS_IN_AVX_REGISTER = 8u;
+//     const auto itemsWithSIMD = (a.size()/ FLOATS_IN_AVX_REGISTER) * FLOATS_IN_AVX_REGISTER;
+
+//     auto i = 0u;
+//     // vectorized addition
+//     for(; i<itemsWithSIMD; i+=FLOATS_IN_AVX_REGISTER){
+//         // load from memory to the specific SMID register
+//         // u stands for unalligned data
+//         // ps stands for single precision (float)
+//         auto aRegister = _mm256_loadu_ps(a.data()+1);
+//         auto bRegister = _mm256_loadu_ps(b.data()+1);
+
+//         auto sum = _mm256_add_ps(aRegister, bRegister);
+
+//         // store "sum" in the result vector
+//         // that's defined in the memory
+//         _mm256_storeu_ps(result.data() + i, sum);
+//     }
+
+//     return result;
+// }
+
+Vector scalarAdd(const Vector& a, const Vector& b){
+    Vector result(a.size());
+
+    for(int i =0; i<result.size(); i++)
+        result[i] = a[i] + b[i];
+
+    return result;    
+}
 
 
-	std::cout << "\n\n#######\nSize of MyClass: " << sizeof(chessboard::ChessBoard) << " bytes\n#######\n\n" << std::endl;
-    chessboard::ChessBoard* thisInstance;
-    if (argc == 1)
-        thisInstance = new chessboard::ChessBoard(0,0,0,578756592880516895,0,pow(2,49),0,0,0,0,0,pow(2,5));
-    else if (argc == 2)
-        thisInstance = new chessboard::ChessBoard(argv[1]);
-    if (thisInstance->legalStart()){
-        // thisInstance->printBoard();
-        thisInstance->printStatusInfo();
-        std::chrono::steady_clock::time_point begin,end;
-        for(int iter=0;iter<5; iter++ ){
-            begin = std::chrono::steady_clock::now();
-            ScorenMove best = searchBestMove2(thisInstance->get_board(), thisInstance->board_turn, MINUS_INF, PLUS_INF, iter);
-            std::cout<<best.first<<std::endl;
-            printMove(best.second);
-            end = std::chrono::steady_clock::now();
-            std::cout<<"v2 took "<<std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()<<std::endl;
-            std::cout<<"\n\n\n";
-        }
-              
-    } // legal starting position
+int main(){
+
+    using namespace std;
+    Vector a(17,1U);
+    int N = 100000;
+
+    chrono::steady_clock::time_point begin,end;
+    begin = chrono::steady_clock::now();
+    // for(int j =0; j < N; j++)
+    //     auto result = simAdd(a,a);
+    end = chrono::steady_clock::now();
+    cout<<"SIMD Took "<<chrono::duration_cast<chrono::microseconds>(end - begin).count()/1000000.<<endl;
+
+
+    begin = chrono::steady_clock::now();
+    for(int j =0; j < N; j++)
+        auto result = scalarAdd(a,a);
+    end = chrono::steady_clock::now();
+    cout<<"scalarAdd Took "<<chrono::duration_cast<chrono::microseconds>(end - begin).count()/1000000.<<endl;
 
     
-    else
-        return -1;
-};
+    return 1;
+
+}
+
+
+
+
+// int main(int argc, char **argv) {
+
+//     std::chrono::steady_clock::time_point begin,end;
+//     begin = std::chrono::steady_clock::now();
+//     int t = 0;
+//     for(int j =0; j < 100000000; j++)
+//         t++;
+
+//     end = std::chrono::steady_clock::now();
+//     std::cout<<"Took "<<std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000000.<<std::endl;
+    
+//     return 1;
+// };

@@ -23,8 +23,8 @@ add_subdirectory(test)
 # Assign the include directories
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Serialize
-add_subdirectory(Serialize)
+# Add other dir
+#add_subdirectory(<dirname>)
 
 
 # Build
