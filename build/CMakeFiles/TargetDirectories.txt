@@ -1,6 +1,0 @@
-/home/francesco/Programs/engine/build/CMakeFiles/chessengine.dir
-/home/francesco/Programs/engine/build/CMakeFiles/edit_cache.dir
-/home/francesco/Programs/engine/build/CMakeFiles/rebuild_cache.dir
-/home/francesco/Programs/engine/build/test/CMakeFiles/_unit_tests.dir
-/home/francesco/Programs/engine/build/test/CMakeFiles/edit_cache.dir
-/home/francesco/Programs/engine/build/test/CMakeFiles/rebuild_cache.dir
