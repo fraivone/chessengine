@@ -23,9 +23,3 @@ Therefore, I have added these settings in the CMake
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -march=native -ftree-vectorize -lstdc++")
 ```
-
-### Description
-* `Bitboard` is a uint64_t;
-* `RepresentBitset(uint64_t)` prints the board with # for the flagged bit in the bitboard;
-* `LUT` is an array<uint64_t,64> ;
-* `<>pawn_<>_lut` is a LUT with all possible landings for the pawn. Divided by *cap*, *fw* and *doublefw*.
