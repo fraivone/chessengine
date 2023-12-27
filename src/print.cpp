@@ -2,8 +2,6 @@
 
 void RepresentBitset(Bitboard number){
     // init the grid
-    int nCols = 8;
-    int nRows = 8;
     std::string grid[nRows][nCols];
     for(int ri=nRows-1; ri>=0; ri--){
         for(int ci=0; ci<nCols; ci++){
@@ -22,7 +20,7 @@ void RepresentBitset(Bitboard number){
     for(int ri=nRows-1; ri>=0; ri--){
         std::cout<<"\n";
         std::cout<<KYEL  <<"    --- --- --- --- --- --- --- ---\n";
-        std::cout<<ri<<"  ";
+        std::cout<<ri+1<<"  ";
         for(int ci=0; ci<nCols; ci++){
             std::cout<<"|"<<KNRM<< grid[ri][ci]<<" "<<KYEL;
             
@@ -31,5 +29,5 @@ void RepresentBitset(Bitboard number){
     }
     std::cout<<"\n    --- --- --- --- --- --- --- ---"<<std::endl;
     std::cout<<"     a   b   c   d   e   f   g   h "<<std::endl;
-    std::cout<<"\n";
+    std::cout<<KNRM<<"\n";
 }
