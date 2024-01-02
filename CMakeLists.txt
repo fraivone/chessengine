@@ -8,8 +8,9 @@ project(chessengine-cmake)
 set(EXEC chessengine)
 
 
-# set the C++14 standard
-set(CMAKE_CXX_STANDARD 14)
+### Upgraded from 14 - 17 to use "std::string_view"
+# set the C++17 standard
+set(CMAKE_CXX_STANDARD 17)
 
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -march=native -ftree-vectorize -lstdc++")

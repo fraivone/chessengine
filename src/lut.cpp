@@ -22,7 +22,7 @@ is allowed because:
 std::array<uint64_t,64> wpawn_straight_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_wpawnstraight_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   (initial_pos << 8);
@@ -33,7 +33,7 @@ std::array<uint64_t,64> wpawn_straight_lut(){
 std::array<uint64_t,64> wpawn_doublestraight_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_wpawndoublestraight_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         landing = 0ULL;
         set_bit(initial_pos,init_bit);
@@ -47,7 +47,7 @@ std::array<uint64_t,64> wpawn_doublestraight_lut(){
 std::array<uint64_t,64> bpawn_straight_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_bpawnstraight_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   (initial_pos >> 8);
@@ -58,7 +58,7 @@ std::array<uint64_t,64> bpawn_straight_lut(){
 std::array<uint64_t,64> bpawn_doublestraight_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_bpawndoublestraight_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         landing = 0ULL;
         set_bit(initial_pos,init_bit);
@@ -72,7 +72,7 @@ std::array<uint64_t,64> bpawn_doublestraight_lut(){
 std::array<uint64_t,64> wpawn_diagcapture_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_wpawndiagcapture_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   ((initial_pos << 7)  & ~columnH) |
@@ -85,7 +85,7 @@ std::array<uint64_t,64> wpawn_diagcapture_lut(){
 std::array<uint64_t,64> bpawn_diagcapture_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_bpawndiagcapture_landing;
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   ((initial_pos >> 9) & ~columnH) |
@@ -99,7 +99,7 @@ std::array<uint64_t,64> king_position_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_king_landing;
 
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
         landing =   (((initial_pos << 1) | (initial_pos << 9)  | (initial_pos >> 7)) & ~columnA) |  // move  to the right. If ends on column A it means it crossed the board. Illegal
@@ -117,7 +117,7 @@ std::array<uint64_t,64> knight_position_lut(){
     uint64_t initial_pos,landing;
     std::array<uint64_t,64> map_knight_landing;
 
-    for(int init_bit =0; init_bit<64; init_bit++){
+    for(Square init_bit =0; init_bit<64; init_bit++){
         initial_pos = 0ULL;
         set_bit(initial_pos,init_bit);
 
@@ -131,7 +131,7 @@ std::array<uint64_t,64> knight_position_lut(){
     }
     return map_knight_landing;
 }
-uint64_t straight_lines(int init_bit, uint64_t my_status, uint64_t opponent_status){
+uint64_t straight_lines(Square init_bit, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     
@@ -172,7 +172,7 @@ uint64_t straight_lines(int init_bit, uint64_t my_status, uint64_t opponent_stat
 
 }
 
-uint64_t diago_lines(int init_bit, uint64_t my_status, uint64_t opponent_status){
+uint64_t diago_lines(Square init_bit, uint64_t my_status, uint64_t opponent_status){
     uint64_t initial_pos = 0ULL;
     set_bit(initial_pos,init_bit);
     uint64_t current_pos = initial_pos;
@@ -212,12 +212,24 @@ uint64_t diago_lines(int init_bit, uint64_t my_status, uint64_t opponent_status)
     return landing;
 }
 
-uint64_t rook_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+uint64_t rook_landings(Square init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
     return straight_lines(init_bit, own_occupancy, opponent_occupancy);
 }
-uint64_t bishop_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+uint64_t bishop_landings(Square init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
     return diago_lines(init_bit, own_occupancy, opponent_occupancy);
 }
-uint64_t queen_landings(int init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
+uint64_t queen_landings(Square init_bit, uint64_t own_occupancy, uint64_t opponent_occupancy){
     return diago_lines(init_bit, own_occupancy, opponent_occupancy) | straight_lines(init_bit, own_occupancy, opponent_occupancy);
+}
+
+
+Bitboard sliding_peices_landings(PieceType pt, Square init_square, uint64_t own_occupancy, uint64_t opponent_occupancy){
+    if (pt==ROOK)
+        return rook_landings(init_square, own_occupancy, opponent_occupancy);
+    else if (pt==BISHOP)
+        return bishop_landings(init_square, own_occupancy, opponent_occupancy);
+    else{
+        throw std::invalid_argument("In function init_magics PieceType must be either BISHOP or ROOK.");
+        return 0;
+    }
 }
