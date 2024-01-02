@@ -1,5 +1,18 @@
 NOTES
 ---
+### What is a Pseudomvoe?
+Move generated only taking into account the allowed piece movements, ignoring:
+* Do I leave my king in check?
+* Am I in check?
+* Is enpassant actually allowed?
+* Can I still castle?
+
+### Whne is enpassant enabled in the StateInfo?
+En passant square will be considered only if
+* side to move has a pawn threatening epSquare
+* there is an enemy pawn in front of epSquare
+* there is no piece on epSquare or behind epSquare
+
 ### Vectorization
 
 I am trying to understand what is the fastest way to handle operations on uint64 (bitboards)

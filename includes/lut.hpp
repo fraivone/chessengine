@@ -1,9 +1,11 @@
 /** @file */
 #pragma once
 #include <iostream>
-#include "types.hpp"
 #include <cstdint>
 #include <array>
+#include <stdexcept> // Required to throw errors
+#include "types.hpp"
+#include "position.hpp"
 
 /*
 8   56 # # # # # # # # 63
@@ -27,6 +29,15 @@
 // 1. It's on their leaping direction
 // for each piece, calculate the landing squares
 // no chess rules
+
+/// LUT with magic bitboard attacks for the rook
+/// first index is the square index, second the magic index 
+/// 4096 is the largest number of blockers
+extern uint64_t Rattacks[nCols*nRows][4096];
+/// LUT with magic bitboard attacks for the bishop
+/// first index is the square index, second the magic index 
+/// 4096 is the largest number of blockers
+extern uint64_t Battacks[nCols*nRows][4096];
 
 
 // to generate the LUT from scratch
@@ -65,40 +76,48 @@ std::array<uint64_t,64> knight_position_lut();
 std::array<uint64_t,64> king_position_lut();
 
 /*! Generates a LUT for landings along straight lines. Lines must NOT intersect friendly or opponent's pieces. Lines must NOT land on friendly pieces. Lines can land on opponent's pieces.
-    \param int Current bit of the position (0-63)
+    \param Square Square to be considered (0-63)
     \param uint64_t Occupancy of the opponent's pieces as a bitboard
     \param uint64_t Occupancy of friendly pieces as a bitboard
     \return uint64_t
 */  
-uint64_t straight_lines(int, uint64_t, uint64_t);
+uint64_t straight_lines(Square, uint64_t, uint64_t);
 /*! Generates a LUT for landings along diagonal lines. Lines must NOT intersect friendly or opponent's pieces. Lines must NOT land on friendly pieces. Lines can land on opponent's pieces.
-    \param int Current bit of the position (0-63)
+    \param Square Square to be considered (0-63)
     \param uint64_t Occupancy of the opponent's pieces as a bitboard
     \param uint64_t Occupancy of friendly pieces as a bitboard
     \return uint64_t BitBoard with possible landings
 */  
-uint64_t diago_lines(int, uint64_t, uint64_t);
+uint64_t diago_lines(Square, uint64_t, uint64_t);
 /*! Generates a LUT for landings of rooks. Lines must NOT intersect friendly or opponent's pieces. Lines must NOT land on friendly pieces. Lines can land on opponent's pieces.
-    \param int Current bit of the position (0-63)
-    \param uint64_t Occupancy of the opponent's pieces as a bitboard
+    \param Square Square to be considered (0-63)
     \param uint64_t Occupancy of friendly pieces as a bitboard
+    \param uint64_t Occupancy of the opponent's pieces as a bitboard
     \return uint64_t BitBoard with possible landings
 */  
-uint64_t rook_landings(int, uint64_t, uint64_t);
+uint64_t rook_landings(Square, uint64_t, uint64_t);
 /*! Generates a LUT for landings of bishops. Lines must NOT intersect friendly or opponent's pieces. Lines must NOT land on friendly pieces. Lines can land on opponent's pieces.
-    \param int Current bit of the position (0-63)
-    \param uint64_t Occupancy of the opponent's pieces as a bitboard
+    \param Square Square to be considered (0-63)
     \param uint64_t Occupancy of friendly pieces as a bitboard
+    \param uint64_t Occupancy of the opponent's pieces as a bitboard
     \return uint64_t BitBoard with possible landings
 */  
-uint64_t bishop_landings(int, uint64_t, uint64_t);
+uint64_t bishop_landings(Square, uint64_t, uint64_t);
 /*! Generates a LUT for landings of queens. Lines must NOT intersect friendly or opponent's pieces. Lines must NOT land on friendly pieces. Lines can land on opponent's pieces.
-    \param int Current bit of the position (0-63)
-    \param uint64_t Occupancy of the opponent's pieces as a bitboard
+    \param Square Square to be considered (0-63)
     \param uint64_t Occupancy of friendly pieces as a bitboard
+    \param uint64_t Occupancy of the opponent's pieces as a bitboard
     \return uint64_t BitBoard with possible landings
 */  
-uint64_t queen_landings(int, uint64_t, uint64_t);
+uint64_t queen_landings(Square, uint64_t, uint64_t);
+/*! Conveniente function to get landings for sliding pieces
+    \param PieceType Sliding piece type
+    \param Square Square to be considered (0-63)
+    \param uint64_t Occupancy of friendly pieces as a bitboard
+    \param uint64_t Occupancy of the opponent's pieces as a bitboard
+    \return uint64_t BitBoard with possible landings
+*/  
+Bitboard sliding_peices_landings(PieceType, Square, uint64_t, uint64_t);
 
 // hard coded LUT
 /*! Hard coded King LUT
@@ -129,3 +148,11 @@ const LUT wpawn_doublefw_lut = {0ULL,0ULL,0ULL,0ULL,0ULL,0ULL,0ULL,0ULL,16777216
 /*! Hard coded knight LUT
 */  
 const LUT knight_lut{132096ULL,329728ULL,659712ULL,1319424ULL,2638848ULL,5277696ULL,10489856ULL,4202496ULL,33816580ULL,84410376ULL,168886289ULL,337772578ULL,675545156ULL,1351090312ULL,2685403152ULL,1075839008ULL,8657044482ULL,21609056261ULL,43234889994ULL,86469779988ULL,172939559976ULL,345879119952ULL,687463207072ULL,275414786112ULL,2216203387392ULL,5531918402816ULL,11068131838464ULL,22136263676928ULL,44272527353856ULL,88545054707712ULL,175990581010432ULL,70506185244672ULL,567348067172352ULL,1416171111120896ULL,2833441750646784ULL,5666883501293568ULL,11333767002587136ULL,22667534005174272ULL,45053588738670592ULL,18049583422636032ULL,145241105196122112ULL,362539804446949376ULL,725361088165576704ULL,1450722176331153408ULL,2901444352662306816ULL,5802888705324613632ULL,11533718717099671552ULL,4620693356194824192ULL,288234782788157440ULL,576469569871282176ULL,1224997833292120064ULL,2449995666584240128ULL,4899991333168480256ULL,9799982666336960512ULL,1152939783987658752ULL,2305878468463689728ULL,1128098930098176ULL,2257297371824128ULL,4796069720358912ULL,9592139440717824ULL,19184278881435648ULL,38368557762871296ULL,4679521487814656ULL,9077567998918656ULL};
+
+
+/// LUT containing Pawn attacks, not all moves
+const LUT PawnAttacks[COLOR_NB] = {wpawn_cap_lut,bpawn_cap_lut};
+/// LUT containing Pawn fw moves, not all moves
+const LUT PawnFW[COLOR_NB] = {wpawn_fw_lut,bpawn_fw_lut};
+/// LUT containing Pawn 2fw moves, not all moves
+const LUT Pawn2FW[COLOR_NB] = {wpawn_doublefw_lut,bpawn_doublefw_lut};

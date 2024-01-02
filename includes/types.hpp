@@ -5,13 +5,23 @@
 #include <iostream>
 #include <array>
 #include <bitset>
+#include <cassert> // for assert
 
-const int nCols = 8;
-const int nRows = 8;
+
+/// Verbose variable to control couts. Ranges from [0,...,5]
+const unsigned VERBOSE = 1; 
+
+constexpr int nCols = 8;
+constexpr int nRows = 8;
+constexpr int MAX_MOVES = 256;
+constexpr int MAX_PLY   = 246;
+
 
 
 /// 64 bits are enoyugh to store single type single color occupancy on the board
 typedef uint64_t Bitboard;
+/// Typedef for square. Indicates the bit index of the square
+typedef uint8_t Square;
 /// Look up table to store 64 bitboards.
 /// Helps storing all possible moves, masks, ...
 typedef std::array<Bitboard,64> LUT;
@@ -33,6 +43,11 @@ enum Move {
   MOVE_NULL = 65
 };
 
+/// ok move
+constexpr bool is_ok(Move m) { return m != MOVE_NONE && m != MOVE_NULL; }
+/// ok square
+constexpr bool is_ok(Square sq) { return (sq >= 0 && sq <= 63); }
+
 enum MoveType {
   NORMAL,
   PROMOTION = 1 << 14,
@@ -44,6 +59,12 @@ enum MoveType {
 enum Color {
   WHITE, BLACK, COLOR_NB = 2
 };
+
+
+/// Bits
+// | 0    |  1    |   2   |   3   |
+// | W_OO | W_OOO |  B_OO | B_OOO |
+/// 
 
 enum CastlingRights {
   NO_CASTLING,
@@ -60,7 +81,6 @@ enum CastlingRights {
 
   CASTLING_RIGHT_NB = 16
 }; 
-
 
 //CONVENIENT BIT OPERATIONS
 #define set_bit(b, i) ((b) |= (1ULL << i))
@@ -80,6 +100,8 @@ inline int pop_LSB(uint64_t &b) {
     b &= b - 1;
     return i;
 }
+// END CONVENIENT BIT OPERATIONS
+
 const uint64_t columnA = 0x101010101010101ULL;
 const uint64_t columnH = columnA << 7;
 const uint64_t row1 = 255ULL;
@@ -89,5 +111,173 @@ const uint64_t chessboard_border = 18411139144890810879ULL;
 const uint64_t chessboard_inner = ~chessboard_border;
 const uint64_t vertical_edges = 0x8181818181818181;
 const uint64_t horizontal_edges = 0xFF000000000000FF;
+const uint64_t ALL_SQUARES = 0xFFFFFFFFFFFFFFFF;
 
-// END CONVENIENT BIT OPERATIONS
+
+constexpr Bitboard FileABB = 0x0101010101010101ULL;
+constexpr Bitboard FileBBB = FileABB << 1;
+constexpr Bitboard FileCBB = FileABB << 2;
+constexpr Bitboard FileDBB = FileABB << 3;
+constexpr Bitboard FileEBB = FileABB << 4;
+constexpr Bitboard FileFBB = FileABB << 5;
+constexpr Bitboard FileGBB = FileABB << 6;
+constexpr Bitboard FileHBB = FileABB << 7;
+
+constexpr Bitboard Rank1BB = 0xFF;
+constexpr Bitboard Rank2BB = Rank1BB << (8 * 1);
+constexpr Bitboard Rank3BB = Rank1BB << (8 * 2);
+constexpr Bitboard Rank4BB = Rank1BB << (8 * 3);
+constexpr Bitboard Rank5BB = Rank1BB << (8 * 4);
+constexpr Bitboard Rank6BB = Rank1BB << (8 * 5);
+constexpr Bitboard Rank7BB = Rank1BB << (8 * 6);
+constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
+
+enum Direction : int {
+    NORTH = 8,
+    EAST  = 1,
+    SOUTH = -NORTH,
+    WEST  = -EAST,
+
+    NORTH_EAST = NORTH + EAST,
+    SOUTH_EAST = SOUTH + EAST,
+    SOUTH_WEST = SOUTH + WEST,
+    NORTH_WEST = NORTH + WEST
+};
+
+// Moves a bitboard one or two steps as specified by the direction D
+template<Direction D>
+constexpr Bitboard shift(Bitboard b) {
+    return D == NORTH         ? b << 8
+         : D == SOUTH         ? b >> 8
+         : D == NORTH + NORTH ? b << 16
+         : D == SOUTH + SOUTH ? b >> 16
+         : D == EAST          ? (b & ~FileHBB) << 1
+         : D == WEST          ? (b & ~FileABB) >> 1
+         : D == NORTH_EAST    ? (b & ~FileHBB) << 9
+         : D == NORTH_WEST    ? (b & ~FileABB) << 7
+         : D == SOUTH_EAST    ? (b & ~FileHBB) >> 7
+         : D == SOUTH_WEST    ? (b & ~FileABB) >> 9
+                              : 0;
+}
+
+/// Magic bitboards require a mask, a magic number and a magic shift to be used. Each Magic is square specific.
+struct Magic {
+  Bitboard mask;
+  Bitboard magicNumber;
+  unsigned shift;
+};
+
+
+/// Struct to hold piece types
+enum PieceType {
+    NO_PIECE_TYPE, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING,
+    ALL_PIECES = 0,
+    PIECE_TYPE_NB = 8
+};
+
+enum Piece {
+    NO_PIECE,
+    W_PAWN = PAWN,     W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
+    B_PAWN = PAWN + 8, B_KNIGHT, B_BISHOP, B_ROOK, B_QUEEN, B_KING,
+    PIECE_NB = 16
+};
+
+enum Value : int {
+    VALUE_ZERO     = 0,
+    VALUE_DRAW     = 0,
+    VALUE_NONE     = 32002,
+    VALUE_INFINITE = 32001,
+
+    // In the code, we make the assumption that these values
+    // are such that non_pawn_material() can be used to uniquely
+    // identify the material on the board.
+    PawnValue   = 208,
+    KnightValue = 781,
+    BishopValue = 825,
+    RookValue   = 1276,
+    QueenValue  = 2538,
+};
+
+constexpr Value PieceValue[PIECE_NB] = {
+  VALUE_ZERO, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, VALUE_ZERO, VALUE_ZERO,
+  VALUE_ZERO, PawnValue, KnightValue, BishopValue, RookValue, QueenValue, VALUE_ZERO, VALUE_ZERO};
+
+// Swap color of piece B_KNIGHT <-> W_KNIGHT
+constexpr Piece operator~(Piece pc) { return Piece(pc ^ 8); }
+
+/// row and column in [1,...,8] 
+constexpr Square make_square(int column, int row) { return Square(8*(row-1) + column); }
+constexpr Bitboard make_bitboard(Square sq) { is_ok(sq); return 1ULL << sq; }
+
+constexpr Piece make_piece(Color c, PieceType pt) { return Piece((c << 3) + pt); }
+
+constexpr PieceType type_of(Piece pc) { return PieceType(pc & 7); }
+
+inline Color color_of(Piece pc) {
+    assert(pc != NO_PIECE);
+    return Color(pc >> 3);
+}
+
+
+
+/// convenient string to be match a char to its piece. Used while converting FEN
+constexpr std::string_view PieceToChar(" PNBRQK  pnbrqk");
+/// Create an array of string representations for piece types
+static const char* PieceTypeNames[] = {"NO_PIECE_TYPE", "PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN", "KING","ALL_PIECES", "PIECE_TYPE_NB"};
+/// Create an array of string representations for colors
+static const char* ColorNames[] = { "WHITE", "BLACK", "COLOR_NB"};
+/// String representations for castling rights
+inline std::string CastlingNames(int cc) {
+    std::string out = "";
+    if (cc == 0)
+      out += "None";
+    else{
+      if (get_bit(cc,0))
+        out += "WHITE_OO ";
+      if (get_bit(cc,1))
+        out += "WHITE_OOO ";
+      if (get_bit(cc,2))
+        out += "BLACK_OO ";
+      if (get_bit(cc,3))
+        out += "BLACK_OOO ";
+    }
+    return out;
+}
+
+/// Create an array of string representations for pieces
+static const char* PieceNames[] = { "NULL", "WHITE PAWN", "WHITE KNIGHT", "WHITE BISHOP","WHITE ROOK","WHITE QUUEN","WHITE KING",
+                                    "NULL", "BLACK PAWN", "BLACK KNIGHT", "BLACK BISHOP","BLACK ROOK","BLACK QUUEN","BLACK KING"};
+
+
+// StateInfo struct stores information needed to restore a Position object to
+// its previous state when we retract a move. Whenever a move is made on the
+// board (by calling Position::do_move), a StateInfo object must be passed.
+
+struct StateInfo {
+
+    // Copied when making a move
+    /// To be understood
+    uint64_t    materialKey;
+    /// To be understood
+    uint64_t    pawnKey;
+    /// To be understood
+    int  nonPawnMaterial[COLOR_NB];
+    int    castlingRights;
+    // number of plys since last pawn move or last capture
+    int    rule50;
+    int    pliesFromNull;
+    /// en passant square
+    Square epSquare;
+
+    // Not copied when making a move (will be recomputed anyhow)
+    /// To be understood
+    uint64_t        key;
+    /// To be understood
+    Bitboard   checkersBB;
+    StateInfo* previous;
+    Bitboard   blockersForKing[COLOR_NB];
+    Bitboard   pinners[COLOR_NB];
+    Bitboard   checkSquares[PIECE_TYPE_NB];
+    Piece      capturedPiece;
+    int        repetition;
+};
