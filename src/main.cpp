@@ -10,9 +10,10 @@
 
 int main(){
 
-    init_position("rnbqkbnr/p1p1pppp/8/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
+    init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
     RepresentBoard();
-    RepresentBitset(PawnAnyMove(BLACK,48));
+    RepresentBitset(PawnAnyMoves(54));
+    std::cout<<std::hex<<PawnAnyMoves(54);
 
 
     /*

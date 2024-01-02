@@ -17,7 +17,7 @@ namespace Position {
             BitboardsByType[i] = 0;
         // all bitboards are empty
         for(int i = 0; i<COLOR_NB; i++)
-            BitboardsByType[i] = 0;
+            BitboardsByColor[i] = 0;
         
         std::memset(&st, 0, sizeof(StateInfo));
         gamePly = 0;
@@ -29,7 +29,6 @@ void init_position(std::string FEN){
     Position::init();
     /// set boards and bitboards from FEN
     setBBFromFEN(FEN);
-    /// set game status from FEN
 }
 
 void put_piece(Square square, Piece PP){

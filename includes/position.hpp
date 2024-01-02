@@ -35,30 +35,43 @@ void init_position(std::string FEN);
 void set_castling_right(Color c, char FEN_char);
 
 
-/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers one piece type
 inline Bitboard pieces(PieceType pt)  { return Position::BitboardsByType[pt]; }
 
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers arbitrary number of piece types
 template<typename... PieceTypes>
 inline Bitboard pieces(PieceType pt, PieceTypes... pts) {
     return pieces(pt) | pieces(pts...);
 }
 
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers one color
 inline Bitboard pieces(Color c)  { return Position::BitboardsByColor[c]; }
 
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers considers a specific piece type / color combo
 template<typename... PieceTypes>
 inline Bitboard pieces(Color c, PieceTypes... pts)  {
     return pieces(c) & pieces(pts...);
 }
 
-inline Bitboard pieces(){return (Position::BitboardsByColor[WHITE] & Position::BitboardsByColor[BLACK]);}
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers considers all pieces
+inline Bitboard pieces(){return (Position::BitboardsByColor[WHITE] | Position::BitboardsByColor[BLACK]);}
 
-/// add a piece on the board
+/// adds a piece on the board
 void put_piece(Square square, Piece PP);
-/// overloaded method to remove a piece from the board
+/// overloaded method to remove a piece from the board. 
+/// Takes a square / piece
 void remove_piece(Square square, Piece pp);
+/// overloaded method to remove a piece from the board. 
+/// Takes a square only
 void remove_piece(Square square);
 /// overloaded method to move a piece on the board
 void move_piece(Square startsquare,Square endsquare, Piece PP);
+/// overloaded method to move a piece on the board
 void move_piece(Square startsquare,Square endsquare);
 
 /// Read FEN string and update the Bitboards

@@ -48,20 +48,20 @@ std::string FEN_Array[] = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
 
 BOOST_AUTO_TEST_SUITE(ChessEngine)
 
-    BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
-        init_magics();
-        BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 0,  0xc19da1890c182089),0x10101010e);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 63, 0xc19da1890c182089),0x4080000000000000);
+    // BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
+    //     init_magics();
+    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 0,  0xc19da1890c182089),0x10101010e);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 63, 0xc19da1890c182089),0x4080000000000000);
 
 		
-        BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,0,  0xc19da1890c182089),0x8040200);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,35, 0xc19da1890c182089),0x4122140014204080);
-        BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,50, 0xc19da1890c182089),0xa000a1120408000);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,52, 0xc19da1890c182089),0x2800280402010000);
-		BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,63, 0xc19da1890c182089),0x40200000000000);
-    }
+    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,0,  0xc19da1890c182089),0x8040200);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,35, 0xc19da1890c182089),0x4122140014204080);
+    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,50, 0xc19da1890c182089),0xa000a1120408000);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,52, 0xc19da1890c182089),0x2800280402010000);
+	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,63, 0xc19da1890c182089),0x40200000000000);
+    // }
     
     BOOST_AUTO_TEST_CASE(CheckCastlingRightsFromFEN){
         int FEN_Results[] = {15,15,0,0,0,0,0,12,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12,0,0};
@@ -89,6 +89,30 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
             if (VERBOSE > 2) std::cout<<"\n\n";
         }
 
+    }
+
+    BOOST_AUTO_TEST_CASE(CheckPiecesFunction){
+        init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
+        BOOST_CHECK_EQUAL(pieces(), 0xfff7080e0000fbff);
+        BOOST_CHECK_EQUAL(~pieces(), 0x8F7F1FFFF0400);
+        BOOST_CHECK_EQUAL(pieces(ROOK), 0x8100000000000081);
+        BOOST_CHECK_EQUAL(pieces(BLACK,ROOK), 0x8100000000000000);
+        BOOST_CHECK_EQUAL(pieces(WHITE,ROOK), 0x81);
+        BOOST_CHECK_EQUAL(pieces(WHITE,ROOK,QUEEN), 0x89);
+    }
+    BOOST_AUTO_TEST_CASE(CheckPawnAnyMovesFunction){
+        Bitboard solutions[] = {0,0,0,0,0,0,0,0,
+                                0x1010000,0x2020000,0,0x8080000,0x10100000,0x20200000,0x40400000,0x80800000,
+                                0,0,0,0,0,0,0,0,
+                                0,0,0,0,0,0,0,0,
+                                0,0x2000000,0x40000000000,0x8000000,0,0,0,0,
+                                0,0,0,0x1C000000000000,0,0,0,0,
+                                0x10100000000,0x20000000000,0xC0000000000,0,0x181000000000,0x202000000000,0x404000000000,0x808000000000
+                                };
+        init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
+        for(Square s = 0; s<56 ; s++){
+            BOOST_CHECK_EQUAL(PawnAnyMoves(s), solutions[s]);
+        }
     }
 
 

@@ -1,30 +1,30 @@
 #include <gen_move.hpp>
+#include <print.hpp>
 
-Bitboard PawnAnyMove(Color c, Square s) {      
+Bitboard PawnAnyMoves(Color c, Square s) {
+    if(Position::board[s] != make_piece(c,PAWN))
+        return 0ULL;
     Square fw_sq = c==WHITE? s + 8: s - 8;
     Square fw2_sq = c==WHITE? s + 16: s - 16;
-    Square westAttack_sq = c==WHITE? s + 7: s - 9;
-    Square eastAttack_sq = c==WHITE? s + 9: s - 7;
+    Bitboard westAttack_bb = c==WHITE? make_bitboard(s + 7): make_bitboard(s - 9);
+    Bitboard eastAttack_bb = c==WHITE? make_bitboard(s + 9): make_bitboard(s - 7);
+    Bitboard PawnstartingRow = c == WHITE? Rank2BB: Rank7BB;
+    Bitboard emptySquares = ~pieces();
 
     // if square in front is empty allow pawn move fw
-    Bitboard movesBB = Position::board[fw_sq] == NO_PIECE? PawnFW[c][s] : 0ULL;
-
-    // Black, 7th rank, 2 empty squares in front ==> allow 2fw
-    if ((c == BLACK) && (s>= 48) && (s<56) && (movesBB!=0ULL) && (Position::board[fw2_sq] == NO_PIECE))
-            movesBB |= Pawn2FW[c][s];
-    // White, 2nd rank, 2 empty squares in front ==> allow 2fw
-    if ((c == WHITE) && (s>= 8) && (s<16) && (movesBB!=0ULL) && (Position::board[fw2_sq] == NO_PIECE))
-            movesBB |= Pawn2FW[c][s];
-
-    // if there is a piece of the opposite color and it is not the king
-    if( (Position::BitboardsByColor[~c] & 1ULL<< westAttack_sq)  &&  (type_of(Position::board[westAttack_sq]) != KING) )
-        movesBB |= PawnAttacks[c][s] & (1ULL << westAttack_sq);
-    // if there is a piece of the opposite color and it is not the king
-    if( (Position::BitboardsByColor[~c] & 1ULL<< eastAttack_sq)  &&  (type_of(Position::board[eastAttack_sq]) != KING) )
-        movesBB |= PawnAttacks[c][s] & (1ULL << eastAttack_sq);
-
+    Bitboard movesBB = emptySquares & PawnFW[c][s];
+    // if pawn could be pushed forward and starts from its starting row, check for double FW moves
+    movesBB |= ( ((1ULL<<s) & PawnstartingRow) * (movesBB!=0) ) ? Pawn2FW[c][s] & emptySquares: 0ULL;
+    // add attacks if there is a piece of the opposite color to capture
+    movesBB |= PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c];
     // allow enpassant captures
     movesBB |= c == Position::sideToMove? (PawnAttacks[c][s] & make_bitboard(Position::st.epSquare)) : 0ULL;
 
     return movesBB;
+}
+
+Bitboard PawnAnyMoves(Square s){
+    if (Position::board[s] == NO_PIECE) return 0ULL;
+    else
+        return PawnAnyMoves(color_of(Position::board[s]),s);
 }
