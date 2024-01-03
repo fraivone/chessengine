@@ -5,7 +5,7 @@
 #include <sstream> // stringstream for FEN
 #include <cstring> // mmset for initializing stateinfo
 // #include <lut.hpp>
-#include <gen_move.hpp>
+#include "gen_move.hpp"
 
  /*!  \todo 
     * - Include method to generate FEN given the bitboards and the status of the current position

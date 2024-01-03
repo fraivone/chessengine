@@ -217,31 +217,39 @@ void init_magics(){
     if(VERBOSE>0) std::cout<<"Initializing bishop magic bitboards"<<std::endl;
     generate_magics(BISHOP, MagicVariables::Battacks, MagicVariables::BishopMagics);
 }
+//void import_magics(Magic RookMagics[nCols*nRows], uint64_t Rattacks[nCols*nRows][4096],Magic BishopMagics[nCols*nRows], uint64_t Battacks[nCols*nRows][4096]);
+//     if(VERBOSE>0) std::cout<<"Defaulting magic variables"<<std::endl;
+//     MagicVariables::init();
+//     if(VERBOSE>0) std::cout<<"Initializing rook magic bitboards"<<std::endl;
+//     generate_magics(ROOK, MagicVariables::Rattacks, MagicVariables::RookMagics);
+//     if(VERBOSE>0) std::cout<<"Initializing bishop magic bitboards"<<std::endl;
+//     generate_magics(BISHOP, MagicVariables::Battacks, MagicVariables::BishopMagics);
+// }
 
-Bitboard get_rook_pseudomoves(Square square, Bitboard all_pieces_occupancy){
+Bitboard get_rook_landings(Square square, Bitboard all_pieces_occupancy){
     Bitboard blockers = all_pieces_occupancy & MagicVariables::RookMagics[square].mask;
     uint64_t magicIndex = ( (blockers * MagicVariables::RookMagics[square].magicNumber ) >> MagicVariables::RookMagics[square].shift );
     Bitboard attacks = MagicVariables::Rattacks[square][magicIndex];
     return attacks;   
 }
-Bitboard get_bishop_pseudomoves(Square square, Bitboard all_pieces_occupancy){
+Bitboard get_bishop_landings(Square square, Bitboard all_pieces_occupancy){
     Bitboard blockers = all_pieces_occupancy & MagicVariables::BishopMagics[square].mask;
     uint64_t magicIndex = ( (blockers * MagicVariables::BishopMagics[square].magicNumber ) >> MagicVariables::BishopMagics[square].shift );
     Bitboard attacks = MagicVariables::Battacks[square][magicIndex];    
     return attacks;   
 }
 
-Bitboard get_sliding_pseudomoves(PieceType pt, Square square, Bitboard all_pieces_occupancy){
+Bitboard get_sliding_landings(PieceType pt, Square square, Bitboard all_pieces_occupancy){
     uint64_t magicIndex;
     Bitboard blockers,attacks = 0;
     if(pt == ROOK)
-        attacks |= get_rook_pseudomoves(square, all_pieces_occupancy);
+        attacks |= get_rook_landings(square, all_pieces_occupancy);
     else if(pt == BISHOP)
-        attacks |= get_bishop_pseudomoves(square, all_pieces_occupancy);
+        attacks |= get_bishop_landings(square, all_pieces_occupancy);
     else if(pt == QUEEN)
-        attacks |= get_bishop_pseudomoves(square, all_pieces_occupancy) | get_rook_pseudomoves(square, all_pieces_occupancy);
+        attacks |= get_bishop_landings(square, all_pieces_occupancy) | get_rook_landings(square, all_pieces_occupancy);
     else
-        throw std::invalid_argument("In function get_sliding_pseudomoves PieceType must be either BISHOP, ROOK or QUEEN.");
+        throw std::invalid_argument("In function get_sliding_landings PieceType must be either BISHOP, ROOK or QUEEN.");
         
     return attacks;
 

@@ -1,5 +1,4 @@
 #include <gen_move.hpp>
-#include <print.hpp>
 
 
 // template<bool Enemy>
@@ -80,7 +79,7 @@ MoveList PawnAnyMoves(MoveList& moveList, Square s){
         return PawnAnyMoves(moveList, color_of(Position::board[s]),s);
 }
 
-Bitboard Moves2Bitboard(const MoveList moveList){
+Bitboard Attacked2Bitboard(const MoveList moveList){
     Move theMove;
     Square to;
     Bitboard theBitboard = 0ULL;
@@ -90,4 +89,74 @@ Bitboard Moves2Bitboard(const MoveList moveList){
         theBitboard |= make_bitboard(to);
     }
     return theBitboard;
+}
+
+Bitboard Attackers2Bitboard(const MoveList moveList){
+    Move theMove;
+    Square from;
+    Bitboard theBitboard = 0ULL;
+    for(int i = 0; i<moveList.size; i++){
+        theMove = moveList.list[i].move;
+        Square from = ((theMove>>6) & 0x3f);
+        theBitboard |= make_bitboard(from);
+    }
+    return theBitboard;
+}
+
+Bitboard Attackers2Bitboard(const MoveList moveList, Bitboard target){
+    Move theMove;
+    Square from;
+    Square to;
+    Bitboard theBitboard = 0ULL;
+    for(int i = 0; i<moveList.size; i++){
+        theMove = moveList.list[i].move;
+        to = ((theMove) & 0x3f);
+        Square from = ((theMove>>6) & 0x3f);
+        if(make_bitboard(to) & target)
+            theBitboard |= (make_bitboard(from));
+    }
+    return theBitboard;
+    
+}
+
+// given a piece generate pseudomoves
+MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const PieceType pt){
+    Bitboard bb;
+        switch(pt) {
+        case PAWN:
+            return PawnAnyMoves(moveList, Us, sq);
+        case KNIGHT:
+            bb = knight_lut[sq] & ~Position::BitboardsByColor[Us];
+            break;
+        case BISHOP:
+        case ROOK :
+        case QUEEN:
+            bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us];
+            break;
+        case KING:
+            bb = king_lut[sq] & ~Position::BitboardsByColor[Us] & ~(Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            break;
+        default: 
+            bb = 0ULL;
+        }
+        while(bb)
+            moveList.Add(make_move(sq,pop_LSB(bb)));
+    return moveList;
+}
+
+MoveList generate_all(MoveList& moveList,Color Us){
+    Bitboard OurPieces = pieces(Us);
+    while(OurPieces){
+        Square sq = pop_LSB(OurPieces);
+        moveList = generate_pseudomoves(moveList, Us, sq, type_of(Position::board[sq]));
+    }
+    return moveList;
+}
+
+MoveList generate_all(MoveList& moveList, Color Us, const PieceType pt){
+    Bitboard OurPieces = Position::BitboardsByType[pt] & Position::BitboardsByColor[Us];
+    while(OurPieces)
+        moveList = generate_pseudomoves(moveList, Us, pop_LSB(OurPieces), pt);
+
+    return moveList;
 }

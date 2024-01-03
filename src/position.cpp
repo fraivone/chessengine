@@ -1,5 +1,4 @@
 #include <position.hpp>
-#include <print.hpp> // for represent bitset
 
 namespace Position {
     Piece board[nCols*nRows];
@@ -156,5 +155,4 @@ void setBBFromFEN(std::string FEN){
     // Convert from fullmove starting from 1 to gamePly starting from 0,
     // handle also common incorrect FEN with fullmove = 0.
     Position::gamePly = std::max(2 * (Position::gamePly - 1), 0) + (Position::sideToMove == BLACK);
-
 }

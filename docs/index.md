@@ -1,17 +1,31 @@
 NOTES
 ---
-### What is a Pseudomvoe?
+### What is a landing?
 Move generated only taking into account the allowed piece movements, ignoring:
 * Do I leave my king in check?
 * Am I in check?
 * Is enpassant actually allowed?
 * Can I still castle?
 
-### Whne is enpassant enabled in the StateInfo?
+### What is a Pseudomove?
+Move generated only taking into account the allowed piece movements, ignoring:
+* Do I leave my king in check?
+* Am I in check?
+* Can I still castle?
+
+### When is enpassant enabled in the StateInfo?
 En passant square will be considered only if
 * side to move has a pawn threatening epSquare
 * there is an enemy pawn in front of epSquare
 * there is no piece on epSquare or behind epSquare
+
+### What are the blockers?
+When a king is in check, it might be possible to block the check with a move that's not capturing the attacking piece.
+It happens when
+* a sliding piece is checking;
+* it is not a double check;
+* there is at least one empty square on the attacking line of sight;
+The pieces that can actually block a check are called blockers;
 
 ### Vectorization
 

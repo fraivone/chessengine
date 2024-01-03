@@ -7,6 +7,7 @@
 #include "print.hpp"
 #include "types.hpp"
 #include "position.hpp"
+#include "position_eval.hpp"
 #include "magic.hpp"
 
 const int arrayLenght = 34;
@@ -48,20 +49,20 @@ std::string FEN_Array[] = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
 
 BOOST_AUTO_TEST_SUITE(ChessEngine)
 
-    // BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
-    //     init_magics();
-    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 0,  0xc19da1890c182089),0x10101010e);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(ROOK, 63, 0xc19da1890c182089),0x4080000000000000);
+    BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
+        init_magics();
+        BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 0,  0xc19da1890c182089),0x10101010e);
+		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
+		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
+		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 63, 0xc19da1890c182089),0x4080000000000000);
 
 		
-    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,0,  0xc19da1890c182089),0x8040200);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,35, 0xc19da1890c182089),0x4122140014204080);
-    //     BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,50, 0xc19da1890c182089),0xa000a1120408000);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,52, 0xc19da1890c182089),0x2800280402010000);
-	// 	BOOST_CHECK_EQUAL(get_sliding_pseudomoves(BISHOP,63, 0xc19da1890c182089),0x40200000000000);
-    // }
+        BOOST_CHECK_EQUAL(get_sliding_landings(BISHOP,0,  0xc19da1890c182089),0x8040200);
+		BOOST_CHECK_EQUAL(get_sliding_landings(BISHOP,35, 0xc19da1890c182089),0x4122140014204080);
+        BOOST_CHECK_EQUAL(get_sliding_landings(BISHOP,50, 0xc19da1890c182089),0xa000a1120408000);
+		BOOST_CHECK_EQUAL(get_sliding_landings(BISHOP,52, 0xc19da1890c182089),0x2800280402010000);
+		BOOST_CHECK_EQUAL(get_sliding_landings(BISHOP,63, 0xc19da1890c182089),0x40200000000000);
+    }
     
     BOOST_AUTO_TEST_CASE(CheckCastlingRightsFromFEN){
         int FEN_Results[] = {15,15,0,0,0,0,0,12,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12,0,0};
@@ -113,12 +114,11 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
                                 0,0,0,0,0,0,0,0,
                                 };
         init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
-        // TODO FIX IT now that it uses movelist
         for(Square s = 0; s<64 ; s++){
             theMoves.Clear();
             theMoves = PawnAnyMoves(theMoves, s);
             // PrintMoveList(theMoves);
-            theBitboard = Moves2Bitboard(theMoves);
+            theBitboard = Attacked2Bitboard(theMoves);
             BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
         }
 
@@ -127,14 +127,34 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         // updating solutions
         solutions[34] = 0x60000000000;
         solutions[49] = 0x0;
-        // TODO FIX IT now that it uses movelist
         for(Square s = 0; s<64 ; s++){
             theMoves.Clear();
             theMoves = PawnAnyMoves(theMoves, s);
             // PrintMoveList(theMoves);
-            theBitboard = Moves2Bitboard(theMoves);
+            theBitboard = Attacked2Bitboard(theMoves);
             BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
         }
+    }
+
+    BOOST_AUTO_TEST_CASE(DetectCheck){
+        // init_magics(); // previously initialized
+        init_position("3Rk3/5prp/p5b1/6B1/r6P/2P5/PP3P2/2K3R1 b - - 2 23");
+        BOOST_CHECK(countBitsOn(Checkers(WHITE))==0);
+        BOOST_CHECK(countBitsOn(Checkers(BLACK))==1);
+        init_position("8/2k5/4R3/8/8/8/7r/3K3r w - - 0 1");
+        BOOST_CHECK(countBitsOn(Checkers(WHITE))==1);
+        BOOST_CHECK(countBitsOn(Checkers(BLACK))==0);
+        init_position("1k6/P7/8/8/8/K7/8/8 b - - 0 1");
+        BOOST_CHECK(countBitsOn(Checkers(WHITE))==0);
+        BOOST_CHECK(countBitsOn(Checkers(BLACK))==1);
+
+        // DOUBLE CHECK
+        init_position("4R3/2k5/4R3/8/8/4n3/8/3K3r w - - 0 1");
+        BOOST_CHECK(countBitsOn(Checkers(WHITE))==2);
+        BOOST_CHECK(countBitsOn(Checkers(BLACK))==0);
+
+
+
     }
 
 

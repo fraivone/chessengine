@@ -6,7 +6,6 @@
 #include <algorithm> // find max in array
 #include <string.h> //memcopy
 #include "types.hpp"
-#include "print.hpp"
 #include "lut.hpp"
 
 
@@ -59,7 +58,7 @@ void generateLineMagicMask();
 void generateDiagoMagicMask();
 
 
-/* Generate all blockers positions for the input move mask. This is a service methode to prepare the magic bitboard. Since the blockers will be computed by doing the *AND* with the mask, I just use the mask to generate all possbile blockers
+/* Generate all blockers positions for the input move mask. This is a service method to prepare the magic bitboard. Since the blockers will be computed by doing the *AND* with the mask, I just use the mask to generate all possbile blockers
     \param Bitboard Mask
     \return std::vector<Bitboard>
 */
@@ -76,28 +75,31 @@ void generate_magics(PieceType pt, Bitboard (&table)[nCols*nRows][4096], Magic (
 
 /// initialize magic bitboard arrays and magic struct arrays
 void init_magics();
+/// import magic bitboard arrays and magic struct arrays
+/// Not yet implemented as it is not needed
+void import_magics(Magic RookMagics[nCols*nRows], uint64_t Rattacks[nCols*nRows][4096],Magic BishopMagics[nCols*nRows], uint64_t Battacks[nCols*nRows][4096]);
 
 /* Get moves for the bishop using magic bitboards
     \param \param Square to be considered (0-63) square the starting square [0,64)
     \param Bitboard all_pieces_occupancy configuration of all pieces on the board
-    \return Bitboard with all pseudomoves INCLUDING capturing own pieces
+    \return Bitboard with all landings INCLUDING capturing own pieces
 */
-Bitboard get_bishop_pseudomoves(Square square, Bitboard all_pieces_occupancy);
+Bitboard get_bishop_landings(Square square, Bitboard all_pieces_occupancy);
 
 /* Get moves for the rook using magic bitboards
     \param Square square the starting square [0,64)
     \param Bitboard all_pieces_occupancy configuration of all pieces on the board
-    \return Bitboard with all pseudomoves INCLUDING capturing own pieces
+    \return Bitboard with all landings INCLUDING capturing own pieces
 */
-Bitboard get_rook_pseudomoves(Square square, Bitboard all_pieces_occupancy);
+Bitboard get_rook_landings(Square square, Bitboard all_pieces_occupancy);
 
 /* Get moves for a given sliding piece using magic bitboards
     \param PieceType pt which piece is movign? ROOK, BISHOP or QUEEN
     \param Square Square the starting square [0,64)
     \param Bitboard all_pieces_occupancy configuration of all pieces on the board
-    \return Bitboard with all pseudomoves INCLUDING capturing own pieces
+    \return Bitboard with all landings INCLUDING capturing own pieces
 */
-Bitboard get_sliding_pseudomoves(PieceType pt, Square square, Bitboard all_pieces_occupancy);
+Bitboard get_sliding_landings(PieceType pt, Square square, Bitboard all_pieces_occupancy);
 
 
 

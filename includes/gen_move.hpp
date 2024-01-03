@@ -2,6 +2,7 @@
 #pragma once
 #include <position.hpp>
 #include <lut.hpp>
+#include <magic.hpp>
 
 /// structure to hold a move and its score(?)
 struct ExtMove {
@@ -25,10 +26,12 @@ struct MoveList{
     void Add(Move s) {list[size] = s; size++;}
     // Append a ExtMove to this move list
     void Add(ExtMove s) {list[size] = s; size++;}
+    void Append(MoveList s) {for(int i=0; i<s.size; i++){list[size] = s.list[i];size++;}}
     // pop element from this move list
     void Pop(int index) {if(index<size){std::move(list + index + 1, list + size, list + index );size--;}}
     void Clear() {size = 0;}
 };
+
 
 /// Method to help promoting a pawn a given square to another to all possible pieces
 /// taken from stockfish, simplified 
@@ -52,7 +55,30 @@ MoveList PawnAnyMoves(MoveList& moveList, Color c, Square s);
 /// not checking for checks or mate
 MoveList PawnAnyMoves(MoveList& moveList, Square s);
 
-/// Convenient method to OR all moves in a movelist 
+/// Convenient method to OR all attacked squares in a movelist 
 /// to a bitboard so that it's possible to easily test the move generator.
 /// Used in boostTester
-Bitboard Moves2Bitboard(const MoveList moveList);
+Bitboard Attacked2Bitboard(const MoveList moveList);
+/// Convenient method to OR all starting squares currently attacking
+Bitboard Attackers2Bitboard(const MoveList moveList);
+/// Convenient method to OR all starting squares currently attacking target
+Bitboard Attackers2Bitboard(const MoveList moveList, Bitboard target);
+
+/// given a pieceType generate pseudomoves
+/// requires magic bitboards to be init
+MoveList generate_pseudomoves(MoveList&,Color, Square, const PieceType);
+
+/// generate all pseudomoves in this postion
+MoveList generate_all(MoveList&,Color);
+
+/// generate all pseudomoves in this postion for PieceTyep
+MoveList generate_all(MoveList&,Color, const PieceType);
+
+/// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
+/// Considers arbitrary number of piece types
+template<typename... PieceTypes>
+inline MoveList generate_all(MoveList& moveList,Color Us, PieceType pt, PieceTypes... pts) {
+    moveList = generate_all(moveList, Us, pt);
+    moveList = generate_all(moveList, Us, pts...);
+    return moveList;
+}
