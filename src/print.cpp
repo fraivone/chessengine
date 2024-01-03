@@ -74,3 +74,23 @@ void RepresentBoard(){
     std::cout<<"     a   b   c   d   e   f   g   h "<<std::endl;
     std::cout<<KNRM<<"\n";
 }
+
+
+void PrintMoveList(MoveList s){
+    Move theMove;
+    for(int i = 0; i<s.current_idx; i++){
+        theMove = s.list[i].move;
+        Square from = ((theMove>>6) & 0x3f);
+        Square to = ((theMove) & 0x3f);
+        PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
+        MoveType mt = MoveType( theMove & 0xC000);
+        int MoveTypeIndex = (mt >> 14)&0x3;
+        std::cout<<"Move["<<i<<"] - From "<<+from<<" to "<<+to << "  -  ";
+        
+        
+        if(mt==PROMOTION)
+            std::cout<<MoveTypeNames[MoveTypeIndex]<<" to "<<PieceTypeNames[pt]<<std::endl;
+        else
+            std::cout<<MoveTypeNames[MoveTypeIndex]<<std::endl;
+    }
+}

@@ -12,8 +12,11 @@ int main(){
 
     init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
     RepresentBoard();
-    RepresentBitset(PawnAnyMoves(54));
-    std::cout<<std::hex<<PawnAnyMoves(54);
+    // MoveList start;    
+    // start = PawnAnyMoves(start, WHITE, 50);
+    // PrintMoveList(start);
+    // RepresentBitset(Moves2Bitboard(start));
+    
 
 
     /*

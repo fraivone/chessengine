@@ -101,17 +101,39 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         BOOST_CHECK_EQUAL(pieces(WHITE,ROOK,QUEEN), 0x89);
     }
     BOOST_AUTO_TEST_CASE(CheckPawnAnyMovesFunction){
+        MoveList theMoves;
+        Bitboard theBitboard = 0ULL;
         Bitboard solutions[] = {0,0,0,0,0,0,0,0,
                                 0x1010000,0x2020000,0,0x8080000,0x10100000,0x20200000,0x40400000,0x80800000,
                                 0,0,0,0,0,0,0,0,
                                 0,0,0,0,0,0,0,0,
                                 0,0x2000000,0x40000000000,0x8000000,0,0,0,0,
                                 0,0,0,0x1C000000000000,0,0,0,0,
-                                0x10100000000,0x20000000000,0xC0000000000,0,0x181000000000,0x202000000000,0x404000000000,0x808000000000
+                                0x10100000000,0x20000000000,0xC0000000000,0,0x181000000000,0x202000000000,0x404000000000,0x808000000000,
+                                0,0,0,0,0,0,0,0,
                                 };
         init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
-        for(Square s = 0; s<56 ; s++){
-            BOOST_CHECK_EQUAL(PawnAnyMoves(s), solutions[s]);
+        // TODO FIX IT now that it uses movelist
+        for(Square s = 0; s<64 ; s++){
+            theMoves.Clear();
+            theMoves = PawnAnyMoves(theMoves, s);
+            // PrintMoveList(theMoves);
+            theBitboard = Moves2Bitboard(theMoves);
+            BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
+        }
+
+        // removing extra pawn makes enpassant possible
+        init_position("rnbqkbnr/p1p1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
+        // updating solutions
+        solutions[34] = 0x60000000000;
+        solutions[49] = 0x0;
+        // TODO FIX IT now that it uses movelist
+        for(Square s = 0; s<64 ; s++){
+            theMoves.Clear();
+            theMoves = PawnAnyMoves(theMoves, s);
+            // PrintMoveList(theMoves);
+            theBitboard = Moves2Bitboard(theMoves);
+            BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
         }
     }
 

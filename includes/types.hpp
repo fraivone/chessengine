@@ -15,6 +15,7 @@ constexpr int nCols = 8;
 constexpr int nRows = 8;
 constexpr int MAX_MOVES = 256;
 constexpr int MAX_PLY   = 246;
+constexpr int ENPSNT_UNAVAILABLE   = 64;
 
 
 
@@ -61,7 +62,7 @@ enum Color {
 };
 
 
-/// Bits
+/// CastlingRights Bits
 // | 0    |  1    |   2   |   3   |
 // | W_OO | W_OOO |  B_OO | B_OOO |
 /// 
@@ -211,6 +212,14 @@ constexpr Bitboard make_bitboard(Square sq) { is_ok(sq); return 1ULL << sq; }
 
 constexpr Piece make_piece(Color c, PieceType pt) { return Piece((c << 3) + pt); }
 
+constexpr Move make_move(Square from, Square to) { return Move((from << 6) + to); }
+
+template<MoveType T>
+constexpr Move make(Square from, Square to, PieceType pt = KNIGHT) {
+    return Move(T + ((pt - KNIGHT) << 12) + (from << 6) + to);
+}
+
+
 constexpr PieceType type_of(Piece pc) { return PieceType(pc & 7); }
 
 inline Color color_of(Piece pc) {
@@ -224,6 +233,7 @@ inline Color color_of(Piece pc) {
 constexpr std::string_view PieceToChar(" PNBRQK  pnbrqk");
 /// Create an array of string representations for piece types
 static const char* PieceTypeNames[] = {"NO_PIECE_TYPE", "PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN", "KING","ALL_PIECES", "PIECE_TYPE_NB"};
+static const char* MoveTypeNames[] = {"NORMAL", "PROMOTION", "ENPASSANT", "CASTLING"};
 /// Create an array of string representations for colors
 static const char* ColorNames[] = { "WHITE", "BLACK", "COLOR_NB"};
 /// String representations for castling rights

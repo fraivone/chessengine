@@ -15,3 +15,5 @@ void RepresentBitset(Bitboard);
     \return void
 */  
 void RepresentBoard();
+
+void PrintMoveList(MoveList s);

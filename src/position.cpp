@@ -1,4 +1,5 @@
 #include <position.hpp>
+#include <print.hpp> // for represent bitset
 
 namespace Position {
     Piece board[nCols*nRows];
@@ -137,17 +138,17 @@ void setBBFromFEN(std::string FEN){
         && ((ss >> row) && (row == (Position::sideToMove == WHITE ? '6' : '3')))){
         Position::st.epSquare = Square((col - 'a') +(row - '1')*8);
 
-    // TODO
         // En passant square will be considered only if
         // a) side to move has a pawn threatening epSquare
         // b) there is an enemy pawn in front of epSquare
         // c) there is no piece on epSquare or behind epSquare
-        enpassant = PawnAttacks[Color(~Position::sideToMove)][Position::st.epSquare] & pieces(Color(Position::sideToMove), PAWN)
-                    && (pieces(Color(~Position::sideToMove), PAWN) & (Position::st.epSquare + Position::sideToMove==WHITE? -8: +8))
-                    && !(pieces() & (Position::st.epSquare | (Position::st.epSquare + Position::sideToMove==WHITE? 8: -8)));
+        
+        enpassant = PawnAttacks[Color(!Position::sideToMove)][Position::st.epSquare] & pieces(Color(Position::sideToMove), PAWN)
+                    && (pieces(Color(!Position::sideToMove), PAWN) & make_bitboard((Position::st.epSquare + (Position::sideToMove==WHITE? -8: +8))))
+                    && !(pieces() & (make_bitboard(Position::st.epSquare) | make_bitboard(Position::st.epSquare + (Position::sideToMove==WHITE? 8: -8))));
     }
     if (!enpassant)
-        Position::st.epSquare = 64;
+        Position::st.epSquare = ENPSNT_UNAVAILABLE;
 
     // 5-6. Halfmove clock and fullmove number
     ss >> std::skipws >> Position::st.rule50 >> Position::gamePly;
