@@ -84,7 +84,7 @@ Bitboard Moves2Bitboard(const MoveList moveList){
     Move theMove;
     Square to;
     Bitboard theBitboard = 0ULL;
-    for(int i = 0; i<moveList.current_idx; i++){
+    for(int i = 0; i<moveList.size; i++){
         theMove = moveList.list[i].move;
         to = ((theMove) & 0x3f);
         theBitboard |= make_bitboard(to);

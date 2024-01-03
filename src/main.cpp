@@ -12,9 +12,9 @@ int main(){
 
     init_position("rnbqkbnr/ppp1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3");
     RepresentBoard();
-    // MoveList start;    
-    // start = PawnAnyMoves(start, WHITE, 50);
-    // PrintMoveList(start);
+    MoveList start;    
+    start = PawnAnyMoves(start, BLACK, 50);
+    PrintMoveList(start);
     // RepresentBitset(Moves2Bitboard(start));
     
 

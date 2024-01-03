@@ -17,13 +17,17 @@ struct ExtMove {
 };
 
 /// Structure to store the ExtMove. Contains a the list 
-/// itself as an array and the current_idx, containing the next index to be filled
+/// itself as an array and the size. The size is different from MAX SIZE which is set to MAX MOVES
 struct MoveList{
     ExtMove list[MAX_MOVES];
-    int current_idx = 0;
-    void Add(Move s) {list[current_idx] = s; current_idx++;}
-    void Add(ExtMove s) {list[current_idx] = s; current_idx++;}
-    void Clear() {current_idx = 0;}
+    int size = 0;
+    // Append a move to this move list
+    void Add(Move s) {list[size] = s; size++;}
+    // Append a ExtMove to this move list
+    void Add(ExtMove s) {list[size] = s; size++;}
+    // pop element from this move list
+    void Pop(int index) {if(index<size){std::move(list + index + 1, list + size, list + index );size--;}}
+    void Clear() {size = 0;}
 };
 
 /// Method to help promoting a pawn a given square to another to all possible pieces

@@ -78,7 +78,7 @@ void RepresentBoard(){
 
 void PrintMoveList(MoveList s){
     Move theMove;
-    for(int i = 0; i<s.current_idx; i++){
+    for(int i = 0; i<s.size; i++){
         theMove = s.list[i].move;
         Square from = ((theMove>>6) & 0x3f);
         Square to = ((theMove) & 0x3f);
