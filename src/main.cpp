@@ -8,15 +8,14 @@
 #include "magic.hpp"
 #include "position.hpp"
 #include "gen_move.hpp"
-#include "position_eval.hpp"
 
 int main(){
     init_lut();
     init_magics();
-    init_position("r1bqk2r/p1p2ppp/1p1p1n2/4p3/3P4/NnP1PN2/PP1BBPPb/R3K2R w KQkq - 1 8");
+    init_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     RepresentBoard();
-    MoveList start;    
-    start = generate_all(start, Position::sideToMove,KING);
+    MoveList start;
+    start = generate_all(start, Position::sideToMove);
     PrintMoveList(start);
     
 

@@ -4,6 +4,14 @@
 #include <lut.hpp>
 #include <magic.hpp>
 
+
+
+enum GenType {
+    CAPTURES,
+    EVASIONS,
+    LEGAL
+};
+
 /// structure to hold a move and its score(?)
 struct ExtMove {
     Move move;
@@ -74,6 +82,10 @@ MoveList generate_all(MoveList&,Color);
 /// generate all pseudomoves in this postion for PieceTyep
 MoveList generate_all(MoveList&,Color, const PieceType);
 
+/// Special template to generate only the evasion moves
+template<GenType>
+MoveList generate_all(MoveList& moveList,Color Us);
+
 /// overloaded function to get bitboard for a certain piece type(s), color, piece types and color.
 /// Considers arbitrary number of piece types
 template<typename... PieceTypes>
@@ -82,3 +94,17 @@ inline MoveList generate_all(MoveList& moveList,Color Us, PieceType pt, PieceTyp
     moveList = generate_all(moveList, Us, pts...);
     return moveList;
 }
+
+/// Given the move list for color THEM, check if Us is in check
+/// returns a bitboard having the bits of checkers set
+Bitboard Checkers(MoveList OpponentMoveList, Bitboard OurKingBitboard);
+/// Checks if the Color "Us" is in check
+/// returns a bitboard having the bits of checkers set
+Bitboard Checkers(Color Us);
+
+/// If our king is in check, return a bitboard with the
+/// pieces that can actually block the attack
+Bitboard PossibleBlockerBitboard(MoveList& opponentMoveList, Color Us);
+/// If our king is in check, return a bitboard with the
+/// pieces that can actually block the attack
+Bitboard PossibleBlockerBitboard(Color Us);
