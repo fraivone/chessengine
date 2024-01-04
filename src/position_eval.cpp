@@ -13,13 +13,16 @@ Bitboard Checkers(Color Us){
 }
 
 
-Bitboard BlockerPossibleBitboard(Color Us){
+Bitboard PossibleBlockerBitboard(Color Us){
     // opponent move lsit
     MoveList theOpponentMoveList;
     theOpponentMoveList = generate_all(theOpponentMoveList, Color(!Us));
-    
+    return PossibleBlockerBitboard(theOpponentMoveList, Us);
+}
+
+Bitboard PossibleBlockerBitboard(MoveList& opponentMoveList, Color Us){   
     Bitboard OurKing = Position::BitboardsByColor[Us]&Position::BitboardsByType[KING];
-    Bitboard WhoIsAttacking = Checkers(theOpponentMoveList,OurKing);
+    Bitboard WhoIsAttacking = Checkers(opponentMoveList,OurKing);
 
     int NumberOfAttackers = countBitsOn(WhoIsAttacking);
     Square theAttackerSquare = pop_LSB(WhoIsAttacking);
@@ -32,56 +35,7 @@ Bitboard BlockerPossibleBitboard(Color Us){
     // Only 1 blockable attacker
     else{
         Square OurKingSquare = pop_LSB(OurKing);
-        int KingRow = OurKingSquare/nRows;
-        int KingCol = OurKingSquare%nCols;
-        int AttackerRow = theAttackerSquare/nRows;
-        int AttackerCol = theAttackerSquare%nCols;
-
-        int deltaRows = AttackerRow - KingRow;
-        int deltaCols = AttackerCol - KingCol;
-
-        // Attacker is touching the king. Cant be blocked
-        if(   ( (abs(deltaRows) == 1)  & (abs(deltaCols) == 0) )
-            ||( (abs(deltaRows) == 0)  & (abs(deltaCols) == 1) )
-            ||( (abs(deltaRows) == 1)  & (abs(deltaCols) == 1) ))
-            return possible_blockers_bb;
-        else{
-            // attack is along a file
-            if(AttackerCol == KingCol ){
-                while(AttackerRow<KingRow-1){
-                    AttackerRow++;
-                    possible_blockers_bb |= make_bitboard(make_square(AttackerCol,AttackerRow));
-                } 
-                while(KingRow<AttackerRow-1){
-                    KingRow++;
-                    possible_blockers_bb |= make_bitboard(make_square(KingCol,KingRow));
-                } 
-            }
-            // attack is along a row
-            else if(AttackerRow == KingRow ){
-                while(AttackerCol<KingCol-1){
-                    AttackerCol++;
-                    possible_blockers_bb |= make_bitboard(make_square(AttackerCol,AttackerRow));
-                } 
-                while(KingCol<AttackerCol-1){
-                    KingCol++;
-                    possible_blockers_bb |= make_bitboard(make_square(KingCol,KingRow));
-                } 
-            }
-            // attack is along a diago
-            else{
-                while(AttackerCol<KingCol-1){
-                    AttackerCol++;
-                    AttackerRow++;
-                    possible_blockers_bb |= make_bitboard(make_square(AttackerCol,AttackerRow));
-                } 
-                while(KingCol<AttackerCol-1){
-                    KingCol++;
-                    KingRow++;
-                    possible_blockers_bb |= make_bitboard(make_square(KingCol,KingRow));
-                } 
-            }
-        }
+        possible_blockers_bb |= BetweenBB[theAttackerSquare][OurKingSquare];
     }
     return possible_blockers_bb;
 }

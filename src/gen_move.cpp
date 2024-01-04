@@ -122,6 +122,12 @@ Bitboard Attackers2Bitboard(const MoveList moveList, Bitboard target){
 // given a piece generate pseudomoves
 MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const PieceType pt){
     Bitboard bb;
+    Bitboard opponent_pawns = Position::BitboardsByType[PAWN] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_knights = Position::BitboardsByType[KNIGHT] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_rooks = Position::BitboardsByType[ROOK] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_bishops = Position::BitboardsByType[BISHOP] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_queens = Position::BitboardsByType[QUEEN] & Position::BitboardsByColor[!Us];
+    Bitboard opponents_attacked_squares = 0ULL;
         switch(pt) {
         case PAWN:
             return PawnAnyMoves(moveList, Us, sq);
@@ -134,13 +140,66 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us];
             break;
         case KING:
-            bb = king_lut[sq] & ~Position::BitboardsByColor[Us] & ~(Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            // KING can't capture it's own piece
+            bb = king_lut[sq] & ~Position::BitboardsByColor[Us];
+            // don't put the king in check
+            
+            // opponents king attacks
+            opponents_attacked_squares = (Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            // opponents pawns attacks
+            while(opponent_pawns)
+                opponents_attacked_squares |= PawnAttacks[!Us][pop_LSB(opponent_pawns)];
+            // opponents knights attacks
+            while(opponent_knights)
+                opponents_attacked_squares |= knight_lut[pop_LSB(opponent_knights)];
+            // opponents rooks attacks
+            while(opponent_rooks)
+                opponents_attacked_squares |= get_sliding_landings(ROOK, pop_LSB(opponent_rooks), pieces());
+            // opponents bishops attacks
+            while(opponent_bishops)
+                opponents_attacked_squares |= get_sliding_landings(BISHOP, pop_LSB(opponent_bishops), pieces());
+            // opponents queens attacks
+            while(opponent_queens)
+                opponents_attacked_squares |= get_sliding_landings(QUEEN, pop_LSB(opponent_queens), pieces());
+            bb &= ~opponents_attacked_squares;
+            // castling moves:
+            // relies entirely on the correctness of the stateinfo
+            // 0. Castles is still valid
+            // 1. No friendly pieces between the king and the rook
+            // 2. no attackers pointing at the squares between where the king is and where it wants to go
+            // However the BetweenBB doesn't include the landing squares. So I have added an extra check to make sure that (2) includes the king's landing square
+            // WHITE CASTLES
+            // TODO improve this block of poorly written code (that works)
+            if((Us == WHITE) && (Position::st.castlingRights & WHITE_CASTLING)){
+                
+                if( (WHITE_OOO & Position::st.castlingRights) 
+                    && !(BetweenBB[White_King_Start][White_Rook_QueenSide] & pieces(Us)) 
+                    && !( (BetweenBB[White_King_Start][White_King_Start + Castle_QueenSide_KingDelta] | make_bitboard(White_King_Start + Castle_QueenSide_KingDelta)) & opponents_attacked_squares))
+                    moveList.Add(make<CASTLING>(White_King_Start, White_King_Start + Castle_QueenSide_KingDelta));
+                if( (WHITE_OO & Position::st.castlingRights) 
+                    && !(BetweenBB[White_King_Start][White_Rook_KingSide] & pieces(Us)) 
+                    && !( ( BetweenBB[White_King_Start][White_King_Start + Castle_KingSide_KingDelta] | make_bitboard(White_King_Start + Castle_KingSide_KingDelta)) & opponents_attacked_squares) )
+                    moveList.Add(make<CASTLING>(White_King_Start, White_King_Start + Castle_KingSide_KingDelta));
+            }
+            
+            // BLACK CASTLES
+            if((Us == BLACK) && (Position::st.castlingRights & BLACK_CASTLING)){
+                if( (BLACK_OOO & Position::st.castlingRights) 
+                    && !(BetweenBB[Black_King_Start][Black_Rook_QueenSide] & pieces(Us)) 
+                    && !( (BetweenBB[Black_King_Start][Black_King_Start + Castle_QueenSide_KingDelta]| make_bitboard(Black_King_Start + Castle_QueenSide_KingDelta)) & opponents_attacked_squares))
+                    moveList.Add(make<CASTLING>(Black_King_Start, Black_King_Start + Castle_QueenSide_KingDelta));
+                if((BLACK_OO & Position::st.castlingRights) 
+                    && !(BetweenBB[Black_King_Start][Black_Rook_KingSide] & pieces(Us)) 
+                    && !( (BetweenBB[Black_King_Start][Black_King_Start + Castle_KingSide_KingDelta] | make_bitboard(Black_King_Start + Castle_KingSide_KingDelta)) & opponents_attacked_squares))
+                    moveList.Add(make<CASTLING>(Black_King_Start, Black_King_Start + Castle_KingSide_KingDelta));
+            }
             break;
         default: 
             bb = 0ULL;
         }
         while(bb)
             moveList.Add(make_move(sq,pop_LSB(bb)));
+        
     return moveList;
 }
 

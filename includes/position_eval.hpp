@@ -13,4 +13,7 @@ Bitboard Checkers(Color Us);
 
 /// If our king is in check, return a bitboard with the
 /// pieces that can actually block the attack
-Bitboard BlockerPossibleBitboard(Color Us);
+Bitboard PossibleBlockerBitboard(MoveList& opponentMoveList, Color Us);
+/// If our king is in check, return a bitboard with the
+/// pieces that can actually block the attack
+Bitboard PossibleBlockerBitboard(Color Us);

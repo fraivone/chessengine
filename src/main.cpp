@@ -4,20 +4,23 @@
 #include <chrono>
 #include "print.hpp"
 #include "types.hpp"
+#include "lut.hpp"
 #include "magic.hpp"
 #include "position.hpp"
 #include "gen_move.hpp"
 #include "position_eval.hpp"
 
 int main(){
+    init_lut();
     init_magics();
-    
-    init_position("3Rk3/5prp/p5b1/6B1/r6P/2P5/PP3P2/2K3R1 b - - 2 23");
+    init_position("r1bqk2r/p1p2ppp/1p1p1n2/4p3/3P4/NnP1PN2/PP1BBPPb/R3K2R w KQkq - 1 8");
     RepresentBoard();
     MoveList start;    
-    // start = PawnAnyMoves(start, BLACK, 50);
+    start = generate_all(start, Position::sideToMove,KING);
+    PrintMoveList(start);
     
-    RepresentBitset(BlockerPossibleBitboard(Position::sideToMove));
+
+    // RepresentBitset(BlockerPossibleBitboard(Position::sideToMove));
     // MoveList OurMoveList;
     // // KING can't block
     // OurMoveList = generate_all(OurMoveList, Color(Us),PAWN,KNIGHT,BISHOP,ROOK,QUEEN); 

@@ -11,13 +11,79 @@
 */
 #include "lut.hpp"
 
-/*
-Functions and LUT generators to determine the possible landing
-squares of the pieces. Landing on my own or my opponents pieces
-is allowed because:
-1. Landing on my own piece serves as Piece is defended
-2. Landing on my oppoenents pieces serves as Piece is captured
-*/
+
+Bitboard BetweenBB[nCols*nRows][nCols*nRows];
+
+void init_lut(){
+    std::cout<<"Initializing inBetween bitboards"<<std::endl;
+    generate_inBetweenLUT();
+}
+
+void generate_inBetweenLUT(){
+    for(Square sq1=0; sq1<nCols*nRows; sq1++)
+        for(Square sq2=0; sq2<nCols*nRows; sq2++)
+            BetweenBB[sq1][sq2] = calculate_inBetween(sq1,sq2);
+}
+
+Bitboard calculate_inBetween(Square sq1, Square sq2){
+    int ARow = sq1/nRows;
+    int ACol = sq1%nCols;
+    int BRow = sq2/nRows;
+    int BCol = sq2%nCols;
+    int deltaRows = BRow - ARow;
+    int deltaCols = BCol - ACol;
+
+    int dirXA = 0;
+    int dirYA = 0;
+    Bitboard inBetweenSquares = 0ULL;
+    // sq1 and sq2 touch each other or are the same square, no in between
+    if(   ( (abs(deltaRows) == 1)  & (abs(deltaCols) == 0) )
+        ||( (abs(deltaRows) == 0)  & (abs(deltaCols) == 1) )
+        ||( (abs(deltaRows) == 0)  & (abs(deltaCols) == 0) )
+        ||( (abs(deltaRows) == 1)  & (abs(deltaCols) == 1) ))
+        return inBetweenSquares;
+    
+    else{
+        // same file
+        if(deltaCols == 0 ){
+            dirYA = ARow < BRow ? 1 : -1;
+            while((abs(ARow - BRow) !=1)){
+                ARow += dirYA;
+                inBetweenSquares |= make_bitboard(make_square(ACol,ARow));
+            } 
+        }
+        // same rank
+        else if(deltaRows == 0 ){
+            dirXA = ACol < BCol ? 1 : -1;
+            while((abs(ACol - BCol) !=1)){
+                ACol += dirXA;
+                inBetweenSquares |= make_bitboard(make_square(ACol,ARow));
+            } 
+        }
+        // diago
+        else if (abs(deltaCols) == abs(deltaRows)){
+            dirXA = ACol < BCol ? 1 : -1;
+            dirYA = ARow < BRow ? 1 : -1;
+            while( (abs(ACol - BCol) !=1) & (abs(ARow - BRow) !=1) ){
+                ACol += dirXA;
+                ARow += dirYA;
+                inBetweenSquares |= make_bitboard(make_square(ACol,ARow));
+            }
+        }
+        else{
+            // std::cout<<"Squares "<<+sq1<<","<<+sq2<<" are incompatible\n";
+            ;
+        }
+        
+    }
+    return inBetweenSquares;
+
+}
+
+
+
+
+
 
 std::array<uint64_t,64> wpawn_straight_lut(){
     uint64_t initial_pos,landing;

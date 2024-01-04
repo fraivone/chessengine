@@ -17,4 +17,8 @@ void RepresentBitset(Bitboard);
 */  
 void RepresentBoard();
 
+/// Print a single move on the terminal
+void PrintMove(Move theMove);
+
+/// Print all the mvoes in the list on the terminal
 void PrintMoveList(MoveList s);

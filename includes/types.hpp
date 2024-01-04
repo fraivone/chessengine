@@ -135,6 +135,19 @@ constexpr Bitboard Rank7BB = Rank1BB << (8 * 6);
 constexpr Bitboard Rank8BB = Rank1BB << (8 * 7);
 constexpr Bitboard Ranks[] = {Rank1BB,Rank2BB,Rank3BB,Rank4BB,Rank5BB,Rank6BB,Rank7BB,Rank8BB};
 
+const Square White_King_Start = 4;
+const Square White_Rook_KingSide = 7;
+const Square White_Rook_QueenSide = 0;
+const Square Black_King_Start = 60;
+const Square Black_Rook_KingSide = 63;
+const Square Black_Rook_QueenSide = 56;
+
+// Number of squares the king moves when castling
+const int Castle_KingSide_KingDelta = 2;
+const int Castle_QueenSide_KingDelta = -Castle_KingSide_KingDelta;
+const int Castle_KingSide_RookDelta = -Castle_KingSide_KingDelta;
+const int Castle_QueenSide_RookDelta = +3;
+
 enum Direction : int {
     NORTH = 8,
     EAST  = 1,

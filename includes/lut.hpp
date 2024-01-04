@@ -39,6 +39,21 @@ extern uint64_t Rattacks[nCols*nRows][4096];
 /// 4096 is the largest number of blockers
 extern uint64_t Battacks[nCols*nRows][4096];
 
+/// LUT containing the squares in between.
+/// If A and B are on the same (file,rank,diagonal)
+/// BetweenBB[A][B] returns a bitboard containing the 
+/// squares connecting them
+/// else it return NULL Bitboard
+extern Bitboard BetweenBB[nCols*nRows][nCols*nRows];
+
+/// Initialize the lut (used only for the BetweenBB so far)
+void init_lut();
+
+/// Fill the BetweenBB LUT
+void generate_inBetweenLUT();
+
+/// calculate the in between bitboard between sq1 and sq2
+Bitboard calculate_inBetween(Square sq1, Square sq2);
 
 // to generate the LUT from scratch
 /*! Generates a LUT for the straight landings of white pawns. 

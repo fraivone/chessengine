@@ -51,6 +51,7 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
 
     BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
         init_magics();
+        init_lut();
         BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 0,  0xc19da1890c182089),0x10101010e);
 		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
 		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
@@ -117,7 +118,6 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         for(Square s = 0; s<64 ; s++){
             theMoves.Clear();
             theMoves = PawnAnyMoves(theMoves, s);
-            // PrintMoveList(theMoves);
             theBitboard = Attacked2Bitboard(theMoves);
             BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
         }
@@ -130,7 +130,6 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         for(Square s = 0; s<64 ; s++){
             theMoves.Clear();
             theMoves = PawnAnyMoves(theMoves, s);
-            // PrintMoveList(theMoves);
             theBitboard = Attacked2Bitboard(theMoves);
             BOOST_CHECK_EQUAL(theBitboard, solutions[s]);
         }
@@ -152,9 +151,68 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         init_position("4R3/2k5/4R3/8/8/4n3/8/3K3r w - - 0 1");
         BOOST_CHECK(countBitsOn(Checkers(WHITE))==2);
         BOOST_CHECK(countBitsOn(Checkers(BLACK))==0);
+    }
 
+    BOOST_AUTO_TEST_CASE(CheckPseudoMoves){
+        const int size = 2;
+        MoveList thePseudoMoves;
+        Bitboard theBitboard;
+        Bitboard solutions[size] = {0x5000000000040,0x200020000000000};
 
+        std::string FEN_ArrayCheckPseudoMoves[size] = {"1B1k4/b1pP1p1p/PpP2P1P/1p6/1p1p4/1P1P3p/7P/7K w - - 0 1",
+                                                        "3k4/b2P1p1p/PBP2P1P/1p6/1p1p4/1P1P3p/7P/7K b - - 0 1"};
+        for(auto i = 0; i < size; i++){
+            thePseudoMoves.Clear();
+            init_position(FEN_ArrayCheckPseudoMoves[i]);
+            thePseudoMoves = generate_all(thePseudoMoves, Position::sideToMove);
+            theBitboard = Attacked2Bitboard(thePseudoMoves);
+            BOOST_CHECK_EQUAL(theBitboard, solutions[i]);
+        }
+    }
+    BOOST_AUTO_TEST_CASE(CheckCastlesMoves){
+        const int size = 9;
+        MoveList thePseudoMoves;
+        // 0 no castles, 1 castles kingside, 2 castles queenside, 3 both castles
+        Bitboard solutions[size] = {1,1,2, 0,3,1,0,0,1};
 
+        std::string FEN_test[size] = {"rnbqk2r/p1pp1ppp/1p1bpn2/8/3P4/2P1PN2/PP2BPPP/RNBQK2R b KQkq - 1 5",
+                                      "rnbqk2r/p1pp1ppp/1p1bpn2/8/3P4/2P1PN2/PP2BPPP/RNBQK2R w KQkq - 1 5",
+                                      "rn1qk2r/p1p2ppp/1p1p1n2/4pb2/3P4/NQP1PN2/PP1BBPPb/R3K2R w KQkq - 2 9",
+                                      "r1bqk2r/p1p2ppp/1p1p1n2/4p3/3P4/NnP1PN2/PP1BBPPb/R3K2R w KQkq - 1 8",
+                                      "r6r/1b3kbq/8/8/7B/8/8/R3K2R w KQ - 4 3",
+                                      "r6r/1b3kb1/7q/8/7B/8/8/R3K2R w KQ - 4 3",
+                                      "r3k2r/8/3Q4/8/8/5q2/8/R3K2R b KQkq - 0 1",
+                                      "8/8/1P2K3/8/2n5/1q6/8/5k2 b - - 0 1",
+                                      "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"};
+        for(auto i = 0; i < 4; i++){
+            thePseudoMoves.Clear();
+            int GeneratedCastlingType = 0;
+            init_position(FEN_test[i]);
+            thePseudoMoves = generate_all(thePseudoMoves, Position::sideToMove, KING);
+            GeneratedCastlingType = 0;
+            for(auto i=0; i<thePseudoMoves.size; i++){
+                Move theMove = thePseudoMoves.list[i].move;
+                MoveType mt = MoveType( theMove & 0xC000);
+                Square from = ((theMove>>6) & 0x3f);
+                Square to = ((theMove) & 0x3f);
+                if(mt==CASTLING){              
+                    // store what type of castling it was
+                    if((to - from) == Castle_KingSide_KingDelta)
+                        GeneratedCastlingType |= 1;
+                    if((to - from) == Castle_QueenSide_KingDelta)
+                        GeneratedCastlingType |= 2;
+                }
+            }
+            // check matches with 
+            BOOST_CHECK_EQUAL(GeneratedCastlingType, solutions[i]);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(CheckInBetweenLUT){
+        Bitboard testResults[64] = {18049651735527936,0,0,0,0,0,0,36170086419038208,0,18049651735527424,0,0,0,0,0,36170086419005440,0,0,18049651735265280,0,0,0,0,36170086410616832,0,0,0,18049651601047552,0,0,0,36170084263133184,0,0,0,0,18049582881570816,0,0,36169534507319296,0,0,0,0,0,18014398509481984,0,36028797018963968,0,0,0,0,0,0,0,0,9079256848778919936,8935141660703064064,8646911284551352320,8070450532247928832,6917529027641081856,4611686018427387904,0,0};
+        Square sq1 = 63;
+        for(Square sq2=0; sq2<nCols*nRows; sq2++)
+            BOOST_CHECK_EQUAL(calculate_inBetween(sq1,sq2),testResults[sq2]);
     }
 
 

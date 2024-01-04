@@ -75,22 +75,25 @@ void RepresentBoard(){
     std::cout<<KNRM<<"\n";
 }
 
+void PrintMove(Move theMove){
+    Square from = ((theMove>>6) & 0x3f);
+    Square to = ((theMove) & 0x3f);
+    PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
+    MoveType mt = MoveType( theMove & 0xC000);
+    int MoveTypeIndex = (mt >> 14)&0x3;
+    std::cout<<"From "<<+from<<" to "<<+to << "  -  ";
+        
+    if(mt==PROMOTION)
+        std::cout<<MoveTypeNames[MoveTypeIndex]<<" to "<<PieceTypeNames[pt]<<std::endl;
+    else
+        std::cout<<MoveTypeNames[MoveTypeIndex]<<std::endl;
+}
+
 
 void PrintMoveList(MoveList s){
     Move theMove;
     for(int i = 0; i<s.size; i++){
-        theMove = s.list[i].move;
-        Square from = ((theMove>>6) & 0x3f);
-        Square to = ((theMove) & 0x3f);
-        PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
-        MoveType mt = MoveType( theMove & 0xC000);
-        int MoveTypeIndex = (mt >> 14)&0x3;
-        std::cout<<"Move["<<i<<"] - From "<<+from<<" to "<<+to << "  -  ";
-        
-        
-        if(mt==PROMOTION)
-            std::cout<<MoveTypeNames[MoveTypeIndex]<<" to "<<PieceTypeNames[pt]<<std::endl;
-        else
-            std::cout<<MoveTypeNames[MoveTypeIndex]<<std::endl;
+        std::cout<<"Move["<<i<<"] - ";
+        PrintMove(s.list[i].move);
     }
 }
