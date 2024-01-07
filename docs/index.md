@@ -1,5 +1,12 @@
 NOTES
 ---
+### Current steps for generating moves
+1. Calculate the opponents pseudomoves OR check the opponent last move[^1]
+2. Is Our king in check? 
+YES. Caclulate Pinned Pieces, Possible Blocker Pieces, Generate evasion moves
+NO. Calculate Pinned Pieces, Generate all legal moves
+
+[^1] Actually this might be not enough. Last opponents move won't tell me anything about discover attacks for example. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
 ### What is a landing?
 Move generated only taking into account the allowed piece movements, ignoring:
 * Do I leave my king in check?
