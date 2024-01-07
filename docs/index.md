@@ -8,7 +8,8 @@ NOTES
 YES. Calculate possible blocker Pieces/Moves, Generate evasion moves
 NO. Generate all legal moves
 
-<a name="myfootnote1">1</a>: Currently I am using a specified method (`Checkers`) to analyze checkers. It *should be* faster than `generate_all` as it skips some extra checks. But I wonder if it is possible to establish a check based on the last move made by opponent. In that case it'd be even faster. However, last opponents move won't tell me anything about discover attacks for example. So it is a more complicated topic I don't want to explore now. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
+<a name="myfootnote1">1</a>: Currently I am using a specified method (`Checkers`) to analyze checkers. It *should be* faster than `generate_all` as it skips some extra checks. But I wonder if it is possible to establish a check based on the last move made by opponent. In that case it'd be even faster. However, last opponents move won't tell me anything about discover attacks for example. So it is a more complicated topic I don't want to explore now. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...).
+
 <a name="myfootnote1">2</a>: Evasions are moves that stop a check. They include blocking with non-pinned pieces, capture the checker if there is only one (can't block double checks), moving the king to safety.
 
 ### Pinned Pieces
