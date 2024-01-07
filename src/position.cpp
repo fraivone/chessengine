@@ -161,7 +161,7 @@ void setBBFromFEN(std::string FEN){
 
 Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
     Square OurKingSquare = pop_LSB(OurKingBB);
-    Bitboard OpponentsSlidingBB = (Position::BitboardsByType[QUEEN] | Position::BitboardsByType[ROOK] | Position::BitboardsByType[BISHOP]) & Position::BitboardsByColor[!Us];
+    Bitboard OpponentsSlidingBB = pieces(Color(!Us), QUEEN,ROOK,BISHOP);
     Bitboard OnlyMyPiecesInBetween;
     Bitboard PinnedBB = 0ULL;
     Square enemySq;
