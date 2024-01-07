@@ -27,7 +27,9 @@ namespace Position{
     /// move ply count
     extern int gamePly;
     /// bitboard of the pinned pieces
-    extern Bitboard pinnedPieces;
+    extern Bitboard pinnedPieces[COLOR_NB];
+    /// array holding, for each square, its pinner if any. No pins are indicated by ENPSNT_UNAVAILABLE
+    extern Square PinMap[COLOR_NB][nRows*nCols];
 }
 
 /// init position
@@ -90,5 +92,9 @@ void setStatusFromFEN(std::string FEN);
 /// Sliding pieces that are pinned on 2 different directions 
 /// can't move either. So that has to be taken into account 
 /// when generating evasions. At this stage leaping 
-/// and sliding pieces are treated equally
+/// and sliding pieces are treated equally.
+/// I had to add 2 more actions to this method to properly deal with the pinned pieces
+/// this method now also updates
+/// 1. StateInfo.pinners[!Us], a bitboard containing the positions of all opponent pinners (pinning us)
+/// 2. PinMap a vector containing all the pairs Pinners - Pinned
 Bitboard PinnedPieces(Color Us, Bitboard OurKingBB);

@@ -7,7 +7,8 @@ namespace Position {
     Color sideToMove;
     StateInfo st;
     int gamePly;
-    Bitboard pinnedPieces;
+    Bitboard pinnedPieces[COLOR_NB];
+    Square PinMap[COLOR_NB][nRows*nCols];
 
     void init(){
         // squares are empty
@@ -28,9 +29,11 @@ namespace Position {
 
 void init_position(std::string FEN){
     Position::init();
-    /// set boards and bitboards from FEN
+    // set boards and bitboards from FEN
     setBBFromFEN(FEN);
-    Position::pinnedPieces = PinnedPieces(Position::sideToMove, (Position::BitboardsByType[KING] & Position::BitboardsByColor[Position::sideToMove] ));
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 
 void put_piece(Square square, Piece PP){
@@ -38,12 +41,18 @@ void put_piece(Square square, Piece PP){
     Position::BitboardsByType[ALL_PIECES] |= 1ULL << square;
     Position::BitboardsByType[type_of(PP)] |= 1ULL << square;
     Position::BitboardsByColor[color_of(PP)] |= 1ULL << square;
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 void remove_piece(Square square,Piece PP){
     Position::board[square] = NO_PIECE;
     Position::BitboardsByType[ALL_PIECES] &= 0ULL << square;
     Position::BitboardsByType[type_of(PP)] &= 0ULL << square;
     Position::BitboardsByColor[color_of(PP)] &= 0ULL << square;
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 void remove_piece(Square square){
     Position::board[square] = NO_PIECE;
@@ -51,11 +60,17 @@ void remove_piece(Square square){
         Position::BitboardsByType[i] &= 0ULL << square;
     for(int i = 0; i<COLOR_NB; i++)
         Position::BitboardsByColor[i] &= 0ULL << square;
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 
 void move_piece(Square startsquare,Square endsquare, Piece PP){
     remove_piece(startsquare,PP);
     put_piece(endsquare,PP);
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 
 void move_piece(Square startsquare,Square endsquare){
@@ -76,6 +91,9 @@ void move_piece(Square startsquare,Square endsquare){
     Position::BitboardsByColor[color_of(PP)] &= 0ULL << startsquare;
     // add
     Position::BitboardsByColor[color_of(PP)] |= 1ULL << endsquare;
+    // Update pinnedpieces
+    Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
+    Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
 }
 
 void set_castling_right(Color c, char FEN_char){
@@ -165,6 +183,7 @@ Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
     Bitboard OnlyMyPiecesInBetween;
     Bitboard PinnedBB = 0ULL;
     Square enemySq;
+    std::fill_n(Position::PinMap[Us], nCols*nRows, ENPSNT_UNAVAILABLE);
     while (OpponentsSlidingBB){
         enemySq = pop_LSB(OpponentsSlidingBB);
         PieceType pt = type_of(Position::board[enemySq]);
@@ -174,10 +193,16 @@ Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
         // rooks only count if on the same row, col
         if( (pt == ROOK) && !(same_row(OurKingSquare,enemySq) | same_col(OurKingSquare,enemySq)) )
             continue;
+
         // Check own pieces in the way 
         // if there are enemy pieces, there is no pin
         OnlyMyPiecesInBetween = (BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[Us]) * ((BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[!Us])==0ULL);
-        PinnedBB |= countBitsOn(OnlyMyPiecesInBetween) == 1 ? OnlyMyPiecesInBetween : 0ULL;
+        // if there is only 1 of my pieces in betwee, it is a pin
+        if (countBitsOn(OnlyMyPiecesInBetween)==1){
+            PinnedBB |= OnlyMyPiecesInBetween;
+            Position::st.pinners[!Us] |= make_bitboard(enemySq);
+            Position::PinMap[Us][pop_LSB(OnlyMyPiecesInBetween)] = enemySq;
+        }
     }
     return PinnedBB;
 }

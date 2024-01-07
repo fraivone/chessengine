@@ -76,8 +76,8 @@ void RepresentBoard(){
 }
 
 void PrintMove(Move theMove){
-    Square from = ((theMove>>6) & 0x3f);
-    Square to = ((theMove) & 0x3f);
+    Square from = mv_from(theMove);
+    Square to = mv_to(theMove);
     PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
     MoveType mt = MoveType( theMove & 0xC000);
     int MoveTypeIndex = (mt >> 14)&0x3;
@@ -95,5 +95,14 @@ void PrintMoveList(MoveList s){
     for(int i = 0; i<s.size; i++){
         std::cout<<"Move["<<i<<"] - ";
         PrintMove(s.list[i].move);
+    }
+}
+
+
+void PrintPinMap(Color Us){
+    for (int pinned = 0; pinned < nCols*nRows; pinned++){
+        Square attacker = Position::PinMap[Us][pinned];
+        if(attacker != ENPSNT_UNAVAILABLE)
+            std::cout<<"Square "<<+attacker<<" is pinning square "<<+pinned<<std::endl;
     }
 }

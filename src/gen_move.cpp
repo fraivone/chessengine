@@ -79,6 +79,86 @@ MoveList PawnAnyMoves(MoveList& moveList, Square s){
         return PawnAnyMoves(moveList, color_of(Position::board[s]),s);
 }
 
+
+
+MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Checkers, Bitboard possibleBlockersBB) {
+    // Only attack blocking or captures of the checker piece can be evasions
+    // generate the pawn moves that lead to evasion
+    // Exclude pinned pawns as they won't help
+    // function to be called only when there's 1 checker only
+    
+    if(Position::board[s] != make_piece(c,PAWN))
+        return moveList;
+    Bitboard thisSq_bb = make_bitboard(s);
+    // even if this pawn is pinned, it can still capture the checker (on attacking square)
+    // it can still move forward as long as those squares are blocking squares. 
+    // so no need to exclude pinned pieces here
+    
+    
+
+    // From now on we assume only 1Checker
+    Bitboard RankBeforePromotion    = c==WHITE? Rank7BB:Rank2BB;
+    Bitboard NotRankBeforePromotion = c==WHITE? ~Rank7BB:~Rank2BB;
+    Square fw_sq = c==WHITE? s + 8: s - 8;
+    Square fw2_sq = c==WHITE? s + 16: s - 16;
+    Bitboard westAttack_bb = c==WHITE? make_bitboard(s + 7): make_bitboard(s - 9);
+    Bitboard eastAttack_bb = c==WHITE? make_bitboard(s + 9): make_bitboard(s - 7);
+    // bitboard that represent the checker captured by the move enpassant
+    Bitboard CheckerEnpassant = c == WHITE? Checkers << 8: Checkers >> 8;
+    Bitboard PawnInitRow = c == WHITE? Rank2BB: Rank7BB;
+    Bitboard emptySquares = ~pieces();
+    Bitboard Step1_enpassant = 0ULL;
+    // STEPS1 - EVADE WITHOUT PROMOTING
+    if(thisSq_bb & NotRankBeforePromotion){
+        
+        // if square in front is empty. I will add the blocker
+        // in a couple of line as this variable is also
+        // used for the fw2 movement
+        Bitboard Step1_fw1 = emptySquares & PawnFW[c][s];
+        // if pawn could be pushed forward and starts from its init row, check for double FW moves
+        Bitboard Step1_fw2 = ( ((thisSq_bb) & PawnInitRow) * (Step1_fw1!=0) ) ? (Pawn2FW[c][s] & emptySquares) & possibleBlockersBB: 0ULL;
+        Step1_fw1 &= possibleBlockersBB;
+        // Step1b capture the opponent checker without promotion
+        Bitboard Step1_nonPromotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
+
+        // Capture enpassant the opponent checker enpassant(of course without promotion)
+        if (Position::st.epSquare != ENPSNT_UNAVAILABLE){
+            Step1_enpassant |= (c == Position::sideToMove)*(PawnAttacks[c][s] & make_bitboard(Position::st.epSquare) & CheckerEnpassant);
+        }
+        
+        while(Step1_fw1)
+            moveList.Add(make_move(s, pop_LSB(Step1_fw1)));
+        while(Step1_fw2)
+            moveList.Add(make_move(s, Square(pop_LSB(Step1_fw2))));
+        while(Step1_nonPromotional_captures)
+            moveList.Add(make_move(s, Square(pop_LSB(Step1_nonPromotional_captures))));
+        while(Step1_enpassant)
+            moveList.Add(make<ENPASSANT>(s, Square(pop_LSB(Step1_enpassant))));
+    }
+    
+    // STEPS2 - PROMOTION WITH CAPTURE
+    else{
+        // Only promotion on a blocker square
+        Bitboard Step2_fw1 = emptySquares & PawnFW[c][s] & possibleBlockersBB;
+        if(Step2_fw1)
+            moveList = make_promotions(moveList,s,pop_LSB(Step2_fw1));
+
+        // captures with promotion of the opponent checker
+        Bitboard Step2_promotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
+        while(Step2_promotional_captures)
+            moveList = make_promotions(moveList,s,pop_LSB(Step2_promotional_captures));
+    }
+    
+    return moveList;
+}
+
+MoveList PawnAnyEvasionsMoves(MoveList& moveList, Square s, Bitboard Checkers, Bitboard possibleBlockersBB){
+    if (Position::board[s] == NO_PIECE) 
+        return moveList;
+    else
+        return PawnAnyEvasionsMoves(moveList, color_of(Position::board[s]), s, Checkers, possibleBlockersBB);
+}
+
 Bitboard Attacked2Bitboard(const MoveList moveList){
     Move theMove;
     Square to;
@@ -97,7 +177,7 @@ Bitboard Attackers2Bitboard(const MoveList moveList){
     Bitboard theBitboard = 0ULL;
     for(int i = 0; i<moveList.size; i++){
         theMove = moveList.list[i].move;
-        Square from = ((theMove>>6) & 0x3f);
+        Square from = mv_from(theMove);
         theBitboard |= make_bitboard(from);
     }
     return theBitboard;
@@ -110,8 +190,8 @@ Bitboard Attackers2Bitboard(const MoveList moveList, Bitboard target){
     Bitboard theBitboard = 0ULL;
     for(int i = 0; i<moveList.size; i++){
         theMove = moveList.list[i].move;
-        to = ((theMove) & 0x3f);
-        Square from = ((theMove>>6) & 0x3f);
+        to = mv_to(theMove);
+        Square from = mv_from(theMove);
         if(make_bitboard(to) & target)
             theBitboard |= (make_bitboard(from));
     }
@@ -119,7 +199,6 @@ Bitboard Attackers2Bitboard(const MoveList moveList, Bitboard target){
     
 }
 
-// given a piece generate pseudomoves
 MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const PieceType pt){
     Bitboard bb;
     Bitboard opponent_pawns = Position::BitboardsByType[PAWN] & Position::BitboardsByColor[!Us];
@@ -128,6 +207,7 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
     Bitboard opponent_bishops = Position::BitboardsByType[BISHOP] & Position::BitboardsByColor[!Us];
     Bitboard opponent_queens = Position::BitboardsByType[QUEEN] & Position::BitboardsByColor[!Us];
     Bitboard opponents_attacked_squares = 0ULL;
+    Bitboard kgBB;
         switch(pt) {
         case PAWN:
             return PawnAnyMoves(moveList, Us, sq);
@@ -140,8 +220,10 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us];
             break;
         case KING:
+            kgBB = make_bitboard(sq);
             // KING can't capture it's own piece
             bb = king_lut[sq] & ~Position::BitboardsByColor[Us];
+            
             // don't put the king in check
             
             // opponents king attacks
@@ -152,15 +234,15 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             // opponents knights attacks
             while(opponent_knights)
                 opponents_attacked_squares |= knight_lut[pop_LSB(opponent_knights)];
-            // opponents rooks attacks
+            // opponents rooks attacks. The rook attacks the whole space as if the king wasn't there
             while(opponent_rooks)
-                opponents_attacked_squares |= get_sliding_landings(ROOK, pop_LSB(opponent_rooks), pieces());
-            // opponents bishops attacks
+                opponents_attacked_squares |= get_sliding_landings(ROOK, pop_LSB(opponent_rooks), (pieces()&~kgBB));
+            // opponents bishops attacks. The bishop attacks the whole space as if the king wasn't there
             while(opponent_bishops)
-                opponents_attacked_squares |= get_sliding_landings(BISHOP, pop_LSB(opponent_bishops), pieces());
-            // opponents queens attacks
+                opponents_attacked_squares |= get_sliding_landings(BISHOP, pop_LSB(opponent_bishops), (pieces()&~kgBB));            
+            // opponents queens attacks. The queen attacks the whole space as if the king wasn't there
             while(opponent_queens)
-                opponents_attacked_squares |= get_sliding_landings(QUEEN, pop_LSB(opponent_queens), pieces());
+                opponents_attacked_squares |= get_sliding_landings(QUEEN, pop_LSB(opponent_queens), (pieces()&~kgBB));
             bb &= ~opponents_attacked_squares;
             // castling moves:
             // relies entirely on the correctness of the stateinfo
@@ -203,6 +285,76 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
     return moveList;
 }
 
+
+
+MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const PieceType pt, Bitboard Checkers, Bitboard BlockersBB){
+    // Only blocking or captures of the checker piece can be evasions
+    // generate pseudomoves that lead to evasion
+    // Exclude pinned pieces as they won't help now   
+
+    Bitboard bb;
+    Bitboard opponent_pawns = Position::BitboardsByType[PAWN] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_knights = Position::BitboardsByType[KNIGHT] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_rooks = Position::BitboardsByType[ROOK] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_bishops = Position::BitboardsByType[BISHOP] & Position::BitboardsByColor[!Us];
+    Bitboard opponent_queens = Position::BitboardsByType[QUEEN] & Position::BitboardsByColor[!Us];
+    Bitboard opponents_attacked_squares = 0ULL;
+    Bitboard kgBB;
+        switch(pt) {
+        case PAWN:
+            return PawnAnyEvasionsMoves(moveList, Us, sq, Checkers, BlockersBB);
+        case KNIGHT:
+            // if the knight is pinned, it can't move whatsoever
+            // so only check cases in which the knight isn't pinned
+            if(!(make_bitboard(sq) & Position::pinnedPieces[Us]))
+                // land the knight either on a blocker square or capture the checker
+                bb = (knight_lut[sq] & ~Position::BitboardsByColor[Us] & (BlockersBB | Checkers) );
+            break;
+        case BISHOP:
+        case ROOK :
+        case QUEEN:
+            // for the sliding pieces, if they are pinned, they can only along the 
+            // rays of the in between squares (blockersBB) or capture the checker if they can
+            // TODO check this logic :D
+            bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us] & (BlockersBB | Checkers);
+            break;
+        case KING:
+            kgBB = make_bitboard(sq);
+            // all KING landings except those which capture it's own piece
+            bb = king_lut[sq] & ~Position::BitboardsByColor[Us];
+            // don't put the king in check
+            
+            // opponents king attacks
+            opponents_attacked_squares = (Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            // opponents pawns attacks
+            while(opponent_pawns)
+                opponents_attacked_squares |= PawnAttacks[!Us][pop_LSB(opponent_pawns)];
+            // opponents knights attacks
+            while(opponent_knights)
+                opponents_attacked_squares |= knight_lut[pop_LSB(opponent_knights)];
+            // opponents rooks attacks. The rook attacks the whole space as if the king wasn't there
+            while(opponent_rooks)
+                opponents_attacked_squares |= get_sliding_landings(ROOK, pop_LSB(opponent_rooks), (pieces()&~kgBB));
+            // opponents bishops attacks. The bishop attacks the whole space as if the king wasn't there
+            while(opponent_bishops)
+                opponents_attacked_squares |= get_sliding_landings(BISHOP, pop_LSB(opponent_bishops), (pieces()&~kgBB));
+            // opponents queens attacks. The queen attacks the whole space as if the king wasn't there
+            while(opponent_queens)
+                opponents_attacked_squares |= get_sliding_landings(QUEEN, pop_LSB(opponent_queens), (pieces()&~kgBB));
+            bb &= ~opponents_attacked_squares;
+            // avoid attacked squares
+            bb &= ~opponents_attacked_squares;
+            // No castle: if the king is checked, can't evade with castle
+            break;
+        default: 
+            bb = 0ULL;
+        }
+        while(bb)
+            moveList.Add(make_move(sq,pop_LSB(bb)));
+        
+    return moveList;
+}
+
 MoveList generate_all(MoveList& moveList,Color Us){
     Bitboard OurPieces = pieces(Us);
     while(OurPieces){
@@ -212,17 +364,86 @@ MoveList generate_all(MoveList& moveList,Color Us){
     return moveList;
 }
 
-template<>
-MoveList generate_all<EVASIONS>(MoveList& moveList,Color Us){
-    
-}
-
 MoveList generate_all(MoveList& moveList, Color Us, const PieceType pt){
     Bitboard OurPieces = Position::BitboardsByType[pt] & Position::BitboardsByColor[Us];
     while(OurPieces)
         moveList = generate_pseudomoves(moveList, Us, pop_LSB(OurPieces), pt);
 
     return moveList;
+}
+/// generate all evasion moves in this postion
+MoveList generate_allevasion_moves(MoveList& moveList,Color Us,Bitboard Checkers, Bitboard blockersBB){
+    Bitboard OurPieces = pieces(Us);
+    while(OurPieces){
+        Square sq = pop_LSB(OurPieces);
+        moveList = generate_evasion_moves(moveList, Us, sq, type_of(Position::board[sq]), Checkers, blockersBB);
+    }
+    return moveList;
+}
+/// generate all evasion moves in this postion for PieceType
+MoveList generate_allevasion_moves(MoveList& moveList, Color Us, const PieceType pt, Bitboard Checkers, Bitboard blockersBB){
+    Bitboard OurPieces = pieces(Us,pt);
+    while(OurPieces)
+        moveList = generate_evasion_moves(moveList, Us, pop_LSB(OurPieces), pt, Checkers, blockersBB);
+
+    return moveList;
+}
+
+MoveList generate_legal(Color Us){
+    Bitboard checkers = Checkers(Us, pieces(Us,KING));
+    return generate_legal(Us, checkers);
+}
+
+
+
+MoveList generate_legal(Color Us, Bitboard checkers){
+    MoveList output;
+    int numberOfChecks = countBitsOn(checkers);
+    Bitboard blockersBB = PossibleBlockersBB(Us, checkers);
+    Bitboard movingTrace;
+    Bitboard allowedPath;
+    
+    // There are 0 checkers, return pseudomvoes that don't involve pins
+    if(numberOfChecks == 0){
+        output = generate_all(output, Us);
+        Square from;
+        // discard moves of pinned pieces if there are any pieces pinned 
+        if(countBitsOn(Position::pinnedPieces[Us]) != 0){
+            for(int i=0; i<output.size; i++){
+                Square from = mv_from(output.list[i].move);
+                // check if this piece is actually pinned
+                Square pinner = Position::PinMap[Us][from];
+                if(pinner == ENPSNT_UNAVAILABLE)
+                    continue;
+                Square to = mv_to(output.list[i].move);
+                Bitboard toBB = make_bitboard(to);
+                // ray "from" to "to" including "to" but excluding "from"
+                movingTrace = BetweenBB[from][to] | toBB;
+                // ray "from" to "pinner" including "to" but excluding "pinner"
+                allowedPath = BetweenBB[from][pinner] | make_bitboard(pinner);
+                // not only pinned, this move even tries to move the pinned piece
+                // out of the allowed path. Pop the move
+                if( (movingTrace & allowedPath) != movingTrace){
+                    output.Pop(i);
+                    
+                    i--;
+                }
+            }
+        }
+        return output;
+    }
+
+    // only 1 check, blocking scenario
+    else if( (numberOfChecks == 1)){
+        output = generate_allevasion_moves(output, Us, checkers, blockersBB);
+        return output;
+    }
+    // number of checks > 1, run the king
+    else{
+        output = generate_all(output,Us,KING);
+        return output;
+    }
+
 }
 
 Bitboard Checkers(MoveList OpponentMoveList, Bitboard OurKingBitboard){
@@ -248,7 +469,7 @@ Bitboard Checkers(Color Us, Bitboard OurKingBB){
             Checkers |= (OurKingBB & knight_lut[theAttackerSquare]) ? make_bitboard(theAttackerSquare) : 0ULL;
             break;
         case BISHOP:
-        case ROOK :
+        case ROOK:
         case QUEEN:
             Checkers |= (OurKingBB & get_sliding_landings(theAttackerType, theAttackerSquare, pieces()) ) ? make_bitboard(theAttackerSquare) : 0ULL;
             break;
@@ -276,33 +497,43 @@ Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers){
 
 }
 
-/// Among the previously calcuted pseudomoves, 
-/// only return the ones that allow to block the checkers and involve non-pinned pieces
-MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers, Bitboard OurPinnedPieces){
-    Bitboard blockersBB = PossibleBlockersBB(Us, Checkers);
-    MoveList blockingMoves;
-    // if there are no possible blocking squares, no blocking moves
-    if(blockersBB == 0ULL)
-        return blockingMoves;
 
-    
-    else{
-        Move mv;
-        Square to,from;
-        // loop through the moves to find only the blocking ones from unpinned pieces
-        for(int i=0; i<OurPseudoMoves.size; i++){
-            mv = OurPseudoMoves.list[i].move;
-            to = mv_to(mv);
-            from = mv_from(mv);
-            // this move can block the check, this piece is not pinned
-            if( (make_bitboard(to)& blockersBB) && !(OurPinnedPieces & make_bitboard(from)) )
-                blockingMoves.Add(mv);
-        }
-        return blockingMoves;
+// LEGACY
+// MoveList generate_evasions(MoveList& OurPseudoMoves, Bitboard Checkers, Color Us){
+//     MoveList evasionsList;
+//     // generate blocking + capturing attacker moves
+//     evasionsList = generate_BlockingMoves(Us, OurPseudoMoves, Checkers);
+//     // generate remaining king legals
+//     evasionsList = generate_all(evasionsList, Us, KING);
+//     return evasionsList;
+// }
 
-    }
-}
-
-MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers){
-    return generate_BlockingMoves( Us, OurPseudoMoves, Checkers, PinnedPieces(Us, pieces(Us,KING)) );
-}
+// LEGACY
+// /// Among the previously calcuted pseudomoves, 
+// /// only return the ones that allow to block the checkers and involve non-pinned pieces
+// MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers){
+//     Bitboard blockersBB = PossibleBlockersBB(Us, Checkers);
+//     MoveList blockingMoves;
+//     // if there are no possible blocking squares, no blocking moves
+//     if(blockersBB == 0ULL)
+//         return blockingMoves;
+//     // if blocking is possible, there is only one checker
+//     else{
+//         Move mv;
+//         Square to,from;
+//         Square checkerSq = pop_LSB(Checkers);
+//         // loop through the moves to find only the blocking ones from unpinned pieces
+//         for(int i=0; i<OurPseudoMoves.size; i++){
+//             mv = OurPseudoMoves.list[i].move;
+//             to = mv_to(mv);
+//             from = mv_from(mv);
+//             // this move can block the check and this piece is not pinned
+//             if( (make_bitboard(to)& blockersBB) && !(Position::pinnedPieces[Us] & make_bitboard(from)) )
+//                 blockingMoves.Add(mv);
+//             // this move captures the checker
+//             if( checkerSq == to  )
+//                 blockingMoves.Add(mv);
+//         }
+//         return blockingMoves;
+//     }
+// }

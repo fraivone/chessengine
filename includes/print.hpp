@@ -22,3 +22,6 @@ void PrintMove(Move theMove);
 
 /// Print all the mvoes in the list on the terminal
 void PrintMoveList(MoveList s);
+
+/// Print PinMap
+void PrintPinMap(Color Us);

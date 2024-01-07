@@ -12,23 +12,19 @@
 int main(){
     init_lut();
     init_magics();
-    init_position("7r/8/8/3k1pB1/7p/5P1P/r5PK/8 w - - 9 23");
+    init_position("r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2");
     RepresentBoard();
-    // MoveList start;
-    // start = generate_all(start, Position::sideToMove);
-    // PrintMoveList(start);
-    RepresentBitset(Position::pinnedPieces);
-    
-
+    MoveList legalMoves;
+    legalMoves = generate_legal(Position::sideToMove);
+    PrintMoveList(legalMoves);
     // RepresentBitset(BlockerPossibleBitboard(Position::sideToMove));
-    // MoveList OurMoveList;
-    // // KING can't block
-    // OurMoveList = generate_all(OurMoveList, Color(Us),PAWN,KNIGHT,BISHOP,ROOK,QUEEN); 
+    
+    
     // return Attackers2Bitboard(OurMoveList,possible_blockers_bb);
     
     
 
-    return 1;
+    return 0;
 
 }
 
