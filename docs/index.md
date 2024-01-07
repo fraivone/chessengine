@@ -7,6 +7,11 @@ NOTES
 YES. Calculate possible blocker Pieces/Moves, Generate evasion moves
 NO. Generate all legal moves
 
+### Pinned Pieces
+Pinned pieces are easy to calculate but tricky to handle:
+1. A pinned pawn/knight can't move, HOWEVER a pinned sliding piece can still move along the in between squares when only pinned along 1 direction (i.e. QUEEN + BISHOP pinning a BISHOP).  Sliding pieces that are pinned on 2 different directions  can't move either. So that has to be taken into account when generating evasions. 
+2. Even if a piece is pinned, it doesn't mean it can't deliver check! So pinned pieces moves should still be calculated but ignored when actually placing the move or for EVASIONS.
+
 <a name="myfootnote1">1</a>: Actually this might be not enough. Last opponents move won't tell me anything about discover attacks for example. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
 ### What is a landing?
 Move generated only taking into account the allowed piece movements, ignoring:
