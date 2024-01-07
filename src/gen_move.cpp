@@ -208,6 +208,7 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
     Bitboard opponent_queens = Position::BitboardsByType[QUEEN] & Position::BitboardsByColor[!Us];
     Bitboard opponents_attacked_squares = 0ULL;
     Bitboard kgBB;
+    Bitboard OpponentsKing = pieces(Color(!Us),KING);
         switch(pt) {
         case PAWN:
             return PawnAnyMoves(moveList, Us, sq);
@@ -227,7 +228,7 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             // don't put the king in check
             
             // opponents king attacks
-            opponents_attacked_squares = (Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            opponents_attacked_squares = king_lut[pop_LSB(OpponentsKing)];
             // opponents pawns attacks
             while(opponent_pawns)
                 opponents_attacked_squares |= PawnAttacks[!Us][pop_LSB(opponent_pawns)];
@@ -299,6 +300,7 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
     Bitboard opponent_bishops = Position::BitboardsByType[BISHOP] & Position::BitboardsByColor[!Us];
     Bitboard opponent_queens = Position::BitboardsByType[QUEEN] & Position::BitboardsByColor[!Us];
     Bitboard opponents_attacked_squares = 0ULL;
+    Bitboard OpponentsKing = pieces(Color(!Us),KING);
     Bitboard kgBB;
         switch(pt) {
         case PAWN:
@@ -325,7 +327,7 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
             // don't put the king in check
             
             // opponents king attacks
-            opponents_attacked_squares = (Position::BitboardsByColor[!Us] & Position::BitboardsByType[KING]);
+            opponents_attacked_squares = king_lut[pop_LSB(OpponentsKing)];
             // opponents pawns attacks
             while(opponent_pawns)
                 opponents_attacked_squares |= PawnAttacks[!Us][pop_LSB(opponent_pawns)];
