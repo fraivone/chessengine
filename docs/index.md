@@ -1,18 +1,21 @@
 NOTES
 ---
 ### Current steps for generating moves
-1. Calculate pinned pieces
-1. Calculate the opponents pseudomoves OR check the opponent last move <sup>[1](#myfootnote1)</sup>
-1. Is Our king in check? 
+1. Calculate pinned pieces, calculate if there are checks <sup>[1](#myfootnote1)</sup>
+1. Then calculate legal moves:
+    1. If our king is in check, only evasions<sup>[2](#myfootnote1)</sup> are legal
+    1. Else, all legal pseudomoves should be considered
 YES. Calculate possible blocker Pieces/Moves, Generate evasion moves
 NO. Generate all legal moves
+
+<a name="myfootnote1">1</a>: Currently I am using a specified method (`Checkers`) to analyze checkers. It *should be* faster than `generate_all` as it skips some extra checks. But I wonder if it is possible to establish a check based on the last move made by opponent. In that case it'd be even faster. However, last opponents move won't tell me anything about discover attacks for example. So it is a more complicated topic I don't want to explore now. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
+<a name="myfootnote1">2</a>: Evasions are moves that stop a check. They include blocking with non-pinned pieces, capture the checker if there is only one (can't block double checks), moving the king to safety.
 
 ### Pinned Pieces
 Pinned pieces are easy to calculate but tricky to handle:
 1. A pinned pawn/knight can't move, HOWEVER a pinned sliding piece can still move along the in between squares when only pinned along 1 direction (i.e. QUEEN + BISHOP pinning a BISHOP).  Sliding pieces that are pinned on 2 different directions  can't move either. So that has to be taken into account when generating evasions. 
 2. Even if a piece is pinned, it doesn't mean it can't deliver check! So pinned pieces moves should still be calculated but ignored when actually placing the move or for EVASIONS.
 
-<a name="myfootnote1">1</a>: Actually this might be not enough. Last opponents move won't tell me anything about discover attacks for example. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
 ### What is a landing?
 Move generated only taking into account the allowed piece movements, ignoring:
 * Do I leave my king in check?
