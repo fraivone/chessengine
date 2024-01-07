@@ -3,12 +3,15 @@ NOTES
 ### Current steps for generating moves
 1. Calculate pinned pieces, calculate if there are checks <sup>[1](#myfootnote1)</sup>
 1. Then calculate legal moves:
-    1. If our king is in check, only evasions<sup>[2](#myfootnote1)</sup> are legal
+    1. Calculate all pseudomoves. <sup>[2](#myfootnote1)</sup>
+    1. If our king is in check, only evasions<sup>[3](#myfootnote1)</sup> are legal.
     1. Else, all legal pseudomoves should be considered
 
 <a name="myfootnote1">1</a>: Currently I am using a specified method (`Checkers`) to analyze checkers. It *should be* faster than `generate_all` as it skips some extra checks. But I wonder if it is possible to establish a check based on the last move made by opponent. In that case it'd be even faster. However, last opponents move won't tell me anything about discover attacks for example. So it is a more complicated topic I don't want to explore now. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...).
 
-<a name="myfootnote1">2</a>: Evasions are moves that stop a check. They include blocking with non-pinned pieces, capture the checker if there is only one (can't block double checks), moving the king to safety.
+<a name="myfootnote1">2</a>: This is something that can be improved. Currently, I calculate all pseudomoves even if only few of those are evasions. It'd be better having a specialized method that calculates only evasions.
+
+<a name="myfootnote1">3</a>: Evasions are moves that stop a check. They include blocking with non-pinned pieces, capture the checker if there is only one (can't block double checks), moving the king to safety.
 
 ### Pinned Pieces
 Pinned pieces are easy to calculate but tricky to handle:
