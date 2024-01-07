@@ -229,11 +229,36 @@ Bitboard Checkers(MoveList OpponentMoveList, Bitboard OurKingBitboard){
     return Attackers2Bitboard(OpponentMoveList,OurKingBitboard);
 
 }
+
+
+Bitboard Checkers(Color Us, Bitboard OurKingBB){
+    Bitboard OpponentPieces = pieces(Color(!Us));
+    Bitboard Checkers = 0ULL;
+    Square theAttackerSquare;
+    PieceType theAttackerType;
+
+    while(OpponentPieces){
+        theAttackerSquare = pop_LSB(OpponentPieces);
+        theAttackerType = type_of(Position::board[theAttackerSquare]);
+        switch(theAttackerType) {
+        case PAWN:
+            Checkers |= (OurKingBB & PawnAttacks[!Us][theAttackerSquare])? make_bitboard(theAttackerSquare) : 0ULL;
+            break;
+        case KNIGHT:
+            Checkers |= (OurKingBB & knight_lut[theAttackerSquare]) ? make_bitboard(theAttackerSquare) : 0ULL;
+            break;
+        case BISHOP:
+        case ROOK :
+        case QUEEN:
+            Checkers |= (OurKingBB & get_sliding_landings(theAttackerType, theAttackerSquare, pieces()) ) ? make_bitboard(theAttackerSquare) : 0ULL;
+            break;
+        }
+    }
+    return Checkers;
+}
+
 Bitboard Checkers(Color Us){
-    // opponent move lsit
-    MoveList theOpponentMoveList;
-    theOpponentMoveList = generate_all(theOpponentMoveList, Color(!Us));
-    return Checkers(theOpponentMoveList,Position::BitboardsByColor[Us]&Position::BitboardsByType[KING]);
+    return Checkers(Us,pieces(Us,KING));
 }
 
 
@@ -246,7 +271,7 @@ Bitboard PossibleBlockerBitboard(Color Us){
 
 Bitboard PossibleBlockerBitboard(MoveList& opponentMoveList, Color Us){   
     Bitboard OurKing = Position::BitboardsByColor[Us]&Position::BitboardsByType[KING];
-    Bitboard WhoIsAttacking = Checkers(opponentMoveList,OurKing);
+    Bitboard WhoIsAttacking = Checkers(Us);
 
     int NumberOfAttackers = countBitsOn(WhoIsAttacking);
     Square theAttackerSquare = pop_LSB(WhoIsAttacking);

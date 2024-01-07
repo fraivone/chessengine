@@ -99,8 +99,11 @@ inline MoveList generate_all(MoveList& moveList,Color Us, PieceType pt, PieceTyp
 /// returns a bitboard having the bits of checkers set
 Bitboard Checkers(MoveList OpponentMoveList, Bitboard OurKingBitboard);
 /// Checks if the Color "Us" is in check
-/// returns a bitboard having the bits of checkers set
+/// returns a bitboard having the bits of checker pieces set
 Bitboard Checkers(Color Us);
+/// Checks if the Color "Us" is in check
+/// returns a bitboard having the bits of checker pieces set
+Bitboard Checkers(Color Us, Bitboard OurKingBB);
 
 /// If our king is in check, return a bitboard with the
 /// pieces that can actually block the attack
