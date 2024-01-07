@@ -167,6 +167,13 @@ Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
     Square enemySq;
     while (OpponentsSlidingBB){
         enemySq = pop_LSB(OpponentsSlidingBB);
+        PieceType pt = type_of(Position::board[enemySq]);
+        // bishops only count if on the same diagonal
+        if( (pt == BISHOP) && !same_diago(OurKingSquare,enemySq))
+            continue;
+        // rooks only count if on the same row, col
+        if( (pt == ROOK) && !(same_row(OurKingSquare,enemySq) | same_col(OurKingSquare,enemySq)) )
+            continue;
         // Check own pieces in the way 
         // if there are enemy pieces, there is no pin
         OnlyMyPiecesInBetween = (BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[Us]) * ((BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[!Us])==0ULL);
