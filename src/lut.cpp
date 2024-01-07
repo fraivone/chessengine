@@ -13,16 +13,24 @@
 
 
 Bitboard BetweenBB[nCols*nRows][nCols*nRows];
+Bitboard Ray[nCols*nRows][nCols*nRows];
 
 void init_lut(){
-    std::cout<<"Initializing inBetween bitboards"<<std::endl;
+    std::cout<<"Initializing LUT bitboards"<<std::endl;
     generate_inBetweenLUT();
+    generate_RayLUT();
 }
 
 void generate_inBetweenLUT(){
     for(Square sq1=0; sq1<nCols*nRows; sq1++)
         for(Square sq2=0; sq2<nCols*nRows; sq2++)
             BetweenBB[sq1][sq2] = calculate_inBetween(sq1,sq2);
+}
+
+void generate_RayLUT(){
+    for(Square sq1=0; sq1<nCols*nRows; sq1++)
+        for(Square sq2=0; sq2<nCols*nRows; sq2++)
+            Ray[sq1][sq2] = calculate_Ray(sq1,sq2);
 }
 
 Bitboard calculate_inBetween(Square sq1, Square sq2){
@@ -74,14 +82,62 @@ Bitboard calculate_inBetween(Square sq1, Square sq2){
             // std::cout<<"Squares "<<+sq1<<","<<+sq2<<" are incompatible\n";
             ;
         }
-        
     }
     return inBetweenSquares;
 
 }
 
+Bitboard calculate_Ray(Square sq1, Square sq2){
+    Bitboard output = 0ULL;
+    int sq1Row, sq2Row, sq1Col, sq2Col;
+    int m;
+    int index_row, index_col;
+    if(sq1 == sq2)
+        return output;
+    
+    if (same_row(sq1,sq2))
+        // return the row
+        output = Rank1BB << ((sq1/nRows)*8);
+    else if (same_col(sq1,sq2))
+        output = FileABB << (sq1%nCols);
+        // return the col
+    else if (same_diago(sq1,sq2)){
+        sq1Row = sq1 / nRows;
+        sq2Row = sq2 / nRows;
+        sq1Col = sq1 % nCols;
+        sq2Col = sq2 % nCols;
+        m = ((sq2Row - sq1Row) / (sq2Col - sq1Col)) > 0 ? 1: -1;
+        // negative diagonal
+        if(m == -1){
+            index_row = (sq1Row + sq1Col -7) >= 0? 7 : (sq1Row + sq1Col);
+            index_col = (sq1Row + sq1Col -7) >= 0? (sq1Row +sq1Col -7) : 0;
+            while(1){
+                output |= make_bitboard(make_square(index_col, index_row));
+                index_col++;
+                index_row+=m;
+                if((index_row>7) || (index_row<0) || (index_col>7) || (index_col<0) )
+                    break;
+            }
+        }
+        // positive diagonal
+        else{
+            index_row = (sq1Row - sq1Col) >= 0? (sq1Row-sq1Col) : 0;
+            index_col = (sq1Row - sq1Col) >= 0? 0 : (sq1Col - sq1Row);
+            while(1){
+                output |= make_bitboard(make_square(index_col, index_row));
+                index_col++;
+                index_row+=m;
+                if((index_row>7) || (index_col>7) || (index_row<0) || (index_col<0) )
+                    break;
+            }
+        }
 
-
+    }
+        // return diago
+    else
+        ;
+    return output;
+}
 
 
 
