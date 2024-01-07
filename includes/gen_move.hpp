@@ -105,9 +105,8 @@ Bitboard Checkers(Color Us);
 /// returns a bitboard having the bits of checker pieces set
 Bitboard Checkers(Color Us, Bitboard OurKingBB);
 
-/// If our king is in check, return a bitboard with the
-/// pieces that can actually block the attack
-Bitboard PossibleBlockerBitboard(MoveList& opponentMoveList, Color Us);
-/// If our king is in check, return a bitboard with the
-/// pieces that can actually block the attack
-Bitboard PossibleBlockerBitboard(Color Us);
+/// Calculate if there are and which squares allow to block
+/// a check given by checkers. It has to be complemented 
+/// with pseudomoves of non-pinned pieces to provide 
+/// blocking moves
+Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers);
