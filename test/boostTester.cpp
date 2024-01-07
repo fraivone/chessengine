@@ -366,7 +366,6 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
             
             auto f = x.first;
             auto result = x.second;
-            std::cout<<f<<std::endl;
             init_position(f);
             theMoveList = generate_legal(Position::sideToMove);
             // if(result == 14) PrintMoveList(theMoveList);
