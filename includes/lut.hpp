@@ -45,6 +45,12 @@ extern uint64_t Battacks[nCols*nRows][4096];
 /// squares connecting them
 /// else it return NULL Bitboard
 extern Bitboard BetweenBB[nCols*nRows][nCols*nRows];
+/// LUT containing the squares ray.
+/// If A and B are on the same (file,rank,diagonal)
+/// BetweenBB[A][B] returns a bitboard containing the 
+/// whole ray (direction) that passes by A and B
+/// else it return NULL Bitboard
+extern Bitboard Ray[nCols*nRows][nCols*nRows];
 
 /// Initialize the lut (used only for the BetweenBB so far)
 void init_lut();
@@ -54,6 +60,11 @@ void generate_inBetweenLUT();
 
 /// calculate the in between bitboard between sq1 and sq2
 Bitboard calculate_inBetween(Square sq1, Square sq2);
+/// Fill the Ray LUT
+void generate_RayLUT();
+
+/// calculate the in ray bitboard passing by sq1 and sq2
+Bitboard calculate_Ray(Square sq1, Square sq2);
 
 // to generate the LUT from scratch
 /*! Generates a LUT for the straight landings of white pawns. 

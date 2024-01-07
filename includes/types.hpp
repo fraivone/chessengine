@@ -247,7 +247,7 @@ constexpr Square mv_from(Move mv) {return ((mv>>6) & 0x3f); }
 
 constexpr bool same_row(Square sq1, Square sq2){  return (sq1/nRows == sq2/nRows)? true: false;}
 constexpr bool same_col(Square sq1, Square sq2){  return (sq1%nCols == sq2%nCols)? true: false;}
-constexpr bool same_diago(Square sq1, Square sq2){ return abs(sq1%nCols == sq2%nCols) == abs(sq1/nRows == sq2/nRows)? true: false;}
+constexpr bool same_diago(Square sq1, Square sq2){ return abs(sq1%nCols - sq1/nRows) == abs(sq2%nCols - sq2/nRows)? true: false;}
 
 
 /// convenient string to be match a char to its piece. Used while converting FEN
