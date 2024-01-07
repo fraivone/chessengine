@@ -26,6 +26,8 @@ namespace Position{
     extern StateInfo st;
     /// move ply count
     extern int gamePly;
+    /// bitboard of the pinned pieces
+    extern Bitboard pinnedPieces;
 }
 
 /// init position
@@ -78,3 +80,15 @@ void move_piece(Square startsquare,Square endsquare);
 void setBBFromFEN(std::string FEN);
 /// Read FEN string and update status
 void setStatusFromFEN(std::string FEN);
+
+/// Returns the bitboard of our pinned pieces,
+/// i.e. pieces that prevent the king from getting checked
+/// Here there is a problem. A pinned pawn/knight can't move
+/// HOWEVER a pinned Sliding can still move 
+/// along the in between squares if pinned along
+/// 1 direction (i.e. QUEEN + BISHOP pinning a BISHOP). 
+/// Sliding pieces that are pinned on 2 different directions 
+/// can't move either. So that has to be taken into account 
+/// when generating evasions. At this stage leaping 
+/// and sliding pieces are treated equally
+Bitboard PinnedPieces(Color Us, Bitboard OurKingBB);

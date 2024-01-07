@@ -7,6 +7,7 @@ namespace Position {
     Color sideToMove;
     StateInfo st;
     int gamePly;
+    Bitboard pinnedPieces;
 
     void init(){
         // squares are empty
@@ -29,6 +30,7 @@ void init_position(std::string FEN){
     Position::init();
     /// set boards and bitboards from FEN
     setBBFromFEN(FEN);
+    Position::pinnedPieces = PinnedPieces(Position::sideToMove, (Position::BitboardsByType[KING] & Position::BitboardsByColor[Position::sideToMove] ));
 }
 
 void put_piece(Square square, Piece PP){
@@ -155,4 +157,20 @@ void setBBFromFEN(std::string FEN){
     // Convert from fullmove starting from 1 to gamePly starting from 0,
     // handle also common incorrect FEN with fullmove = 0.
     Position::gamePly = std::max(2 * (Position::gamePly - 1), 0) + (Position::sideToMove == BLACK);
+}
+
+Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
+    Square OurKingSquare = pop_LSB(OurKingBB);
+    Bitboard OpponentsSlidingBB = (Position::BitboardsByType[QUEEN] | Position::BitboardsByType[ROOK] | Position::BitboardsByType[BISHOP]) & Position::BitboardsByColor[!Us];
+    Bitboard OnlyMyPiecesInBetween;
+    Bitboard PinnedBB = 0ULL;
+    Square enemySq;
+    while (OpponentsSlidingBB){
+        enemySq = pop_LSB(OpponentsSlidingBB);
+        // Check own pieces in the way 
+        // if there are enemy pieces, there is no pin
+        OnlyMyPiecesInBetween = (BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[Us]) * ((BetweenBB[OurKingSquare][enemySq] & Position::BitboardsByColor[!Us])==0ULL);
+        PinnedBB |= countBitsOn(OnlyMyPiecesInBetween) == 1 ? OnlyMyPiecesInBetween : 0ULL;
+    }
+    return PinnedBB;
 }

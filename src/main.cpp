@@ -12,11 +12,12 @@
 int main(){
     init_lut();
     init_magics();
-    init_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    init_position("7r/8/8/3k1pB1/7p/5P1P/r5PK/8 w - - 9 23");
     RepresentBoard();
-    MoveList start;
-    start = generate_all(start, Position::sideToMove);
-    PrintMoveList(start);
+    // MoveList start;
+    // start = generate_all(start, Position::sideToMove);
+    // PrintMoveList(start);
+    RepresentBitset(Position::pinnedPieces);
     
 
     // RepresentBitset(BlockerPossibleBitboard(Position::sideToMove));
