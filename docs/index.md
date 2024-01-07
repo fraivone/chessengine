@@ -5,8 +5,6 @@ NOTES
 1. Then calculate legal moves:
     1. If our king is in check, only evasions<sup>[2](#myfootnote1)</sup> are legal
     1. Else, all legal pseudomoves should be considered
-YES. Calculate possible blocker Pieces/Moves, Generate evasion moves
-NO. Generate all legal moves
 
 <a name="myfootnote1">1</a>: Currently I am using a specified method (`Checkers`) to analyze checkers. It *should be* faster than `generate_all` as it skips some extra checks. But I wonder if it is possible to establish a check based on the last move made by opponent. In that case it'd be even faster. However, last opponents move won't tell me anything about discover attacks for example. So it is a more complicated topic I don't want to explore now. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...).
 
