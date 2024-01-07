@@ -1,10 +1,11 @@
 NOTES
 ---
 ### Current steps for generating moves
+1. Calculate pinned pieces
 1. Calculate the opponents pseudomoves OR check the opponent last move <sup>[1](#myfootnote1)</sup>
-2. Is Our king in check? 
-YES. Caclulate Pinned Pieces, Possible Blocker Pieces, Generate evasion moves
-NO. Calculate Pinned Pieces, Generate all legal moves
+1. Is Our king in check? 
+YES. Calculate possible blocker Pieces/Moves, Generate evasion moves
+NO. Generate all legal moves
 
 <a name="myfootnote1">1</a>: Actually this might be not enough. Last opponents move won't tell me anything about discover attacks for example. Maybe it is possible to add more info in the state info (checkers, pinned pieces, blockers ...)
 ### What is a landing?
