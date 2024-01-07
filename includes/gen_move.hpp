@@ -110,3 +110,7 @@ Bitboard Checkers(Color Us, Bitboard OurKingBB);
 /// with pseudomoves of non-pinned pieces to provide 
 /// blocking moves
 Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers);
+/// Among the previously calcuted pseudomoves, 
+/// only return the ones that allow to block the checkers
+MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers, Bitboard OurPinnedPieces);
+MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers);

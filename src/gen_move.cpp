@@ -275,3 +275,34 @@ Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers){
     return BetweenBB[theAttackerSquare][pop_LSB(ourKingBB)];
 
 }
+
+/// Among the previously calcuted pseudomoves, 
+/// only return the ones that allow to block the checkers and involve non-pinned pieces
+MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers, Bitboard OurPinnedPieces){
+    Bitboard blockersBB = PossibleBlockersBB(Us, Checkers);
+    MoveList blockingMoves;
+    // if there are no possible blocking squares, no blocking moves
+    if(blockersBB == 0ULL)
+        return blockingMoves;
+
+    
+    else{
+        Move mv;
+        Square to,from;
+        // loop through the moves to find only the blocking ones from unpinned pieces
+        for(int i=0; i<OurPseudoMoves.size; i++){
+            mv = OurPseudoMoves.list[i].move;
+            to = mv_to(mv);
+            from = mv_from(mv);
+            // this move can block the check, this piece is not pinned
+            if( (make_bitboard(to)& blockersBB) && !(OurPinnedPieces & make_bitboard(from)) )
+                blockingMoves.Add(mv);
+        }
+        return blockingMoves;
+
+    }
+}
+
+MoveList generate_BlockingMoves(Color Us, MoveList& OurPseudoMoves, Bitboard Checkers){
+    return generate_BlockingMoves( Us, OurPseudoMoves, Checkers, PinnedPieces(Us, pieces(Us,KING)) );
+}
