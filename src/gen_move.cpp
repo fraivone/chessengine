@@ -422,7 +422,9 @@ MoveList generate_legal(Color Us, Bitboard checkers){
                 // ray "from" to "to" including "to" but excluding "from"
                 movingTrace = BetweenBB[from][to] | toBB;
                 // ray "from" to "pinner" including "to" but excluding "pinner"
-                allowedPath = BetweenBB[from][pinner] | make_bitboard(pinner);
+                allowedPath = Ray[from][pinner];
+                if(from)
+                    std::cout<<"Pinner "<<+pinner<<std::endl;
                 // not only pinned, this move even tries to move the pinned piece
                 // out of the allowed path. Pop the move
                 if( (movingTrace & allowedPath) != movingTrace){
