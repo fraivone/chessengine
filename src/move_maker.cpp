@@ -235,7 +235,7 @@ void UndoMove(Move mv){
 }
 
     
-int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbose, int count){
+int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbose, uint64_t count){
     if (depth == 0){
         // std::cout<<std::string(3-depth-1, '\t')<<"Move list has size "<<mvList.size<<std::endl;
         count += mvList.size;
@@ -243,7 +243,7 @@ int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbo
     }
     MoveList legalMoves;
     StateInfo previousState;
-    int prevCount = count;
+    uint64_t prevCount = count;
     
     previousState = Position::st;
     for(int i=0; i<mvList.size; i++){
