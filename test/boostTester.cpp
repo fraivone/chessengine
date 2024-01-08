@@ -55,7 +55,7 @@ std::unordered_map<std::string, int> PERFTH1 = {
                                     {"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",44},
                                     {"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",46},
                                     {"r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2",8},
-                                    // {"8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3",8},
+                                    {"8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3",8},
                                     {"r1bqkbnr/pppppppp/n7/8/8/P7/1PPPPPPP/RNBQKBNR w KQkq - 2 2",19},
                                     {"r3k2r/p1pp1pb1/bn2Qnp1/2qPN3/1p2P3/2N5/PPPBBPPP/R3K2R b KQkq - 3 2",5},
                                     {"2kr3r/p1ppqpb1/bn2Qnp1/3PN3/1p2P3/2N5/PPPBBPPP/R3K2R b KQ - 3 2",44},
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
     BOOST_AUTO_TEST_CASE(EnsureMakMove_UndoMove_opposite){
 
         MoveList theMoveList;
-        Bitboard before,after;
+        Bitboard before,whiteBefore,blackBefore;
         for (auto const& x : PERFTH1){
             theMoveList.Clear();
             
@@ -372,12 +372,13 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
             theMoveList = generate_legal(Position::sideToMove);
             for(int i= 0; i<theMoveList.size; i++ ){
                 before = pieces();
+                whiteBefore = pieces(WHITE);
+                blackBefore = pieces(BLACK);
                 MakeMove(theMoveList.list[i].move);    
                 UndoMove(theMoveList.list[i].move);
-                after = pieces();
-                if(before!=after)
-                    PrintMove(theMoveList.list[i].move);
-                BOOST_CHECK_EQUAL(before,after);            
+                BOOST_CHECK_EQUAL(before,pieces());            
+                BOOST_CHECK_EQUAL(whiteBefore,whiteBefore);            
+                BOOST_CHECK_EQUAL(blackBefore,blackBefore);            
             }
         }
 
