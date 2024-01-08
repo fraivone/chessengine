@@ -315,10 +315,15 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
         case BISHOP:
         case ROOK :
         case QUEEN:
-            // for the sliding pieces, if they are pinned, they can only along the 
-            // rays of the in between squares (blockersBB) or capture the checker if they can
-            // TODO check this logic :D
-            bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us] & (BlockersBB | Checkers);
+            // Sliding pieces, even if pinned, can always move along the 
+            // rays of the in between squares (blockersBB) to block the attack (1)
+            // If they are NOT pinned, they can also capture ANY checker
+            // If they are pinned, they can only capture the checker along rays (3)
+            // 
+            // TODO check this logic :D // I checked and fixed it once
+            bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us];
+
+            bb &= ( BlockersBB | ( (Position::PinMap[Us][sq]==ENPSNT_UNAVAILABLE)*Checkers ) | ( (Position::PinMap[Us][sq]!=ENPSNT_UNAVAILABLE)*(Checkers& Ray[sq][Position::PinMap[Us][sq]]) ) ); //(1) + (2) + (3)
             break;
         case KING:
             kgBB = make_bitboard(sq);
