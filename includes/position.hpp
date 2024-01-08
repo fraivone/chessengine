@@ -14,6 +14,7 @@
 /// namespace to encapsulate the variables needed for position
 namespace Position{
     void init();
+    void UpdatePosition();
     /// holds occupancy for all pieces on the board, one per square. 64 piece array
     extern Piece board[nCols*nRows];
     /// holds occupancy for each piece type, 8 bitboards

@@ -102,6 +102,8 @@ void MakeMove(Move mv){
             remove_piece(to,P_to);
         move_piece(from,to,P_from);
     }
+
+    Position::UpdatePosition();
 }
 
 void UndoMove(Move mv){    
@@ -182,7 +184,7 @@ void UndoMove(Move mv){
     // std::cout<<"Position::st.rule50\t"<<Position::st.rule50<<std::endl;
     // std::cout<<"Position::st.previous->rule50\t"<<Position::st.previous->rule50<<std::endl;
 
-    
+    Position::UpdatePosition();   
 }
 
 
