@@ -235,7 +235,7 @@ void UndoMove(Move mv){
 }
 
     
-int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbose, uint64_t count){
+uint64_t StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbose, uint64_t count){
     if (depth == 0){
         // std::cout<<std::string(3-depth-1, '\t')<<"Move list has size "<<mvList.size<<std::endl;
         count += mvList.size;
@@ -273,7 +273,7 @@ int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbo
     // init_position("8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3");
 }
 
-int StupidPerftCount(std::string FEN, uint8_t depth, bool verbose){
+uint64_t StupidPerftCount(std::string FEN, uint8_t depth, bool verbose){
     init_position(FEN);
     MoveList mvl;
     mvl = generate_legal(Position::sideToMove);
