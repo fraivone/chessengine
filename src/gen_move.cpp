@@ -82,17 +82,23 @@ MoveList PawnAnyMoves(MoveList& moveList, Square s){
 
 
 MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Checkers, Bitboard possibleBlockersBB) {
-    // Only attack blocking or captures of the checker piece can be evasions
+    // Only blocking or captures of the checker piece can be evasions
     // generate the pawn moves that lead to evasion
-    // Exclude pinned pawns as they won't help
-    // function to be called only when there's 1 checker only
+    // function to be called exclusively when there's only 1 checker
     
     if(Position::board[s] != make_piece(c,PAWN))
         return moveList;
     Bitboard thisSq_bb = make_bitboard(s);
-    // even if this pawn is pinned, it can still capture the checker (on attacking square)
-    // it can still move forward as long as those squares are blocking squares. 
-    // so no need to exclude pinned pieces here
+    // tldr
+    // if it is not pinned, a pawn can block attack/capture checker
+    // if a pawn is pinned, it can only block!
+    // If a pawn is pinned
+    // it can still move forward as long as those squares are blocking squares. (INCLUDED)
+    // BUT it CANNOT capture the checker.  (EXCLUDED)
+    // Indeed if a pawn is pinned along a line (row/col)
+    // it can't caputre anything, cause captures are diagonally -->forbidden
+    // Conversely a pawn is pinned diagonally, its attacker would not be delivering check (it's blocked!)
+    // so the pawn would need to capture another piece that's not the attacker -->forbidden
     
     
 
@@ -118,8 +124,13 @@ MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Ch
         // if pawn could be pushed forward and starts from its init row, check for double FW moves
         Bitboard Step1_fw2 = ( ((thisSq_bb) & PawnInitRow) * (Step1_fw1!=0) ) ? (Pawn2FW[c][s] & emptySquares) & possibleBlockersBB: 0ULL;
         Step1_fw1 &= possibleBlockersBB;
-        // Step1b capture the opponent checker without promotion
-        Bitboard Step1_nonPromotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
+        
+        // capture the opponent checker if NOT pinned
+        if(Position::PinMap[c][s] == ENPSNT_UNAVAILABLE){
+            Bitboard Step1_nonPromotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
+            while(Step1_nonPromotional_captures)
+            moveList.Add(make_move(s, Square(pop_LSB(Step1_nonPromotional_captures))));
+        }
 
         // Capture enpassant the opponent checker enpassant(of course without promotion)
         if (Position::st.epSquare != ENPSNT_UNAVAILABLE){
@@ -130,8 +141,6 @@ MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Ch
             moveList.Add(make_move(s, pop_LSB(Step1_fw1)));
         while(Step1_fw2)
             moveList.Add(make_move(s, Square(pop_LSB(Step1_fw2))));
-        while(Step1_nonPromotional_captures)
-            moveList.Add(make_move(s, Square(pop_LSB(Step1_nonPromotional_captures))));
         while(Step1_enpassant)
             moveList.Add(make<ENPASSANT>(s, Square(pop_LSB(Step1_enpassant))));
     }
@@ -143,10 +152,12 @@ MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Ch
         if(Step2_fw1)
             moveList = make_promotions(moveList,s,pop_LSB(Step2_fw1));
 
-        // captures with promotion of the opponent checker
-        Bitboard Step2_promotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
-        while(Step2_promotional_captures)
-            moveList = make_promotions(moveList,s,pop_LSB(Step2_promotional_captures));
+        // promotion and capture the opponent checker if NOT pinned
+        if(Position::PinMap[c][s] == ENPSNT_UNAVAILABLE){
+            Bitboard Step2_promotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
+            while(Step2_promotional_captures)
+                moveList = make_promotions(moveList,s,pop_LSB(Step2_promotional_captures));
+        }
     }
     
     return moveList;
