@@ -101,7 +101,6 @@ void MakeMove(Move mv){
         if(P_to != NO_PIECE)
             remove_piece(to,P_to);
         move_piece(from,to,P_from);
-
     }
 }
 

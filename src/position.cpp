@@ -55,9 +55,9 @@ void put_piece(Square square, Piece PP){
 }
 void remove_piece(Square square,Piece PP){
     Position::board[square] = NO_PIECE;
-    Position::BitboardsByType[ALL_PIECES] &= 0ULL << square;
-    Position::BitboardsByType[type_of(PP)] &= 0ULL << square;
-    Position::BitboardsByColor[color_of(PP)] &= 0ULL << square;
+    clear_bit(Position::BitboardsByType[ALL_PIECES],square);
+    clear_bit(Position::BitboardsByType[type_of(PP)],square);
+    clear_bit(Position::BitboardsByColor[color_of(PP)],square);
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
@@ -67,9 +67,9 @@ void remove_piece(Square square,Piece PP){
 void remove_piece(Square square){
     Position::board[square] = NO_PIECE;
     for(int i = 0; i<PIECE_TYPE_NB; i++)
-        Position::BitboardsByType[i] &= 0ULL << square;
+        clear_bit(Position::BitboardsByType[i], square);
     for(int i = 0; i<COLOR_NB; i++)
-        Position::BitboardsByColor[i] &= 0ULL << square;
+        clear_bit(Position::BitboardsByColor[i], square);
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
