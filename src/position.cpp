@@ -9,6 +9,7 @@ namespace Position {
     int gamePly;
     Bitboard pinnedPieces[COLOR_NB];
     Square PinMap[COLOR_NB][nRows*nCols];
+    StateInfo tempState;
 
     void init(){
         // squares are empty
@@ -22,6 +23,9 @@ namespace Position {
             BitboardsByColor[i] = 0;
         
         std::memset(&st, 0, sizeof(StateInfo));
+        /// Initializing tempstate to null StateInfo
+        std::memset(&tempState, 0, sizeof(StateInfo));
+        st.previous = &tempState;
         gamePly = 0;
     }
 }
@@ -34,6 +38,8 @@ void init_position(std::string FEN){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 
 void put_piece(Square square, Piece PP){
@@ -44,6 +50,8 @@ void put_piece(Square square, Piece PP){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 void remove_piece(Square square,Piece PP){
     Position::board[square] = NO_PIECE;
@@ -53,6 +61,8 @@ void remove_piece(Square square,Piece PP){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 void remove_piece(Square square){
     Position::board[square] = NO_PIECE;
@@ -63,6 +73,8 @@ void remove_piece(Square square){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 
 void move_piece(Square startsquare,Square endsquare, Piece PP){
@@ -71,6 +83,8 @@ void move_piece(Square startsquare,Square endsquare, Piece PP){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 
 void move_piece(Square startsquare,Square endsquare){
@@ -94,6 +108,8 @@ void move_piece(Square startsquare,Square endsquare){
     // Update pinnedpieces
     Position::pinnedPieces[BLACK] = PinnedPieces(BLACK, (pieces(BLACK,KING)));
     Position::pinnedPieces[WHITE] = PinnedPieces(WHITE, (pieces(WHITE,KING)));
+    // update checkers
+    Position::st.checkersBB = Checkers(Position::sideToMove, pieces(Position::sideToMove,KING));
 }
 
 void set_castling_right(Color c, char FEN_char){

@@ -8,15 +8,31 @@
 #include "magic.hpp"
 #include "position.hpp"
 #include "gen_move.hpp"
+#include "move_maker.hpp"
 
 int main(){
     init_lut();
     init_magics();
-    init_position("r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2");
+    init_position("r3k2r/p1pp1pb1/bn2Qnp1/2qPN3/1p2P3/2N5/PPPBBPPP/R3K2R b KQkq - 3 2");
     RepresentBoard();
     MoveList legalMoves;
     legalMoves = generate_legal(Position::sideToMove);
-    PrintMoveList(legalMoves);
+    Bitboard before = pieces();
+    Bitboard after;
+    for(int i= 0; i<legalMoves.size; i++ ){
+        PrintMove(legalMoves.list[i].move);
+        MakeMove(legalMoves.list[i].move);    
+        UndoMove(legalMoves.list[i].move);
+        after = pieces();
+        if(after != before){
+            std::cout<<"Dude they are different "<<std::hex<<(before - (before & after))<<std::endl;
+            RepresentBoard();
+        }
+            
+    }
+    RepresentBoard();
+    
+    
     // RepresentBitset(BlockerPossibleBitboard(Position::sideToMove));
     
     

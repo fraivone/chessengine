@@ -30,6 +30,8 @@ namespace Position{
     extern Bitboard pinnedPieces[COLOR_NB];
     /// array holding, for each square, its pinner if any. No pins are indicated by ENPSNT_UNAVAILABLE
     extern Square PinMap[COLOR_NB][nRows*nCols];
+    /// Tempstate as helper to init StateInfo* Position::st.previous
+    extern StateInfo tempState;
 }
 
 /// init position

@@ -138,9 +138,7 @@ Bitboard Checkers(Color Us, Bitboard OurKingBB);
 /// a check given by checkers. It has to be complemented 
 /// with pseudomoves of non-pinned pieces to provide 
 /// blocking moves
-Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers);
+Bitboard PossibleBlockersBB(Color Us);
 
 /// generate only legal moves
 MoveList generate_legal(Color Us);
-/// generate only legal moves
-MoveList generate_legal(Color,Bitboard);

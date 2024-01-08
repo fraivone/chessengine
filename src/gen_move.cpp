@@ -391,17 +391,11 @@ MoveList generate_allevasion_moves(MoveList& moveList, Color Us, const PieceType
     return moveList;
 }
 
+
 MoveList generate_legal(Color Us){
-    Bitboard checkers = Checkers(Us, pieces(Us,KING));
-    return generate_legal(Us, checkers);
-}
-
-
-
-MoveList generate_legal(Color Us, Bitboard checkers){
     MoveList output;
-    int numberOfChecks = countBitsOn(checkers);
-    Bitboard blockersBB = PossibleBlockersBB(Us, checkers);
+    int numberOfChecks = countBitsOn(Position::st.checkersBB);
+    Bitboard blockersBB = PossibleBlockersBB(Us);
     Bitboard movingTrace;
     Bitboard allowedPath;
     
@@ -437,7 +431,7 @@ MoveList generate_legal(Color Us, Bitboard checkers){
 
     // only 1 check, blocking scenario
     else if( (numberOfChecks == 1)){
-        output = generate_allevasion_moves(output, Us, checkers, blockersBB);
+        output = generate_allevasion_moves(output, Us, Position::st.checkersBB, blockersBB);
         return output;
     }
     // number of checks > 1, run the king
@@ -484,12 +478,12 @@ Bitboard Checkers(Color Us){
     return Checkers(Us,pieces(Us,KING));
 }
 
-Bitboard PossibleBlockersBB(Color Us, Bitboard Checkers){
+Bitboard PossibleBlockersBB(Color Us){
     // can't block a double check
-    if (countBitsOn(Checkers) != 1)
+    if (countBitsOn(Position::st.checkersBB) != 1)
         return 0ULL;
 
-    Square theAttackerSquare = pop_LSB(Checkers);
+    Square theAttackerSquare = get_LSB(Position::st.checkersBB);
     PieceType pt = type_of(Position::board[theAttackerSquare]);
     // can't block PAWNs or KNIGHTs checks
     if (pt == PAWN | pt == KNIGHT)
