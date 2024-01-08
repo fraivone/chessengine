@@ -83,6 +83,9 @@ enum CastlingRights {
   CASTLING_RIGHT_NB = 16
 }; 
 
+// convenient to transform enum into FEN
+const std::string castlingString[16] = {"-","K","Q","KQ","k","Kk","Qk","KQk","q","Kq","Qq","KQq","kq","Kkq","Qkq","KQkq"};
+
 //CONVENIENT BIT OPERATIONS
 #define set_bit(b, i) ((b) |= (1ULL << i))
 #define get_bit(b, i) ((b) & (1ULL << i))
@@ -150,6 +153,7 @@ const int Castle_QueenSide_RookDelta = +3;
 
 // convenient square
 const int square_fw[COLOR_NB] = {8,-8};
+const int square_bw[COLOR_NB] = {-8,+8};
 
 enum Direction : int {
     NORTH = 8,
@@ -255,6 +259,9 @@ constexpr bool same_diago(Square sq1, Square sq2){ return abs(sq1%nCols - sq2%nC
 
 /// convenient string to be match a char to its piece. Used while converting FEN
 constexpr std::string_view PieceToChar(" PNBRQK  pnbrqk");
+/// convenient array to convert a position to FEN
+constexpr char PieceCharMap[COLOR_NB][7] = { {'.','P','N','B','R','Q','K'},{'.','p','n','b','r','q','k'}};
+
 /// Create an array of string representations for piece types
 static const char* PieceTypeNames[] = {"NO_PIECE_TYPE", "PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN", "KING","ALL_PIECES", "PIECE_TYPE_NB"};
 static const char* MoveTypeNames[] = {"NORMAL", "PROMOTION", "ENPASSANT", "CASTLING"};

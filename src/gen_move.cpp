@@ -248,7 +248,7 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             // castling moves:
             // relies entirely on the correctness of the stateinfo
             // 0. Castles is still valid
-            // 1. No friendly pieces between the king and the rook
+            // 1. No friendly/enemy pieces between the king and the rook
             // 2. no attackers pointing at the squares between where the king is and where it wants to go
             // However the BetweenBB doesn't include the landing squares. So I have added an extra check to make sure that (2) includes the king's landing square
             // WHITE CASTLES
@@ -256,11 +256,11 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             if((Us == WHITE) && (Position::st.castlingRights & WHITE_CASTLING)){
                 
                 if( (WHITE_OOO & Position::st.castlingRights) 
-                    && !(BetweenBB[White_King_Start][White_Rook_QueenSide] & pieces(Us)) 
+                    && !(BetweenBB[White_King_Start][White_Rook_QueenSide] & pieces()) 
                     && !( (BetweenBB[White_King_Start][White_King_Start + Castle_QueenSide_KingDelta] | make_bitboard(White_King_Start + Castle_QueenSide_KingDelta)) & opponents_attacked_squares))
                     moveList.Add(make<CASTLING>(White_King_Start, White_King_Start + Castle_QueenSide_KingDelta));
                 if( (WHITE_OO & Position::st.castlingRights) 
-                    && !(BetweenBB[White_King_Start][White_Rook_KingSide] & pieces(Us)) 
+                    && !(BetweenBB[White_King_Start][White_Rook_KingSide] & pieces()) 
                     && !( ( BetweenBB[White_King_Start][White_King_Start + Castle_KingSide_KingDelta] | make_bitboard(White_King_Start + Castle_KingSide_KingDelta)) & opponents_attacked_squares) )
                     moveList.Add(make<CASTLING>(White_King_Start, White_King_Start + Castle_KingSide_KingDelta));
             }
@@ -268,11 +268,11 @@ MoveList generate_pseudomoves(MoveList& moveList,Color Us, Square sq, const Piec
             // BLACK CASTLES
             if((Us == BLACK) && (Position::st.castlingRights & BLACK_CASTLING)){
                 if( (BLACK_OOO & Position::st.castlingRights) 
-                    && !(BetweenBB[Black_King_Start][Black_Rook_QueenSide] & pieces(Us)) 
+                    && !(BetweenBB[Black_King_Start][Black_Rook_QueenSide] & pieces()) 
                     && !( (BetweenBB[Black_King_Start][Black_King_Start + Castle_QueenSide_KingDelta]| make_bitboard(Black_King_Start + Castle_QueenSide_KingDelta)) & opponents_attacked_squares))
                     moveList.Add(make<CASTLING>(Black_King_Start, Black_King_Start + Castle_QueenSide_KingDelta));
                 if((BLACK_OO & Position::st.castlingRights) 
-                    && !(BetweenBB[Black_King_Start][Black_Rook_KingSide] & pieces(Us)) 
+                    && !(BetweenBB[Black_King_Start][Black_Rook_KingSide] & pieces()) 
                     && !( (BetweenBB[Black_King_Start][Black_King_Start + Castle_KingSide_KingDelta] | make_bitboard(Black_King_Start + Castle_KingSide_KingDelta)) & opponents_attacked_squares))
                     moveList.Add(make<CASTLING>(Black_King_Start, Black_King_Start + Castle_KingSide_KingDelta));
             }

@@ -101,3 +101,6 @@ void setStatusFromFEN(std::string FEN);
 /// 1. StateInfo.pinners[!Us], a bitboard containing the positions of all opponent pinners (pinning us)
 /// 2. PinMap a vector containing all the pairs Pinners - Pinned
 Bitboard PinnedPieces(Color Us, Bitboard OurKingBB);
+
+/// returns the FEN of the current position
+std::string MakeFEN();

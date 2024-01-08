@@ -1,5 +1,17 @@
 #include <move_maker.hpp>
 
+std::string stringmv(Move theMove){
+    Square from = mv_from(theMove);
+    Square to = mv_to(theMove);
+    std::string out;
+    out += char('a'+from%nCols);
+    out += char('1'+from/nRows);
+    out += char('a'+to%nCols);
+    out += char('1'+to/nRows);
+    return out;
+}
+    
+
 
 void MakeMove(Move mv){
     // update the board with the new move
@@ -9,10 +21,10 @@ void MakeMove(Move mv){
     // [DONE] captured piece
     // [DONE] castling rights 
     // [DONE] rule50 
-    // [DONE] Square epSquare   
     // [DONE] gamePly (in position::)
     // [DONE] sideToMove(in position::)
-    // [DONE] lastly I update the board moving the pieces
+    // [DONE] Update the board moving the pieces
+    // [DONE] Lastly since all the pieces are placed now, check if enpassant should be enabled/disabled   
     
     
     // I start with copying the current state before any put/remove/move modifies it
@@ -29,6 +41,21 @@ void MakeMove(Move mv){
     MoveType mt = MoveType( mv & 0xC000);
     
     Position::st.capturedPiece = P_to;
+    
+    // if a ROOK is captured, remove opponent castling rights
+    if( (P_to != NO_PIECE) && (!whoMoves == WHITE) && (Position::st.castlingRights & WHITE_CASTLING)  && (type_of(P_to) == ROOK)){
+        if(to == White_Rook_QueenSide)
+            clear_bit(Position::st.castlingRights, 1);
+        if(to == White_Rook_KingSide)
+            clear_bit(Position::st.castlingRights, 0);
+    }
+    if( (P_to != NO_PIECE) && (!whoMoves == BLACK) && (Position::st.castlingRights & BLACK_CASTLING)  && (type_of(P_to) == ROOK)){
+        if(to == Black_Rook_QueenSide)
+            clear_bit(Position::st.castlingRights, 3);
+        if(to == Black_Rook_KingSide)
+            clear_bit(Position::st.castlingRights, 2);
+    }
+
     // Handle castles
     if((whoMoves == WHITE)){
         // remove castle WHITE_OOO
@@ -62,11 +89,6 @@ void MakeMove(Move mv){
         Position::st.rule50 = 0;
     else
         Position::st.rule50++;
-    
-    // it was a double push
-    if((type_of(P_from) == PAWN) && (abs(from-to)==16))
-        // epsquare is the one in between the from and push squares
-        Position::st.epSquare = whoMoves == BLACK? from - 8: from + 8;
 
     Position::gamePly++;
     Position::sideToMove = Color(!Position::sideToMove);
@@ -81,7 +103,6 @@ void MakeMove(Move mv){
     else if(mt == ENPASSANT){
         Square victim = Position::st.previous->epSquare + square_fw[!whoMoves];
         Piece P_cap_enp = Position::board[victim];
-        std::cout<<"Type "<<PieceNames[P_cap_enp]<<std::endl;
         remove_piece(victim,P_cap_enp);
         Position::st.capturedPiece = P_cap_enp;
         move_piece(from,to,P_from);
@@ -106,6 +127,27 @@ void MakeMove(Move mv){
             remove_piece(to,P_to);
         move_piece(from,to,P_from);
     }
+
+    // en passant might need to be enabled if enpassant was available, it's a pawn move, it moved 2 squares
+    if((type_of(P_from) == PAWN) && (abs(from-to)==16)){
+        // check for enpassant
+        Square epSquare = to  + square_bw[whoMoves];
+        Bitboard epBB = make_bitboard(epSquare);
+        // enpassant rules
+        // a) side to move has a pawn threatening epSquare
+        // b) there is an enemy pawn in front of epSquare --> Granted, we just moved a pawn there
+        // c) there is no piece on epSquare or behind epSquare
+        
+        if ((pieces(Color(!whoMoves),PAWN) && (  (epBB >>1) | (epBB << 1) ) )                            //a)
+            &&(Position::board[epSquare] == NO_PIECE) & (Position::board[epSquare+square_bw[whoMoves]] == NO_PIECE))  //c)
+            Position::st.epSquare = epSquare;
+        else
+            Position::st.epSquare = ENPSNT_UNAVAILABLE;
+    }
+    else
+        Position::st.epSquare = ENPSNT_UNAVAILABLE;
+
+
 
     Position::UpdatePosition();
 }
@@ -192,11 +234,54 @@ void UndoMove(Move mv){
     Position::UpdatePosition();   
 }
 
+    
+int StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool verbose, int count){
+    if (depth == 0){
+        // std::cout<<std::string(3-depth-1, '\t')<<"Move list has size "<<mvList.size<<std::endl;
+        count += mvList.size;
+        return count;
+    }
+    MoveList legalMoves;
+    StateInfo previousState;
+    int prevCount = count;
+    
+    previousState = Position::st;
+    for(int i=0; i<mvList.size; i++){
+        // std::cout<<std::string(4-depth-1, '\t')<<"Depth"<<+depth<<"   ";
+        MakeMove(mvList.list[i].move);
+        // std::cout<<"Made"<<std::endl;
+        legalMoves.Clear();
+        legalMoves = generate_legal(Position::sideToMove);
+        // std::cout<<std::string(depth-1, '\t')<<"Depth "<<+depth<<depth<<"\tMove["<<i<<"] has "<<legalMoves.size<<std::endl;
+        // std::cout<<std::string(3-depth-1, '\t')<<"Depth "<<+depth<<" - Before Move["<<i<<"]"<<"\tNow Count is "<<count<<std::endl;
+        if(depth>1)
+            count = StupidPerftCount(legalMoves,depth-1,MaxDepth,verbose, count);
+        else
+            count += legalMoves.size;
+        
+        if((depth == MaxDepth) & verbose)
+            std::cout<<stringmv(mvList.list[i].move)<<": " <<(count - prevCount)<<std::endl;
+        prevCount = count;
+        // std::cout<<std::string(3-depth-1, '\t')<<"Depth "<<+depth<<" - After Move["<<i<<"] "<<"\tNow Count is "<<count<<"\n"<<std::endl;
+        // UNDO
+        // the previous status might have gotten lost
+        // if depth > 1
+        *(Position::st.previous) = previousState;
+        UndoMove(mvList.list[i].move);
+    }
+    return count;
+    // init_position("8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3");
+}
 
-    
-    
-    
-    
+int StupidPerftCount(std::string FEN, uint8_t depth, bool verbose){
+    init_position(FEN);
+    MoveList mvl;
+    mvl = generate_legal(Position::sideToMove);
+    return StupidPerftCount(mvl,depth,depth,verbose);
+}
+
+
+
 
 // struct StateInfo {
 

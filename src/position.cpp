@@ -202,3 +202,69 @@ Bitboard PinnedPieces(Color Us, Bitboard OurKingBB){
     }
     return PinnedBB;
 }
+
+
+/// returns the FEN of the current position
+std::string MakeFEN(){
+    std::string output = "";
+    Square current = 56;
+    char pieceChar;
+    int emptyAdjacent = 0;
+    while(1){
+        // std::cout<<"current square "<<+current<<"   "<<output<<"Position::board[current] "<<PieceTypeNames[type_of(Position::board[current])]<<std::endl;
+        if(Position::board[current]==NO_PIECE)
+            emptyAdjacent++;
+        else{
+            pieceChar = PieceCharMap[color_of(Position::board[current])][type_of(Position::board[current])];
+            if(emptyAdjacent!=0)
+                output += std::to_string(emptyAdjacent);
+            output += pieceChar;
+            emptyAdjacent = 0;
+            
+        }
+
+        // update current to point to the next square
+        // easy case, we are finished
+        if(current == 7){
+            if(emptyAdjacent!=0)
+                output += std::to_string(emptyAdjacent);
+            break;
+        }
+        // stay on the same row
+        else if( (current+1)%8!=0)
+            current++;
+        else{
+            // we have to change row
+            // let's dump some chars
+            if(emptyAdjacent!=0)
+                output += std::to_string(emptyAdjacent);
+            emptyAdjacent = 0;
+            current = ((current/8) -1)*8;
+            output += "/";
+        }
+    }
+    
+    output += ' ';
+    // who moves
+    output += Position::sideToMove == WHITE? 'w':'b';
+    output += ' ';
+    // castl rigths
+    output += castlingString[Position::st.castlingRights];
+    output += ' ';
+    // enpassant square
+    if(Position::st.epSquare==ENPSNT_UNAVAILABLE)
+        output += '-';
+    else{
+        Square row = '1' + Position::st.epSquare/nRows;
+        Square col = 'a' + Position::st.epSquare%nCols;
+        output += col;
+        output += row;
+    }
+    output += ' ';
+    output += std::to_string(Position::st.rule50);
+    output += ' ';
+    output += std::to_string(1 + Position::gamePly/2);
+
+    return output;
+
+}
