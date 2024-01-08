@@ -148,6 +148,9 @@ const int Castle_QueenSide_KingDelta = -Castle_KingSide_KingDelta;
 const int Castle_KingSide_RookDelta = -Castle_KingSide_KingDelta;
 const int Castle_QueenSide_RookDelta = +3;
 
+// convenient square
+const int square_fw[COLOR_NB] = {8,-8};
+
 enum Direction : int {
     NORTH = 8,
     EAST  = 1,

@@ -79,7 +79,11 @@ void MakeMove(Move mv){
         put_piece(to,make_piece(whoMoves,pt));
         }
     else if(mt == ENPASSANT){
-        remove_piece(Position::st.previous->epSquare);
+        Square victim = Position::st.previous->epSquare + square_fw[!whoMoves];
+        Piece P_cap_enp = Position::board[victim];
+        std::cout<<"Type "<<PieceNames[P_cap_enp]<<std::endl;
+        remove_piece(victim,P_cap_enp);
+        Position::st.capturedPiece = P_cap_enp;
         move_piece(from,to,P_from);
     }
     else if( mt == CASTLING){
@@ -143,9 +147,10 @@ void UndoMove(Move mv){
         }
     else if(mt == ENPASSANT){
         // put back the opponent pawn
-        put_piece(Position::st.previous->epSquare + whoMoved == WHITE? 8:-8, make_piece(Color(!whoMoved), PAWN));
+        Square victim = Position::st.previous->epSquare + square_fw[!whoMoved];
+        put_piece(victim, make_piece(Color(!whoMoved), PAWN));
         // put back our pawn
-        move_piece(from,to,P_to);
+        move_piece(to,from,P_to);
     }
     else if( mt == CASTLING){
         // castle was queenside
