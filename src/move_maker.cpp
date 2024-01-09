@@ -8,6 +8,12 @@ std::string stringmv(Move theMove){
     out += char('1'+from/nRows);
     out += char('a'+to%nCols);
     out += char('1'+to/nRows);
+
+    MoveType mt = MoveType( theMove & 0xC000);
+    PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
+    if(mt==PROMOTION)
+        out += PieceCharMap[BLACK][pt];
+
     return out;
 }
     
