@@ -304,7 +304,7 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
     // generate pseudomoves that lead to evasion
     // Exclude pinned pieces as they won't help now   
 
-    Bitboard bb;
+    Bitboard bb = 0ULL;
     Bitboard opponent_pawns = Position::BitboardsByType[PAWN] & Position::BitboardsByColor[!Us];
     Bitboard opponent_knights = Position::BitboardsByType[KNIGHT] & Position::BitboardsByColor[!Us];
     Bitboard opponent_rooks = Position::BitboardsByType[ROOK] & Position::BitboardsByColor[!Us];
@@ -321,7 +321,7 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
         case KNIGHT:
             // if the knight is pinned, it can't move whatsoever
             // so only check cases in which the knight isn't pinned
-            if(!(make_bitboard(sq) & Position::pinnedPieces[Us]))
+            if(!isPinned)
                 // land the knight either on a blocker square or capture the checker
                 bb = (knight_lut[sq] & ~Position::BitboardsByColor[Us] & (BlockersBB | Checkers) );
             break;
@@ -332,7 +332,10 @@ MoveList generate_evasion_moves(MoveList& moveList,Color Us, Square sq, const Pi
             // when pinned they can move on blocker squares if those belong to the pinner rat (1) 
             // or capture the checker along that same ray (2)
             // 
-            // TODO check this logic :D // I checked and fixed it once :S
+            // TODO check this logic :D 
+            // I checked and fixed it once but it wasn't enough :S 
+            // I checked and fixed it a second time :SS
+
             bb = get_sliding_landings(pt, sq, pieces())& ~Position::BitboardsByColor[Us];
             if (!isPinned)
                 bb &= ( BlockersBB | Checkers );
