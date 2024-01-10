@@ -301,8 +301,8 @@ struct StateInfo {
     uint64_t    materialKey;
     /// To be understood
     uint64_t    pawnKey;
-    /// To be understood
     int  nonPawnMaterial[COLOR_NB];
+    int  PSTScore[COLOR_NB];
     int    castlingRights;
     // number of plys since last pawn move or last capture
     int    rule50;

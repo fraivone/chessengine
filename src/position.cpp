@@ -45,8 +45,10 @@ void init_position(std::string FEN){
     // set boards and bitboards from FEN
     setBBFromFEN(FEN);
     Position::UpdatePosition();
-    // cal material count
+    // calc and store material count
     CalculateMaterial();
+    // calc and store PST score
+    CalculatePSTScore();
 }
 
 void put_piece(Square square, Piece PP){
@@ -277,9 +279,35 @@ void UpdateMaterialCount(Color color,int v ){
 void CalculateMaterial(){
     PieceType pt = KNIGHT;
     // update values for KNIGHTs, BISHOPs, ROOKs, QUEENs
-    while(pt < ALL_PIECES){
+    while(pt < KING){
         UpdateMaterialCount(WHITE,countBitsOn(pieces(WHITE,pt))*PieceValue[pt]);
         UpdateMaterialCount(BLACK,countBitsOn(pieces(BLACK,pt))*PieceValue[pt]);
         pt = PieceType(int(pt) + 1);
+    }
+}
+
+void AddPSTScore(Color Us, Square sq, PieceType pt){
+    Position::st.PSTScore[Us] += getPieceSquareTableValue(Us, sq, pt);
+}
+void SubtractPSTScore(Color Us, Square sq, PieceType pt){
+    Position::st.PSTScore[Us] -= getPieceSquareTableValue(Us, sq, pt);
+}
+
+void AddPSTScore(Color c,int value ){
+    Position::st.PSTScore[c] += value;
+}
+
+void CalculatePSTScore(){
+    PieceType pt;
+    Color c;
+    int value = 0;
+    // update values for KNIGHTs, BISHOPs, ROOKs, QUEENs
+    for(Square sq=0; sq<nRows*nCols; sq++){
+        pt = type_of(Position::board[sq]);
+        if(pt==NO_PIECE_TYPE)
+            continue;
+
+        c = color_of(Position::board[sq]);
+        AddPSTScore(c,sq,pt);
     }
 }

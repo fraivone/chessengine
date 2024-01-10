@@ -6,6 +6,7 @@
 #include <cstring> // mmset for initializing stateinfo
 // #include <lut.hpp>
 #include "gen_move.hpp"
+#include "pst.hpp"
 
  /*!  \todo 
     * - Include method to generate FEN given the bitboards and the status of the current position
@@ -36,13 +37,24 @@ namespace Position{
 }
 
 
-/// Addes value to the material count of Color
-void UpdateMaterialCount(Color ,int value );
+/// Adds value to the material count of Color
+void UpdateMaterialCount(Color c,int value );
 /// calculate the material count by looping on 
 /// all pieces
 /// requires Position::Bitboard<> to be updated
 /// to be called only once, at board init
 void CalculateMaterial();
+
+/// Adds value to the PST score count of Color
+void AddPSTScore(Color c,Square sq, PieceType pt );
+/// Subtract value to the PST score count of Color
+void SubtractPSTScore(Color Us, Square sq, PieceType pt);
+/// Adds value to the PST score count of Color
+void AddPSTScore(Color c,int value );
+/// calculate positional score for black and white pieces
+/// requires Position::Bitboard<> to be updated
+/// to be called only once, at board init
+void CalculatePSTScore();
 
 /// init position
 void init_position(std::string FEN);
