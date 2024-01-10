@@ -35,6 +35,15 @@ namespace Position{
     extern StateInfo tempState;
 }
 
+
+/// Addes value to the material count of Color
+void UpdateMaterialCount(Color ,int value );
+/// calculate the material count by looping on 
+/// all pieces
+/// requires Position::Bitboard<> to be updated
+/// to be called only once, at board init
+void CalculateMaterial();
+
 /// init position
 void init_position(std::string FEN);
 

@@ -45,6 +45,8 @@ void init_position(std::string FEN){
     // set boards and bitboards from FEN
     setBBFromFEN(FEN);
     Position::UpdatePosition();
+    // cal material count
+    CalculateMaterial();
 }
 
 void put_piece(Square square, Piece PP){
@@ -267,4 +269,17 @@ std::string MakeFEN(){
 
     return output;
 
+}
+
+void UpdateMaterialCount(Color color,int v ){
+    Position::st.nonPawnMaterial[color] += v;
+}
+void CalculateMaterial(){
+    PieceType pt = KNIGHT;
+    // update values for KNIGHTs, BISHOPs, ROOKs, QUEENs
+    while(pt < ALL_PIECES){
+        UpdateMaterialCount(WHITE,countBitsOn(pieces(WHITE,pt))*PieceValue[pt]);
+        UpdateMaterialCount(BLACK,countBitsOn(pieces(BLACK,pt))*PieceValue[pt]);
+        pt = PieceType(int(pt) + 1);
+    }
 }
