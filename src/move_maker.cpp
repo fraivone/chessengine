@@ -102,9 +102,16 @@ void MakeMove(Move mv){
     if(mt == PROMOTION){
         PieceType pt = PieceType(((mv >> 12) & (0x3))+2);
         remove_piece(from,P_from);
-        if(P_to != NO_PIECE)
+        if(P_to != NO_PIECE){
             remove_piece(to,P_to);
+             if (PieceValue[P_to] != PawnValue)
+                // Decrease opponent's nonpawnmaterial by the value of pt
+                UpdateMaterialCount(Color(!whoMoves), -PieceValue[P_to] );
+        }
         put_piece(to,make_piece(whoMoves,pt));
+        // Increase nonpawnmaterial by the value of pt
+        // pt is a promoting piece, can't be pawn!
+        UpdateMaterialCount(whoMoves, PieceValue[pt] );
         }
     else if(mt == ENPASSANT){
         Square victim = Position::st.previous->epSquare + square_fw[!whoMoves];
@@ -129,8 +136,13 @@ void MakeMove(Move mv){
     }
     // Normal move
     else{
-        if(P_to != NO_PIECE)
+        // there is a capture
+        if(P_to != NO_PIECE){
             remove_piece(to,P_to);
+            if (PieceValue[P_to] != PawnValue)
+                // Decrease opponent's nonpawnmaterial by the value of pt
+                UpdateMaterialCount(Color(!whoMoves), -PieceValue[P_to] );
+            }
         move_piece(from,to,P_from);
     }
 
@@ -276,7 +288,6 @@ uint64_t StupidPerftCount(MoveList mvList, uint8_t depth,uint8_t MaxDepth, bool 
         UndoMove(mvList.list[i].move);
     }
     return count;
-    // init_position("8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3");
 }
 
 uint64_t StupidPerftCount(std::string FEN, uint8_t depth, bool verbose){
