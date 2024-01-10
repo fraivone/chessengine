@@ -4,7 +4,9 @@
 #include "types.hpp"
 #include "position.hpp"
 # include "colors.hpp"
+# include "pst.hpp"
 #include <gen_move.hpp> //movelist
+#include <iomanip> //method setw
 /*! Prints the given bitboard with # in place of the set bits.
     \param Bitboard 
     \return void
@@ -25,3 +27,6 @@ void PrintMoveList(MoveList s);
 
 /// Print PinMap
 void PrintPinMap(Color Us);
+
+/// Print a Piece Square Table to ease the dev
+void PrintPST(Color c, PieceType pt);

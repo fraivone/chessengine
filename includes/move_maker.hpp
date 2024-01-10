@@ -2,6 +2,7 @@
 #pragma once
 #include <types.hpp>
 #include <position.hpp>
+#include <pst.hpp>
 
 /// Given a move(internally gnerated) makes the move and updates
 /// the position and the stateinfo

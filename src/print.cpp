@@ -65,14 +65,49 @@ void RepresentBoard(){
         std::cout<<KYEL  <<"    --- --- --- --- --- --- --- ---\n";
         std::cout<<ri+1<<"  ";
         for(int ci=0; ci<nCols; ci++){
-            std::cout<<"|"<<KNRM<< grid[ri][ci]<<" "<<KYEL;
-            
+            std::cout<<"|"<<KNRM<< grid[ri][ci]<<" "<<KYEL; 
         }
     std::cout<<"|";
     }
     std::cout<<"\n    --- --- --- --- --- --- --- ---"<<std::endl;
     std::cout<<"     a   b   c   d   e   f   g   h "<<std::endl;
     std::cout<<KNRM<<"\n";
+}
+
+void PrintPST(Color c, PieceType pt){
+    // the goal is to pring each value of the table in a fixed 
+    // width fashion. The value should be centered in the printing box
+    int boxWidth = 4;
+    int prepadding = 0;
+    int postpadding = 0;
+    for(int ri=nRows-1; ri>=0; ri--){
+        std::cout<<"\n";
+        std::cout<<KYEL  <<"    --- --- --- --- --- --- --- ---\n";
+        std::cout<<ri+1<<"  ";
+        for(int ci=0; ci<nCols; ci++){
+            Square s = make_square(ci,ri);
+            int number = getPieceSquareTableValue(c,s,pt);
+            if (std::to_string(number).length()==1){
+                prepadding = 1; postpadding = 1;
+            }
+            else if (std::to_string(number).length()==2){
+                prepadding = 1; postpadding = 0;
+            }
+            else if (std::to_string(number).length()==3){
+                prepadding = 0; postpadding = 0;
+            }
+            else{
+            prepadding = 0; postpadding = 0;
+            }
+            std::cout<<"|";
+            std::cout <<KNRM<< std::setw(prepadding + std::to_string(number).length()) << std::right << number << std::setw(postpadding) << ""<<KYEL ;
+        }
+    std::cout<<"|";
+    }
+    std::cout<<"\n    --- --- --- --- --- --- --- ---"<<std::endl;
+    std::cout<<"     a   b   c   d   e   f   g   h "<<std::endl;
+    std::cout<<KNRM<<"\n";
+
 }
 
 void PrintMove(Move theMove){

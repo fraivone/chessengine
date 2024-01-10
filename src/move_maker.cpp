@@ -104,14 +104,19 @@ void MakeMove(Move mv){
         remove_piece(from,P_from);
         if(P_to != NO_PIECE){
             remove_piece(to,P_to);
-             if (PieceValue[P_to] != PawnValue)
+            // update PST for opponents P_to that gets captured
+            SubtractPSTScore(Color(!whoMoves), to, type_of(P_to));
+            if (PieceValue[P_to] != PawnValue)
                 // Decrease opponent's nonpawnmaterial by the value of pt
                 UpdateMaterialCount(Color(!whoMoves), -PieceValue[P_to] );
+            
         }
         put_piece(to,make_piece(whoMoves,pt));
         // Increase nonpawnmaterial by the value of pt
         // pt is a promoting piece, can't be pawn!
         UpdateMaterialCount(whoMoves, PieceValue[pt] );
+        // update PST for a pawn that became pt
+        AddPSTScore(whoMoves,  getPieceSquareTableValue(whoMoves, to, pt) - getPieceSquareTableValue(whoMoves, from, PAWN)  );
         }
     else if(mt == ENPASSANT){
         Square victim = Position::st.previous->epSquare + square_fw[!whoMoves];
@@ -119,6 +124,10 @@ void MakeMove(Move mv){
         remove_piece(victim,P_cap_enp);
         Position::st.capturedPiece = P_cap_enp;
         move_piece(from,to,P_from);
+        // update PST for opponents pawn that gets captured
+        SubtractPSTScore(Color(!whoMoves), victim, PAWN );
+        // update PST for my pawn that moves from - to
+        AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, PAWN) - getPieceSquareTableValue(whoMoves, from, PAWN) );
     }
     else if( mt == CASTLING){
         // castle is queenside
@@ -126,12 +135,16 @@ void MakeMove(Move mv){
             move_piece(from,to, make_piece(whoMoves,KING));
             Square start = whoMoves == WHITE? White_Rook_QueenSide : Black_Rook_QueenSide;
             move_piece(start, start + Castle_QueenSide_RookDelta, make_piece(whoMoves,ROOK));
+            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, KING) - getPieceSquareTableValue(whoMoves, from, KING) );
+            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, start + Castle_QueenSide_RookDelta, ROOK) - getPieceSquareTableValue(whoMoves, start, ROOK) );
         }
         // castle is kingside
         if( (to - from) == Castle_KingSide_KingDelta){
             move_piece(from,to, make_piece(whoMoves,KING));
             Square start = whoMoves == WHITE? White_Rook_KingSide : Black_Rook_KingSide;
             move_piece(start, start + Castle_KingSide_RookDelta, make_piece(whoMoves,ROOK));
+            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, KING) - getPieceSquareTableValue(whoMoves, from, KING) );
+            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, start + Castle_KingSide_RookDelta, ROOK) - getPieceSquareTableValue(whoMoves, start, ROOK) );
         }
     }
     // Normal move
@@ -139,11 +152,13 @@ void MakeMove(Move mv){
         // there is a capture
         if(P_to != NO_PIECE){
             remove_piece(to,P_to);
+            AddPSTScore(Color(!whoMoves), -getPieceSquareTableValue(Color(!whoMoves), to, type_of(P_to)) );
             if (PieceValue[P_to] != PawnValue)
                 // Decrease opponent's nonpawnmaterial by the value of pt
                 UpdateMaterialCount(Color(!whoMoves), -PieceValue[P_to] );
             }
         move_piece(from,to,P_from);
+        AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves,to,type_of(P_from))- getPieceSquareTableValue(whoMoves, from, type_of(P_from)) );
     }
 
     // en passant might need to be enabled if enpassant was available, it's a pawn move, it moved 2 squares
