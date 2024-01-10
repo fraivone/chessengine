@@ -2,6 +2,8 @@
 ExecutablePath = "/home/francesco/Programs/engine/build/chessengine"
 import subprocess
 import numpy as np
+from timeit import default_timer as timer   
+import time
 
 # Function to read from stdout
 def read_stdout(process, exit_string):
@@ -22,7 +24,6 @@ def send_command(process, command):
 
 def test_fen(process, fen_string, depth):
     # Example: Sending commands to stdin
-    read_stdout(process, "Enter fen")
     send_command(process, fen_string)
     read_stdout(process, "Enter depth")
     send_command(process, str(depth))
@@ -74,11 +75,15 @@ if __name__ == "__main__":
         universal_newlines=True,
         shell=True
     )
-
+    read_stdout(process, "Enter fen")
+    print("Start measuring time")
+    start = timer()
     for test in data:
         for depth in range(1,6):
             value , _ = test_fen(process, test[0],depth-1)
+            read_stdout(process, "Enter fen")
             if value != test[depth]:
                 raise ValueError(f"FAILED at DEPTH {depth}\t {value} differs from book {test[depth]} for FEN\n\t{test[0]}")
             
-    
+    end = timer()
+    print(f"Time taken {end - start}")

@@ -13,7 +13,7 @@ set(EXEC chessengine)
 set(CMAKE_CXX_STANDARD 17)
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -march=native -ftree-vectorize -lstdc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -march=native -ftree-vectorize -mfpmath=sse -lstdc++")
 
 # I../includes
 include_directories(includes)
