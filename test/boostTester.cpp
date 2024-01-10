@@ -524,12 +524,35 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
         
     }
     BOOST_AUTO_TEST_CASE(CheckPerftDepth1){
-        for (auto const& x : PERFT1)
-            BOOST_CHECK_EQUAL(StupidPerftCount(x.first,0),x.second);
+        for (auto const& x : PERFT1){
+                BOOST_CHECK_EQUAL(StupidPerftCount(x.first,0),x.second);
+                // std::cout<<x.first<<std::endl;
+        }
     }
     BOOST_AUTO_TEST_CASE(CheckPerftDepth2){
         for (auto const& x : PERFT2)
             BOOST_CHECK_EQUAL(StupidPerftCount(x.first,1),x.second);
+    }
+
+    BOOST_AUTO_TEST_CASE(CheckMaterialCountConsistencyAtPerft4){
+        
+        MoveList mvl;
+        int BeforeWhiteValue, AfterWhiteValue = 0;
+        int BeforeBlackValue, AfterBlackValue = 0;
+        for (auto const& x : PERFT2){
+            init_position(x.first);
+            BeforeWhiteValue = Position::st.nonPawnMaterial[WHITE];
+            BeforeBlackValue = Position::st.nonPawnMaterial[BLACK];
+            mvl = generate_legal(Position::sideToMove);
+            // makes / unmakes all possible moves up to depth 4
+            // so that at the end we should be back with the same
+            // material count as beginning
+            StupidPerftCount(mvl,4,4);
+            AfterWhiteValue = Position::st.nonPawnMaterial[WHITE];
+            AfterBlackValue = Position::st.nonPawnMaterial[BLACK];
+            BOOST_CHECK_EQUAL(BeforeWhiteValue, AfterBlackValue);
+            BOOST_CHECK_EQUAL(BeforeBlackValue, AfterBlackValue);
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()
