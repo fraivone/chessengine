@@ -96,7 +96,7 @@ bool white_sorter(ExtMove const& lhs, ExtMove const& rhs) {
 }
 
 
-ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, bool verbose){
+ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, int& counter, bool verbose){
     ExtMove bestMove,newMove;
     bestMove = Move(0);
     MoveList legal = generate_legal(Us);
@@ -127,8 +127,9 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, bool verb
         for(int i=0; i<legal.size; i++){
             if(verbose)
                 std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<ee(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
+            counter ++;
             MakeMove(legal.list[i].move);
-            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,verbose);
+            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,counter, verbose);
             legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);
@@ -158,7 +159,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, bool verb
             if(verbose)
                 std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<ee(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             MakeMove(legal.list[i].move);
-            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, verbose);
+            newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, counter, verbose);
             legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);
