@@ -34,7 +34,7 @@ struct MoveList{
     ExtMove list[MAX_MOVES];
     int size = 0;
     // Append a move to this move list
-    void Add(Move s) {list[size] = s; size++;}
+    void Add(Move s) {list[size].move = s; size++;}
     // Append a ExtMove to this move list
     void Add(ExtMove s) {list[size] = s; size++;}
     void Append(MoveList s) {for(int i=0; i<s.size; i++){list[size] = s.list[i];size++;}}
