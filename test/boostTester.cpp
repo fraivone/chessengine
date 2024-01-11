@@ -9,6 +9,7 @@
 #include "position.hpp"
 #include "magic.hpp"
 #include "move_maker.hpp"
+#include "eval.hpp"
 
 const int arrayLenght = 34;
 std::string FEN_Array[] = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -318,7 +319,7 @@ std::unordered_map<std::string, int> PERFT1 = {
                                     {"n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", 24},
         };
 
-BOOST_AUTO_TEST_SUITE(ChessEngine)
+BOOST_AUTO_TEST_SUITE(Methods)
 
     BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
         init_magics();
@@ -554,5 +555,93 @@ BOOST_AUTO_TEST_SUITE(ChessEngine)
             BOOST_CHECK_EQUAL(BeforeBlackValue, AfterBlackValue);
         }
     }
-
 BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+BOOST_AUTO_TEST_CASE(Init){
+    init_lut();
+    init_magics();
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth1){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 1,1,n_calls, false);
+    }
+    std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth2){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 2,2,n_calls, false);
+    }
+    std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth3){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 3,3,n_calls, false);
+    }
+    std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth4){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 4,4,n_calls, false);
+    }
+    std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth5){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 5,5,n_calls, false);
+    }
+    std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth6){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 6,6,n_calls, false);
+    }
+        std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth7){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 7,7,n_calls, false);
+    }
+        std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth8){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 8,8,n_calls, false);
+    }
+        std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}
+BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth9){
+    ExtMove theBest;
+    int n_calls = 0;
+    for (auto const& x : PERFT2){
+        init_position(x.first);
+        theBest = minmax(Position::sideToMove,-10000000, +10000000, 9,9,n_calls, false);
+    }
+        std::cout<<"Searched moves: "<<n_calls<<std::endl;
+}    
