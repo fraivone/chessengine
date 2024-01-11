@@ -6,7 +6,9 @@
 // of 100, which might differ from PawnValue 
 // defined in types.hpp 
 const int PST_PAWN_VALUE = 100;
+const int PST_CONVERSION_FACTOR = 2; // it should be float(PawnValue/PST_PAWN_VALUE), but I want to keep all scores as int till last moment
 
+// tables from https://github.com/stwe/SgChess/blob/main/src/main/java/EvaluationTables.java
 const std::array<int,nRows*nCols> null_pst = {
          0,  0,   0,   0,   0,   0,  0,  0,
          0,  0,   0,   0,   0,   0,  0,  0,
