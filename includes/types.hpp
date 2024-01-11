@@ -61,6 +61,8 @@ enum Color {
   WHITE, BLACK, COLOR_NB = 2
 };
 
+const int ColorScoreFactor[COLOR_NB] = {1,-1};
+
 
 /// CastlingRights Bits
 // | 0    |  1    |   2   |   3   |
