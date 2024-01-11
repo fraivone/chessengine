@@ -2,6 +2,7 @@ import subprocess
 from matplotlib import pyplot as plt
 import pandas as pd
 import mplhep as hep
+import time
 plt.style.use(hep.style.CMS)
 ExecutablePath = "/home/francesco/Programs/engine/build/test/_unit_tests"
 
@@ -43,6 +44,7 @@ ax1.plot(df.Depth, df.Time,label="Time(us)",linestyle='dashed', marker='s')
 ax1.plot(df.Depth, df.Nodes,label="Nodes",linestyle='dashed', marker='s')
 ax1.plot(df.Depth, 10**(6)*df.Nodes/df.Time,label="Nodes/s",color="g",linestyle='dashed', marker='s')
 ax1.legend()
-ax1.set_ylim(10**3,10**7)
+ax1.set_ylim(10**3,)
 fig.savefig("Performance.pdf")
 fig.savefig("Performance.png")
+df.to_csv(f"Performance{time.strftime('_%-y%m%d%H%M')}.csv")
