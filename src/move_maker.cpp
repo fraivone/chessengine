@@ -124,10 +124,12 @@ void MakeMove(Move mv){
         remove_piece(victim,P_cap_enp);
         Position::st.capturedPiece = P_cap_enp;
         move_piece(from,to,P_from);
-        // update PST for opponents pawn that gets captured
+        // update PST and material count for opponents pawn that gets captured
         SubtractPSTScore(Color(!whoMoves), victim, PAWN );
+        UpdateMaterialCount(Color(!whoMoves), -PieceValue[PAWN] );
         // update PST for my pawn that moves from - to
         AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, PAWN) - getPieceSquareTableValue(whoMoves, from, PAWN) );
+        
     }
     else if( mt == CASTLING){
         // castle is queenside
