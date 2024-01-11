@@ -20,7 +20,7 @@ std::string ee(Move theMove){
 int EvalPosition(){
     Color whoMoves = Position::sideToMove;
     Color opponent_c = Color(!whoMoves);
-    return ColorScoreFactor[whoMoves] * ( Position::st.PSTScore[whoMoves]*PST_CONVERSION_FACTOR + countBitsOn(pieces(whoMoves,PAWN)) + Position::st.nonPawnMaterial[whoMoves] - Position::st.PSTScore[opponent_c]*PST_CONVERSION_FACTOR + countBitsOn(pieces(opponent_c,PAWN)) - Position::st.nonPawnMaterial[opponent_c]);
+    return ColorScoreFactor[whoMoves] * ( Position::st.PSTScore[whoMoves]*PST_CONVERSION_FACTOR + countBitsOn(pieces(whoMoves,PAWN))*PawnValue + Position::st.nonPawnMaterial[whoMoves] - Position::st.PSTScore[opponent_c]*PST_CONVERSION_FACTOR - countBitsOn(pieces(opponent_c,PAWN))*PawnValue - Position::st.nonPawnMaterial[opponent_c]);
 }
 
 ExtMove EvalExtMove(ExtMove& extmove){
@@ -75,7 +75,7 @@ ExtMove EvalExtMove(ExtMove& extmove){
     else
         score += ( getPieceSquareTableValue(whoMoves, to, type_of(P_from)) - getPieceSquareTableValue(whoMoves, from, type_of(P_from)) )* PST_CONVERSION_FACTOR;
 
-    score = ColorScoreFactor[whoMoves] * ( score + Position::st.PSTScore[whoMoves]*PST_CONVERSION_FACTOR + countBitsOn(pieces(whoMoves,PAWN)) + Position::st.nonPawnMaterial[whoMoves] - Position::st.PSTScore[opponent_c]*PST_CONVERSION_FACTOR + countBitsOn(pieces(opponent_c,PAWN)) - Position::st.nonPawnMaterial[opponent_c]);
+    score = ColorScoreFactor[whoMoves] * ( score + Position::st.PSTScore[whoMoves]*PST_CONVERSION_FACTOR + countBitsOn(pieces(whoMoves,PAWN))*PawnValue + Position::st.nonPawnMaterial[whoMoves] - Position::st.PSTScore[opponent_c]*PST_CONVERSION_FACTOR - countBitsOn(pieces(opponent_c,PAWN))*PawnValue - Position::st.nonPawnMaterial[opponent_c]);
     extmove.value = score;
     return extmove;
 }
@@ -119,6 +119,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, int& coun
     if(Us == WHITE){
         std::sort(&legal.list[0], &legal.list[legal.size], &white_sorter);
         if (depth == 0){
+            counter +=legal.size;
             if(verbose)
                 std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << ee(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
@@ -150,6 +151,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, int& coun
     else{
         std::sort(&legal.list[0], &legal.list[legal.size], &black_sorter);
         if (depth == 0){
+            counter +=legal.size;
             if(verbose)
                 std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << ee(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
