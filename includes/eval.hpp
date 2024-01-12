@@ -21,7 +21,7 @@ int EvalPosition();
 MoveList EvalMoveList(MoveList& mvList);
 
 /// test evaluation function
-ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, int& counter, bool verbose = false);
+ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t & counter, bool verbose = false);
 
 /// helps sorting best move for black
 bool black_sorter(ExtMove const& lhs, ExtMove const& rhs);

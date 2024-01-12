@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Init){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth1){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t  n_calls= 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 1,1,n_calls, false);
@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth1){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth2){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t  n_calls= 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 2,2,n_calls, false);
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth2){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth3){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 3,3,n_calls, false);
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth3){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth4){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 4,4,n_calls, false);
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth4){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth5){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 5,5,n_calls, false);
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth5){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth6){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 6,6,n_calls, false);
@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth6){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth7){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 7,7,n_calls, false);
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth7){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth8){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 8,8,n_calls, false);
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth8){
 }
 BOOST_AUTO_TEST_CASE(MiniMaxSpeedDepth9){
     ExtMove theBest;
-    int n_calls = 0;
+    uint64_t n_calls = 0;
     for (auto const& x : PERFT2){
         init_position(x.first);
         theBest = minmax(Position::sideToMove,-10000000, +10000000, 9,9,n_calls, false);

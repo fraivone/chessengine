@@ -96,7 +96,7 @@ bool white_sorter(ExtMove const& lhs, ExtMove const& rhs) {
 }
 
 
-ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, int& counter, bool verbose){
+ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t& counter, bool verbose){
     ExtMove bestMove,newMove;
     bestMove = Move(0);
     MoveList legal = generate_legal(Us);
