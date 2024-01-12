@@ -6,10 +6,13 @@
 #include <array>
 #include <bitset>
 #include <cassert> // for assert
-
+const std::string VERSION = "0.1";
+const std::string engineName ="ThePaunch";
+const std::string author ="Francesco Ivone";
+const int defaultDepth = 6;
 
 /// Verbose variable to control couts. Ranges from [0,...,5]
-const unsigned VERBOSE = 1; 
+extern unsigned VERBOSE;
 
 constexpr int nCols = 8;
 constexpr int nRows = 8;
@@ -210,8 +213,24 @@ enum Piece {
 enum Value : int {
     VALUE_ZERO     = 0,
     VALUE_DRAW     = 0,
-    VALUE_NONE     = 32002,
-    VALUE_INFINITE = 32001,
+    VALUE_NONE     = 31999,
+    VALUE_INFINITE = 2147483647,
+    // the evalution has a data format 
+    // [20-16]Mate in | [15-0] Evaluation
+    // The 5 bits [16,20] to store how many plys till mate (mate in [0:30] pyls)
+    // The 12 bits [0,11] store the eval value (max 65535)
+    // For "MATE IN" the lower the number of plys the higher the value 
+    // so that it gets sorted properly as the best move
+    // 0 -> 11111(remaining15bits)
+    // 1 -> 11110(remaining15bits)
+    // 2 -> 11101(remaining15bits)
+    // the solution is (VALUE_MATE_0 - mate in plys) << 15
+    VALUE_MATE_0 = 31 << 16,
+    VALUE_MATE_1 = VALUE_MATE_0 - (1ULL << 16),
+    VALUE_MATE_2 = VALUE_MATE_0 - (2ULL << 16),
+    // ..
+    VALUE_MATE_30 = VALUE_MATE_0 - (30ULL << 16), // max number of plys storable is 30 otherwise we get 0
+
 
     // In the code, we make the assumption that these values
     // are such that non_pawn_material() can be used to uniquely
@@ -324,3 +343,6 @@ struct StateInfo {
     Piece      capturedPiece;
     int        repetition;
 };
+
+// Convenient FEN
+const std::string starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

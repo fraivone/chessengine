@@ -118,12 +118,28 @@ void PrintMove(Move theMove){
     std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<std::endl;
 }
 
-void PrintExtMove(ExtMove etxmv){
-    auto string_first = mvhuman(etxmv.move);
-    MoveType mt = MoveType( etxmv.move & 0xC000);
-    int MoveTypeIndex = (mt >> 14)&0x3;
+void PrintExtMove(ExtMove extmv){
+    Color c = extmv.value > 0? WHITE: BLACK;
+    if((abs(extmv.value) == VALUE_MATE_0))
+        std::cout<<"Game over "<<ColorNames[c]<<" won"<<std::endl;
+    else{
+        auto string_first = mvhuman(extmv.move);
+        MoveType mt = MoveType( extmv.move & 0xC000);
+        int MoveTypeIndex = (mt >> 14)&0x3;
 
-    std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: "<<etxmv.value<<std::endl;
+
+        if((abs(extmv.value) >= VALUE_MATE_30) & (abs(extmv.value) < VALUE_MATE_0)){
+            int mateInPlys = (VALUE_MATE_0 - extmv.value) >> 16;
+            std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: "<<ColorNames[c]<<" MATE in "<<mateInPlys<<std::endl;
+        }
+
+        else if((extmv.value == VALUE_NONE))
+            std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: NONE"<<std::endl;
+        else if((abs(extmv.value) == VALUE_INFINITE))
+            std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: INFINITE"<<std::endl;
+        else
+            std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: "<<extmv.value<<std::endl;
+    }
 
 }
 

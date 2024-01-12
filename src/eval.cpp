@@ -105,8 +105,10 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
         
         if(Position::st.checkersBB == 0ULL)
             bestMove.value = 0; // stalemate
-        else
-            bestMove.value = ColorScoreFactor[!Us]*VALUE_INFINITE; // opponent did checkmate
+        else{
+            int mateIn = maxdepth - depth;
+            bestMove.value = ColorScoreFactor[!Us]*(VALUE_MATE_0 - (mateIn << 16)); // opponent did checkmate in mateIn plys
+        }
         return bestMove;
     }
     legal = EvalMoveList(legal);
@@ -131,6 +133,13 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             counter ++;
             MakeMove(legal.list[i].move);
             newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,counter, verbose);
+            // if mate is signaled, then the move
+            // returned is a null move with a valid score.
+            // The mate move is actually the one 
+            // currently indexed by i 
+            if(abs(newMove.value) >= VALUE_MATE_30) 
+                newMove.move = legal.list[i];
+
             legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);
@@ -162,6 +171,12 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
                 std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             MakeMove(legal.list[i].move);
             newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, counter, verbose);
+            // if mate is signaled, then the move
+            // returned is a null move with a valid score.
+            // The mate move is actually the one 
+            // currently indexed by i 
+            if(abs(newMove.value) >= VALUE_MATE_30) 
+                newMove.move = legal.list[i];
             legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
             *(Position::st.previous) = previousState;
             UndoMove(legal.list[i].move);

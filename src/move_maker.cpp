@@ -36,6 +36,8 @@ void MakeMove(Move mv){
     // I start with copying the current state before any put/remove/move modifies it
     // now previous points is assigned with the value of Position::st
     // Changes in Position::st will not take effect on previous
+    if(mv == MOVE_NULL)
+        return;
     *(Position::st.previous) =  Position::st;
     
     Square from = mv_from(mv);
@@ -314,6 +316,34 @@ uint64_t StupidPerftCount(std::string FEN, uint8_t depth, bool verbose){
     return StupidPerftCount(mvl,depth,depth,verbose);
 }
 
+Move parse_move(std::string inputstring){
+    MoveList legal;
+    legal.Clear();
+    legal = generate_legal(Position::sideToMove);
+    const char* charArray = inputstring.c_str();
+    int colFrom = charArray[0] -'a';
+    int rowFrom = charArray[1] -'1';
+    int colTo = charArray[2] -'a';
+    int rowTo = charArray[3] -'1';
+    int i = 0;
+    bool moveIsLegal = false;
+    if(VERBOSE > 1) std::cout<<"You entered the move "<<charArray[0]<<charArray[1]<<charArray[2]<<charArray[3]<<".";
+
+    Square from = make_square(colFrom,rowFrom);
+    Square to = make_square(colTo,rowTo);
+    Move m = make_move(from,to);
+    for(i=0; i < legal.size; i++){
+        if( (legal.list[i].move & 0xFFF) == m){
+            moveIsLegal = true;
+            break;
+        }
+    }
+    if(!moveIsLegal){
+        std::cout<<"Move "<<charArray[0]<<charArray[1]<<charArray[2]<<charArray[3]<<" is not illegal."<<std::endl;
+        return MOVE_NULL;
+    }
+    return legal.list[i].move;
+}
 
 
 
