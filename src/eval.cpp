@@ -1,6 +1,6 @@
 #include "eval.hpp"
 
-std::string ee(Move theMove){
+std::string mvhuman(Move theMove){
     Square from = mv_from(theMove);
     Square to = mv_to(theMove);
     std::string out;
@@ -121,13 +121,13 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
         if (depth == 0){
             counter +=legal.size;
             if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << ee(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
+                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
         }
         bestMove.value = -VALUE_INFINITE;
         for(int i=0; i<legal.size; i++){
             if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<ee(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
+                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             counter ++;
             MakeMove(legal.list[i].move);
             newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth,counter, verbose);
@@ -143,7 +143,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             alpha = std::max(alpha, bestMove.value);    
         }
         if(verbose)
-            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<ee(bestMove)<<" e:"<<bestMove.value<<std::endl;
+            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
     }       
     
@@ -153,13 +153,13 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
         if (depth == 0){
             counter +=legal.size;
             if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << ee(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
+                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBest "<<ColorNames[Us]<< "move " << mvhuman(legal.list[0].move) << " e:"<<legal.list[0].value<<std::endl;
             return legal.list[0];
         }
         bestMove.value = VALUE_INFINITE;
         for(int i=0; i<legal.size; i++){
             if(verbose)
-                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<ee(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
+                std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tTrying " <<ColorNames[Us]<<" "<<mvhuman(legal.list[i].move)<< " e:"<<legal.list[i].value<<std::endl;
             MakeMove(legal.list[i].move);
             newMove = minmax(Color(!Us), alpha, beta, depth-1, maxdepth, counter, verbose);
             legal.list[i].value = newMove.value; // update eval of the move for iterative deepning
@@ -174,7 +174,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
             beta  = std::min(beta , bestMove.value);    
         }
         if(verbose)
-            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<ee(bestMove)<<" e:"<<bestMove.value<<std::endl;
+            std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
     }
 }

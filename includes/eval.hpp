@@ -27,3 +27,6 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
 bool black_sorter(ExtMove const& lhs, ExtMove const& rhs);
 /// helps sorting best move for white
 bool white_sorter(ExtMove const& lhs, ExtMove const& rhs);
+
+/// strings the move as stockfish does when perft
+std::string mvhuman(Move theMove);

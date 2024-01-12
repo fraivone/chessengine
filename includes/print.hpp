@@ -5,7 +5,8 @@
 #include "position.hpp"
 # include "colors.hpp"
 # include "pst.hpp"
-#include <gen_move.hpp> //movelist
+#include "gen_move.hpp" //movelist
+#include "eval.hpp"
 #include <iomanip> //method setw
 /*! Prints the given bitboard with # in place of the set bits.
     \param Bitboard 
@@ -19,8 +20,10 @@ void RepresentBitset(Bitboard);
 */  
 void RepresentBoard();
 
+/// Print a single extmove on the terminal
+void PrintExtMove(ExtMove etxmv);
 /// Print a single move on the terminal
-void PrintMove(Move theMove, int value);
+void PrintMove(Move theMove);
 
 /// Print all the mvoes in the list on the terminal
 void PrintMoveList(MoveList s);

@@ -110,30 +110,21 @@ void PrintPST(Color c, PieceType pt){
 
 }
 
-// prints the move as stockfish does when perft
-std::string mvhuman(Move theMove){
-    Square from = mv_from(theMove);
-    Square to = mv_to(theMove);
-    std::string out;
-    out += char('a'+from%nCols);
-    out += char('1'+from/nRows);
-    out += char('a'+to%nCols);
-    out += char('1'+to/nRows);
-
-    MoveType mt = MoveType( theMove & 0xC000);
-    PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
-    if(mt==PROMOTION)
-        out += PieceCharMap[BLACK][pt];
-    return out;
-}
-
-
-void PrintMove(Move theMove, int value){
+void PrintMove(Move theMove){
     auto string_first = mvhuman(theMove);
     MoveType mt = MoveType( theMove & 0xC000);
     int MoveTypeIndex = (mt >> 14)&0x3;
 
-    std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluated: "<<float(value)<<std::endl;
+    std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<std::endl;
+}
+
+void PrintExtMove(ExtMove etxmv){
+    auto string_first = mvhuman(etxmv.move);
+    MoveType mt = MoveType( etxmv.move & 0xC000);
+    int MoveTypeIndex = (mt >> 14)&0x3;
+
+    std::cout<<string_first<< " "<<MoveTypeNames[MoveTypeIndex]<<"\tEvaluation: "<<etxmv.value<<std::endl;
+
 }
 
 
@@ -145,7 +136,7 @@ void PrintMoveList(MoveList s){
         out = "Move["+std::to_string(i)+"]";
         padding = 9 - out.length();
         std::cout << std::setw(padding + (out).length()) << std::left << out << "-  ";
-        PrintMove(s.list[i].move,s.list[i].value);
+        PrintMove(s.list[i].move);
     }
 }
 
