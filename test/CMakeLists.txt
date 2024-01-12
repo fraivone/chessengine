@@ -20,8 +20,6 @@ include_directories(${UNIT_TESTS_INCLUDES})
 # Gather the header and source files
 file(GLOB UNIT_SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB UNIT_TESTS_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
-## exclude main.cpp from the list of srcs
-list(REMOVE_ITEM UNIT_SRC_FILES "/home/francesco/Programs/engine/src/main.cpp")
 
 # Build unit tests
 add_definitions(-DBOOST_TEST_DYN_LINK)

@@ -4,10 +4,6 @@ cmake_minimum_required(VERSION 3.5.1)
 # project name
 project(chessengine-cmake)
 
-# creates the variable EXEC and sets it to chessengine
-set(EXEC chessengine)
-
-
 ### Upgraded from 14 - 17 to use "std::string_view"
 # set the C++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -28,11 +24,15 @@ add_subdirectory(test)
 # Assign the include directories
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Add other dir
-#add_subdirectory(<dirname>)
+# creates the variable EXEC with name of the executable
+set(MAINEXEC chessengine)
+set(UCIEXEC uci)
+# get the all app files you want to build an executable from
+file(GLOB MAIN app/main.cxx)
+file(GLOB UCI app/uci.cxx)
 
-
-# Build
-add_executable(${EXEC} ${SOURCES})
-#add_executable(cmake_boost_demo ${SOURCE_FILES})
-target_link_libraries(${EXEC} ${Boost_LIBRARIES})
+# add all executables you want to build
+add_executable(${MAINEXEC} ${MAIN} ${SOURCES})
+add_executable(${UCIEXEC} ${UCI} ${SOURCES})
+# add boost test, which only links to the main given the other cmake file
+target_link_libraries(${MAINEXEC} ${Boost_LIBRARIES})
