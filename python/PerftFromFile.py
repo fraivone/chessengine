@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 ExecutablePath = "/home/francesco/Programs/engine/build/chessengine"
+CSVPath = "/home/francesco/Programs/engine/python/performance/PerftTest.csv"
 import subprocess
 import numpy as np
 from timeit import default_timer as timer   
-import time
+import pandas as pd
+from matplotlib import pyplot as plt
+import mplhep as hep
+plt.style.use(hep.style.CMS)
 
 # Function to read from stdout
 def read_stdout(process, exit_string):
@@ -86,4 +90,28 @@ if __name__ == "__main__":
                 raise ValueError(f"FAILED at DEPTH {depth}\t {value} differs from book {test[depth]} for FEN\n\t{test[0]}")
             
     end = timer()
-    print(f"Time taken {end - start}")
+    time_taken = end - start
+    print(f"Time taken {time_taken}")
+    data = [[pd.Timestamp.now(),time_taken]]
+    df = pd.DataFrame(data,columns=["Date","Time"])
+
+    # append to df if it exists
+    try:
+        dfold = pd.read_csv(CSVPath)
+        df = pd.concat([dfold, df], ignore_index=True)
+    # else skip append
+    except:
+        pass
+    df.to_csv(CSVPath,index=False)
+
+    # plotting
+    # date timestamp to datetime obj
+    df['DateTime'] = df['Date'].apply(lambda x: pd.Timestamp(x).to_pydatetime())
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel("Date")
+    ax1.set_ylabel("Time (s)")
+    ax1.plot(df.DateTime, df.Time,label="Time(s)",linestyle='dashed', marker='s')
+    ax1.set_ylim(0,)
+    ax1.grid()
+    fig.savefig(CSVPath.replace("csv","pdf"))
+    fig.savefig(CSVPath.replace("csv","png"))

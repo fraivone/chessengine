@@ -95,3 +95,25 @@ The magic bitboard provide an elegant solution:
 1. Repeat for all blocker configs, squares;
 1. To search for rook moves, use the same hash function to calculate the LUT `index` based on the occupancy. 
 1. Retrieve the rook moves by calling `LUT[index]`
+
+### Performance
+Currently I am monitoring 2 types of performance:
+1. **Perft** to ensure correctness of the move generator and monitor the speed of the move generation
+1. **UnitTest** which monitors the time taken for a search up to depth <>
+
+The latter is the most important: it is the hard limit of the search depth.
+
+For the **Perft** performance test I am keeping track of the time it took to test all the position in [StandardPerft.txt](https://github.com/fraivone/chessengine/blob/v2/python/perftstandard.txt) vs date.
+
+| Date  | Time(s) |
+| ----- | ------- |
+|   1   |    43   |  
+|   2   |    463  |  
+
+
+For the **UnitTest** performance test I am storing, for each test, the depth, the nodes searched, the time taken in us to complete the tests `MiniMaxSpeedDepth<>` in [boostTester.cpp](https://github.com/fraivone/chessengine/blob/v2/test/boostTester.cpp)
+
+| Depth | Nodes Searched | Time(us) |
+| ----- | -------------- | -------- |
+|   1   |      43        | 2149345  | 
+|   2   |      463       | 9143453  | 
