@@ -5,7 +5,7 @@ import mplhep as hep
 import time
 plt.style.use(hep.style.CMS)
 ExecutablePath = "/home/francesco/Programs/engine/build/test/_unit_tests"
-outputFolder = "/home/francesco/Programs/engine/python/data"
+outputFolder = "/home/francesco/Programs/engine/python/performance"
 
 results = []
 MAX_DEPTH = 8
@@ -45,6 +45,6 @@ ax1.plot(df.Depth, df.Nodes,label="Nodes",linestyle='dashed', marker='s')
 ax1.plot(df.Depth, 10**(6)*df.Nodes/df.Time,label="Nodes/s",color="g",linestyle='dashed', marker='s')
 ax1.legend()
 ax1.set_ylim(10**3,)
-fig.savefig(f"{outputFolder}/{time.strftime('_%-y%m%d%H%M')}.pdf")
+fig.savefig(f"{outputFolder}/Performance{time.strftime('_%-y%m%d%H%M')}.pdf")
 fig.savefig(f"{outputFolder}/Performance{time.strftime('_%-y%m%d%H%M')}.png")
-df.to_csv(f"{outputFolder}/dataPerformance{time.strftime('_%-y%m%d%H%M')}.csv")
+df.to_csv(f"{outputFolder}/Performance{time.strftime('_%-y%m%d%H%M')}.csv")
