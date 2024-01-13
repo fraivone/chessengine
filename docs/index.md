@@ -117,3 +117,6 @@ For the **UnitTest** performance test I am storing, for each test, the depth, th
 | ----- | -------------- | -------- |
 |   1   |      43        | 2149345  | 
 |   2   |      463       | 9143453  | 
+
+#### A note on Nodes Searched
+`Nodes searched` is the count of all nodes that were searched while looking for the best algorithm. I have decided to include also the leaf nodes (i.e. nodes searched at depth = 0).
