@@ -9,7 +9,7 @@
 const std::string VERSION = "0.1";
 const std::string engineName ="ThePaunch";
 const std::string author ="Francesco Ivone";
-const int defaultDepth = 6;
+const int defaultDepth = 7;
 
 /// Verbose variable to control couts. Ranges from [0,...,5]
 extern unsigned VERBOSE;

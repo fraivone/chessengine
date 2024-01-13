@@ -111,7 +111,7 @@ For the **Perft** performance test I am keeping track of the time it took to tes
 |   2   |    463  |  
 
 
-For the **UnitTest** performance test I am storing, for each test, the depth, the nodes searched, the time taken in us to complete the tests `MiniMaxSpeedDepth<>` in [boostTester.cpp](https://github.com/fraivone/chessengine/blob/v2/test/boostTester.cpp)
+For the **UnitTest** performance test I am storing, for each test, the depth, the nodes searched, the time taken in `us` to complete the tests `MiniMaxSpeedDepth<>` in [boostTester.cpp](https://github.com/fraivone/chessengine/blob/v2/test/boostTester.cpp)
 
 | Depth | Nodes Searched | Time(us) |
 | ----- | -------------- | -------- |

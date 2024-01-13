@@ -210,11 +210,11 @@ void generate_magics(PieceType pt, Bitboard (&table)[nCols*nRows][4096], Magic (
 
 
 void init_magics(){
-    if(VERBOSE>0) std::cout<<"Defaulting magic variables"<<std::endl;
+    if(VERBOSE>1) std::cout<<"Defaulting magic variables"<<std::endl;
     MagicVariables::init();
-    if(VERBOSE>0) std::cout<<"Initializing rook magic bitboards"<<std::endl;
+    if(VERBOSE>1) std::cout<<"Initializing rook magic bitboards"<<std::endl;
     generate_magics(ROOK, MagicVariables::Rattacks, MagicVariables::RookMagics);
-    if(VERBOSE>0) std::cout<<"Initializing bishop magic bitboards"<<std::endl;
+    if(VERBOSE>1) std::cout<<"Initializing bishop magic bitboards"<<std::endl;
     generate_magics(BISHOP, MagicVariables::Battacks, MagicVariables::BishopMagics);
 }
 //void import_magics(Magic RookMagics[nCols*nRows], uint64_t Rattacks[nCols*nRows][4096],Magic BishopMagics[nCols*nRows], uint64_t Battacks[nCols*nRows][4096]);

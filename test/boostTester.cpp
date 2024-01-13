@@ -11,6 +11,7 @@
 #include "move_maker.hpp"
 #include "eval.hpp"
 
+unsigned VERBOSE = 1;
 const int arrayLenght = 34;
 std::string FEN_Array[] = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
                            "rnbqkbnr/p1p1pppp/8/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3",

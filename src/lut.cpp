@@ -16,7 +16,7 @@ Bitboard BetweenBB[nCols*nRows][nCols*nRows];
 Bitboard Ray[nCols*nRows][nCols*nRows];
 
 void init_lut(){
-    std::cout<<"Initializing LUT bitboards"<<std::endl;
+    if(VERBOSE > 1) std::cout<<"Initializing LUT bitboards"<<std::endl;
     generate_inBetweenLUT();
     generate_RayLUT();
 }

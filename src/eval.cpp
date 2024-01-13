@@ -1,9 +1,13 @@
 #include "eval.hpp"
 
 std::string mvhuman(Move theMove){
+    std::string out;
+    if(theMove == MOVE_NONE)
+        out = "0000";
+    else{
     Square from = mv_from(theMove);
     Square to = mv_to(theMove);
-    std::string out;
+    
     out += char('a'+from%nCols);
     out += char('1'+from/nRows);
     out += char('a'+to%nCols);
@@ -13,6 +17,7 @@ std::string mvhuman(Move theMove){
     PieceType pt = PieceType(((theMove >> 12) & (0x3))+2);
     if(mt==PROMOTION)
         out += PieceCharMap[BLACK][pt];
+    }
     return out;
 }
 
