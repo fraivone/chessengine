@@ -5,6 +5,7 @@
 #include "gen_move.hpp"
 #include "move_maker.hpp"
 #include "eval.hpp"
+#include "hash.hpp"
 
 unsigned VERBOSE = 1;
 
@@ -61,6 +62,7 @@ void PrintExtMoveScoreUCI(ExtMove extmv){
 
 
 int main(int argc, char **argv){
+	HashTables::init();
 	init_lut();
     init_magics();
 	init_position(starting_fen);
