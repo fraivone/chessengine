@@ -105,9 +105,15 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
     ExtMove bestMove,newMove;
     bestMove = Move(0);
     MoveList legal = generate_legal(Us);
+    
+    // this is draw by repetition
+    if(Position::st.repetition <0){
+        bestMove.value = 0;
+        return bestMove;
+    }
+    
     // this is either checkmate or stalemate
-    if (legal.size == 0){
-        
+    if (legal.size == 0){    
         if(Position::st.checkersBB == 0ULL)
             bestMove.value = 0; // stalemate
         else{
