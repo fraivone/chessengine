@@ -9,16 +9,21 @@
 unsigned VERBOSE = 1;
 
 
-void PrintExtMoveForUCI(ExtMove extmv){
+void PrintExtMoveScoreUCI(ExtMove extmv){
     Color c = Position::sideToMove;
-	// Special treatment: the mate in is signaled
-	// by the bits 16-20, with all other bits set to 0.
-	// In addition if there is mate in x for BLACK
-	// the 31th bit is set
-	int is31thSet = extmv.value & (1ULL<<31);
-	int mateInMultiplier = is31thSet? -1:1;
-	// clear 31th bit
-	extmv.value = extmv.value*mateInMultiplier;
+	// The score can be positive or negative
+	// Uci returns the score as relative to the side who moves
+	// Additionally  in the value, also the MATE in is stored
+	// So here I first establish if the number is negative
+	// If so, and there is a mate in, then to correctly unpack
+	// mate in we need to remove the sign -
+	bool isNegative = extmv.value  < 0;
+	int mateInMultiplier = 1;
+	if(isNegative & abs(extmv.value) >= VALUE_MATE_30 & abs(extmv.value)<=VALUE_MATE_0){
+		int mateInMultiplier = -1;
+		// Turn positive
+		extmv.value = -extmv.value;
+	}
 
 	// Special treatement 2
 	// in UCI the score is relative to who plays
@@ -197,9 +202,14 @@ int main(int argc, char **argv){
 			ExtMove theBest;
 			move_counter = 0;
 			theBest = minmax(Position::sideToMove,-10000000, +10000000, depth,depth,move_counter, false);
+			if (move_counter < 6000000){
+				depth +=1;
+				move_counter = 0;
+				theBest = minmax(Position::sideToMove,-10000000, +10000000, depth+1,depth+1,move_counter, false);
+			}
 			
 			std::cout<<"info depth "<<depth;
-			PrintExtMoveForUCI(theBest);
+			PrintExtMoveScoreUCI(theBest);
 			std::cout<<" nodes "<<move_counter<<" pv "<<mvhuman(theBest.move) <<std::endl;
 			std::cout << "bestmove "<<mvhuman(theBest.move)<<"\n";
 			
@@ -227,7 +237,7 @@ int main(int argc, char **argv){
 			// } else { std::cout << "Miss" << std::endl; }
 		}
 		if (command == "eval"){
-			std::cout<<"Current position evaluated on material "<< EvalPosition()<<std::endl;
+			std::cout<<"Current position evaluated on material relative to who plays "<< ColorScoreFactor[Position::sideToMove]*EvalPosition()<<std::endl;
 			// const auto mg_pst_eval = (board.White.King % 8 >= 4) ? 
 			// 	((board.Black.King % 8 >= 4) ? board.EvalInfo.mg_kk : board.EvalInfo.mg_kq) :
 			// 	((board.Black.King % 8 >= 4) ? board.EvalInfo.mg_qk : board.EvalInfo.mg_qq);
@@ -235,6 +245,10 @@ int main(int argc, char **argv){
 			// std::cout << "eg = " << board.EvalInfo.eg << std::endl;
 			// std::cout << "phase_count = " << board.EvalInfo.phase_count << std::endl;
 			// std::cout << "eval = " << (wtm ? eval<true>(board) : -eval<false>(board)) << std::endl;
+		}
+		if (command == "getfen"){
+			std::cout<<"Current fen"<<std::endl;
+			std::cout<<MakeFEN()<<std::endl;
 		}
 		if (command == "quit"){
 			return 0;
