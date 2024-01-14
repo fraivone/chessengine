@@ -108,6 +108,7 @@ Bitboard get_sliding_landings(PieceType pt, Square square, Bitboard all_pieces_o
 const int seeds[] = {8977, 44560, 54343, 38998, 5731, 95205, 104912, 17020};
 
 // https://github.com/official-stockfish/Stockfish/blob/fbdf5d94a9a42acb92720a5896b16c92931ec3de/src/misc.h#L127
+/// Pseudo random number generator, convenient for magics
 class PRNG {
 
     uint64_t s;
