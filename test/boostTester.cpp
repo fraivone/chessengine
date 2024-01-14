@@ -10,6 +10,7 @@
 #include "magic.hpp"
 #include "move_maker.hpp"
 #include "eval.hpp"
+#include "hash.hpp"
 
 unsigned VERBOSE = 1;
 const int arrayLenght = 34;
@@ -323,8 +324,9 @@ std::unordered_map<std::string, int> PERFT1 = {
 BOOST_AUTO_TEST_SUITE(Methods)
 
     BOOST_AUTO_TEST_CASE(CheckMagicBitboards){
-        init_magics();
+        HashTables::init();
         init_lut();
+        init_magics();
         BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 0,  0xc19da1890c182089),0x10101010e);
 		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 35, 0xc19da1890c182089),0x808f708000000);
 		BOOST_CHECK_EQUAL(get_sliding_landings(ROOK, 52, 0xc19da1890c182089),0x10e8101010100000);
@@ -536,7 +538,10 @@ BOOST_AUTO_TEST_SUITE(Methods)
             BOOST_CHECK_EQUAL(StupidPerftCount(x.first,1),x.second);
     }
 
-    BOOST_AUTO_TEST_CASE(CheckMaterialCountConsistencyAtPerft4){
+    // makes / unmakes all possible moves up to depth 4
+    // so that at the end we should be back with the same
+    // material count as beginning
+    BOOST_AUTO_TEST_CASE(CheckMaterialCountConsistency){
         
         MoveList mvl;
         int BeforeWhiteValue, AfterWhiteValue = 0;
@@ -546,22 +551,44 @@ BOOST_AUTO_TEST_SUITE(Methods)
             BeforeWhiteValue = Position::st.nonPawnMaterial[WHITE];
             BeforeBlackValue = Position::st.nonPawnMaterial[BLACK];
             mvl = generate_legal(Position::sideToMove);
-            // makes / unmakes all possible moves up to depth 4
-            // so that at the end we should be back with the same
-            // material count as beginning
+            
             StupidPerftCount(mvl,4,4);
             AfterWhiteValue = Position::st.nonPawnMaterial[WHITE];
             AfterBlackValue = Position::st.nonPawnMaterial[BLACK];
-            BOOST_CHECK_EQUAL(BeforeWhiteValue, AfterBlackValue);
+            BOOST_CHECK_EQUAL(BeforeWhiteValue, AfterWhiteValue);
             BOOST_CHECK_EQUAL(BeforeBlackValue, AfterBlackValue);
         }
     }
+
+    // for many starting positions,
+    // makes a move and calculates the Zobrist from scratch
+    // then checks if the calculated zobrist matches the one 
+    // that was updated incrementally from the previous status
+    // in the move making 
+    BOOST_AUTO_TEST_CASE(CheckZobristUpdateConsistency){
+        
+        MoveList mvl;
+        Hashkey ZobristFromUpdate, ZobristFromScratch;
+        for (auto const& x : PERFT2){
+            init_position(x.first);
+            mvl = generate_legal(Position::sideToMove);
+            for(int i = 0; i<mvl.size; i++){
+                MakeMove(mvl.list[i].move);
+                ZobristFromUpdate = Position::st.ZobristHash;
+                ZobristFromScratch = CalculateZobristHash();
+                BOOST_CHECK_EQUAL(ZobristFromUpdate, ZobristFromScratch);
+                UndoMove(mvl.list[i]);
+            }
+        }
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
 
 
 BOOST_AUTO_TEST_CASE(Init){
+    HashTables::init();
     init_lut();
     init_magics();
 }
