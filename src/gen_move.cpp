@@ -462,7 +462,7 @@ MoveList generate_legal(Color Us){
     }
     // number of checks > 1, run the king
     else{
-        output = generate_all(output,Us,KING);
+        output = generate_allevasion_moves(output,Us,KING,Position::st.checkersBB, blockersBB);
         return output;
     }
 
