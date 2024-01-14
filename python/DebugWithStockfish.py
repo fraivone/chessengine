@@ -5,9 +5,12 @@ from PerftFromFile import read_stdout,send_command,test_fen,read_perftfile
 import subprocess
 import numpy as np
 
-def ask_stockfish(process, FEN,depth):
-    read_stdout(process, "see AUTHORS fil")
+def ask_stockfish(process, FEN,depth,verbose=False):
+    # if verbose: print('read_stdout(process, "see AUTHORS fil"')
+    # read_stdout(process, "see AUTHORS fil")
+    if verbose: print(f'send_command(process, "position fen {FEN}")')
     send_command(process, f"position fen {FEN}")
+    if verbose: print(f'send_command(process, "go perft {depth}")')
     send_command(process, f"go perft {depth}")
     results = read_stdout(process, "Nodes searched:")
     total = results[-1]
@@ -15,7 +18,8 @@ def ask_stockfish(process, FEN,depth):
     
     
     total = total.replace("Nodes searched:","")
-    if '' in results: results.remove('')
+    while('' in results): 
+        results.remove('')
     
     per_move = {k.split(":")[0]:np.uint64(k.split(":")[-1]) for k in results}
     return np.uint64(total),per_move
@@ -29,6 +33,7 @@ processSTK = subprocess.Popen(
     universal_newlines=True,
     shell=True
 )
+read_stdout(processSTK, "see AUTHORS fil")
 # Start the subprocess
 processME = subprocess.Popen(
     ExecutablePath,
@@ -40,11 +45,11 @@ processME = subprocess.Popen(
 )
 
 
-data = read_perftfile('perftstandard.txt')
-for item in data:
-    depth = 2
-    fen = "r2k4/p1ppqpb1/bn2pQp1/3PN3/1p2P2r/2NB3p/PPPB1PPP/R3K2R w KQ - 1 3"#item[0]
-    total_stk , dict_stk = ask_stockfish(processSTK,fen,depth)
+fen = input("Insert fen you want to compare\n")
+
+for depth in range(1,7):
+    print(f"Trying depth {depth}")
+    total_stk , dict_stk = ask_stockfish(processSTK,fen,depth,False)
     total_me , dict_me = test_fen(processME, fen,depth-1)
 
     if total_stk != total_me:
@@ -53,11 +58,13 @@ for item in data:
         if len(stk_firstMoves) != len(me_firstMoves):
             print(sorted(stk_firstMoves))
             print(sorted(me_firstMoves))
-            # raise ValueError(f"FAILED at DEPTH {1}")
+            raise ValueError(f"FAILED at DEPTH {1}")
         else:
             for k in dict_stk:
                 if(dict_stk[k]!=dict_me[k]):
                     raise ValueError(f"FAILED at DEPTH {depth}\t Move {k} problematic: Stk = {dict_stk[k]} vs Me {dict_me[k]}\tFEN = \n\t{fen}")
+    print(f"Perfect match at depth {depth}\n---------------------------------")
+
 
         
     
