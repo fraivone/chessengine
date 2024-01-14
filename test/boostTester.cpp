@@ -52,6 +52,7 @@ std::string FEN_Array[] = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
 
 std::unordered_map<std::string, int> PERFT2 = {{"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 400},
                                                 {"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", 2039},
+                                                {"rnbqkbnr/p1p1pppp/3P4/1pPp4/8/8/PP1PPPPP/RNBQKBNR w KQkq b6 0 3", 751},
                                                 {"4k3/8/8/8/8/8/8/4K2R w K - 0 1", 66},
                                                 {"4k3/8/8/8/8/8/8/R3K3 w Q - 0 1", 71},
                                                 {"4k2r/8/8/8/8/8/8/4K3 w k - 0 1", 75},
