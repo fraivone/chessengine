@@ -113,5 +113,6 @@ if __name__ == "__main__":
     ax1.plot(df.DateTime, df.Time,label="Time(s)",linestyle='dashed', marker='s')
     ax1.set_ylim(0,)
     ax1.grid()
+    fig.autofmt_xdate(rotation=45)
     fig.savefig(CSVPath.replace("csv","pdf"))
     fig.savefig(CSVPath.replace("csv","png"))
