@@ -30,14 +30,23 @@ void MakeMove(Move mv){
     // [DONE] gamePly (in position::)
     // [DONE] sideToMove(in position::)
     // [DONE] Update the board moving the pieces
-    // [DONE] Lastly since all the pieces are placed now, check if enpassant should be enabled/disabled   
+    // [DONE] Since all pieces are placed now, check if enpassant should be enabled/disabled   
+    // [DONE] Unhash old and hash new enpassant square
+    // [DONE] Unhash old and hash new castling rights
+    // Unhash old and rehash current piece occupancy
+        //[DONE] 1. Unhash P_to, if any as it gets captured
+        //[DONE] 2. Unhash piece "P_from" form "from" and rehash it on square "to"
+        //[DONE] 3. if it was a castle,  unhash / hash the moving rook
+        //[DONE] 4. if it was a enpassant, unhash the victim piece 
+        // if it was promotion, unhash the pawn on square to, hash the promoted piece on to
+    // [DONE] Hash new side to move
+
     
-    
+    if(mv == MOVE_NULL)
+        return;
     // I start with copying the current state before any put/remove/move modifies it
     // now previous points is assigned with the value of Position::st
     // Changes in Position::st will not take effect on previous
-    if(mv == MOVE_NULL)
-        return;
     *(Position::st.previous) =  Position::st;
     
     Square from = mv_from(mv);
@@ -64,7 +73,7 @@ void MakeMove(Move mv){
             clear_bit(Position::st.castlingRights, 2);
     }
 
-    // Handle castles
+    // if one of my ROOKs moves from the starting square, remove castling right
     if((whoMoves == WHITE)){
         // remove castle WHITE_OOO
         if(from == White_Rook_QueenSide)
@@ -103,6 +112,7 @@ void MakeMove(Move mv){
 
     if(mt == PROMOTION){
         PieceType pt = PieceType(((mv >> 12) & (0x3))+2);
+        Piece pPromoted = make_piece(whoMoves,pt);
         remove_piece(from,P_from);
         if(P_to != NO_PIECE){
             remove_piece(to,P_to);
@@ -113,12 +123,14 @@ void MakeMove(Move mv){
                 UpdateMaterialCount(Color(!whoMoves), -PieceValue[P_to] );
             
         }
-        put_piece(to,make_piece(whoMoves,pt));
+        put_piece(to,pPromoted);
         // Increase nonpawnmaterial by the value of pt
         // pt is a promoting piece, can't be pawn!
         UpdateMaterialCount(whoMoves, PieceValue[pt] );
         // update PST for a pawn that became pt
         AddPSTScore(whoMoves,  getPieceSquareTableValue(whoMoves, to, pt) - getPieceSquareTableValue(whoMoves, from, PAWN)  );
+        // unhash the pawn (P_from) on square to, hash the promoted piece on to
+        Position::st.ZobristHash ^= HashTables::PRN_pieces[P_from][to] ^ HashTables::PRN_pieces[pPromoted][to];
         }
     else if(mt == ENPASSANT){
         Square victim = Position::st.previous->epSquare + square_fw[!whoMoves];
@@ -131,25 +143,29 @@ void MakeMove(Move mv){
         UpdateMaterialCount(Color(!whoMoves), -PieceValue[PAWN] );
         // update PST for my pawn that moves from - to
         AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, PAWN) - getPieceSquareTableValue(whoMoves, from, PAWN) );
+        // unhash the victim piece
+        Position::st.ZobristHash ^= HashTables::PRN_pieces[P_cap_enp][victim];
         
     }
     else if( mt == CASTLING){
+        Piece MovingRook = make_piece(whoMoves,ROOK);
+        Square start,dest;
         // castle is queenside
         if( (to - from) == Castle_QueenSide_KingDelta){
-            move_piece(from,to, make_piece(whoMoves,KING));
-            Square start = whoMoves == WHITE? White_Rook_QueenSide : Black_Rook_QueenSide;
-            move_piece(start, start + Castle_QueenSide_RookDelta, make_piece(whoMoves,ROOK));
-            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, KING) - getPieceSquareTableValue(whoMoves, from, KING) );
-            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, start + Castle_QueenSide_RookDelta, ROOK) - getPieceSquareTableValue(whoMoves, start, ROOK) );
+            start = whoMoves == WHITE? White_Rook_QueenSide : Black_Rook_QueenSide;
+            dest = start + Castle_QueenSide_RookDelta;
         }
         // castle is kingside
         if( (to - from) == Castle_KingSide_KingDelta){
-            move_piece(from,to, make_piece(whoMoves,KING));
-            Square start = whoMoves == WHITE? White_Rook_KingSide : Black_Rook_KingSide;
-            move_piece(start, start + Castle_KingSide_RookDelta, make_piece(whoMoves,ROOK));
-            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, KING) - getPieceSquareTableValue(whoMoves, from, KING) );
-            AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, start + Castle_KingSide_RookDelta, ROOK) - getPieceSquareTableValue(whoMoves, start, ROOK) );
+            start = whoMoves == WHITE? White_Rook_KingSide : Black_Rook_KingSide;
+            dest = start + Castle_KingSide_RookDelta;            
         }
+        move_piece(from,to, make_piece(whoMoves,KING));
+        move_piece(start, dest, MovingRook);
+        AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, to, KING) - getPieceSquareTableValue(whoMoves, from, KING) );
+        AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves, dest, ROOK) - getPieceSquareTableValue(whoMoves, start, ROOK) );
+        // unhash the rook from start and rehash it in dest
+        Position::st.ZobristHash ^= HashTables::PRN_pieces[MovingRook][start] ^ HashTables::PRN_pieces[MovingRook][dest];
     }
     // Normal move
     else{
@@ -166,7 +182,7 @@ void MakeMove(Move mv){
     }
     bool epLegal = false;
     Square epSquare;
-    // en passant might need to be enabled if enpassant was available, it's a pawn move, it moved 2 squares
+    // en passant might need to be enabled if enpassant it's a pawn move and it moved 2 squares
     if((type_of(P_from) == PAWN) && (abs(from-to)==16)){
         // check for enpassant
         epSquare = to  + square_bw[whoMoves];
@@ -218,10 +234,29 @@ void MakeMove(Move mv){
         }
     }
 
-    if (epLegal)
+    if (epLegal){
         Position::st.epSquare = epSquare;
+        // hash the new enpassant square
+        Position::st.ZobristHash ^= HashTables::PRN_enpassant[epSquare%8];
+    }
     else
         Position::st.epSquare = ENPSNT_UNAVAILABLE;
+
+    // hash the side to move
+    Position::st.ZobristHash ^= HashTables::whomoves;
+    // unhash previous epsquare, if any
+    if(Position::st.previous->epSquare != ENPSNT_UNAVAILABLE)
+        Position::st.ZobristHash ^= HashTables::PRN_enpassant[(Position::st.previous->epSquare)%8];
+    // unhash old and rehash castling rights
+    Position::st.ZobristHash ^= HashTables::PRN_castling[(Position::st.previous->castlingRights)] ^ HashTables::PRN_castling[(Position::st.castlingRights)];
+    
+    
+    // Unhash piece "P_from" form "from" and rehash it on square "to"
+    Position::st.ZobristHash ^= HashTables::PRN_pieces[P_from][from] ^ HashTables::PRN_pieces[P_from][to];
+    // Unhash P_to, if any as it gets captured
+    if (P_to != NO_PIECE)
+        Position::st.ZobristHash ^= HashTables::PRN_pieces[P_to][to];
+
 
 
     Position::UpdatePosition();

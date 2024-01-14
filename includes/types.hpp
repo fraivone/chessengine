@@ -29,6 +29,8 @@ typedef uint8_t Square;
 /// Look up table to store 64 bitboards.
 /// Helps storing all possible moves, masks, ...
 typedef std::array<Bitboard,64> LUT;
+/// Hash key for hashtables
+typedef uint64_t Hashkey;
 
 /// A move needs 16 bits to be stored
 ///
@@ -332,8 +334,8 @@ struct StateInfo {
     Square epSquare;
 
     // Not copied when making a move (will be recomputed anyhow)
-    /// To be understood
-    uint64_t        key;
+    /// Hash key of this positions
+    Hashkey        ZobristHash;
     /// To be understood
     Bitboard   checkersBB;
     StateInfo* previous;

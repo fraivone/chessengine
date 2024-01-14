@@ -45,6 +45,7 @@ void init_position(std::string FEN){
     // set boards and bitboards from FEN
     setBBFromFEN(FEN);
     Position::UpdatePosition();
+    Position::st.ZobristHash = CalculateZobristHash();
     // calc and store material count
     CalculateMaterial();
     // calc and store PST score
@@ -215,7 +216,6 @@ std::string MakeFEN(){
     char pieceChar;
     int emptyAdjacent = 0;
     while(1){
-        // std::cout<<"current square "<<+current<<"   "<<output<<"Position::board[current] "<<PieceTypeNames[type_of(Position::board[current])]<<std::endl;
         if(Position::board[current]==NO_PIECE)
             emptyAdjacent++;
         else{
@@ -310,4 +310,31 @@ void CalculatePSTScore(){
         c = color_of(Position::board[sq]);
         AddPSTScore(c,sq,pt);
     }
+}
+
+Hashkey CalculateZobristHash(){
+    Bitboard occupancy = pieces();
+    Hashkey k = 0;
+    Square current;
+    Piece p;
+    int cr = Position::st.castlingRights;
+    Square epSq = Position::st.epSquare;
+    // hash castling rights
+    k = HashTables::PRN_castling[cr];
+    // hash ep square if available
+    if (epSq != ENPSNT_UNAVAILABLE)
+        k ^= HashTables::PRN_enpassant[epSq%8];
+    // hash side to move
+    if (Position::sideToMove == BLACK)
+        k ^= HashTables::whomoves;
+
+    // hash occupancy
+    while(occupancy){
+        current = pop_LSB(occupancy);
+        p = Position::board[current];
+        k ^= HashTables::PRN_pieces[p][current];
+    }
+
+    return k;
+
 }

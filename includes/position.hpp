@@ -7,6 +7,7 @@
 // #include <lut.hpp>
 #include "gen_move.hpp"
 #include "pst.hpp"
+#include "hash.hpp"
 
  /*!  \todo 
     * - Include method to generate FEN given the bitboards and the status of the current position
@@ -125,3 +126,6 @@ Bitboard PinnedPieces(Color Us, Bitboard OurKingBB);
 
 /// returns the FEN of the current position
 std::string MakeFEN();
+
+/// calculate the zobrist hash from scracth
+Hashkey CalculateZobristHash();
