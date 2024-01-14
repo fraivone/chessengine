@@ -164,26 +164,64 @@ void MakeMove(Move mv){
         move_piece(from,to,P_from);
         AddPSTScore(whoMoves, getPieceSquareTableValue(whoMoves,to,type_of(P_from))- getPieceSquareTableValue(whoMoves, from, type_of(P_from)) );
     }
-
+    bool epLegal = false;
+    Square epSquare;
     // en passant might need to be enabled if enpassant was available, it's a pawn move, it moved 2 squares
     if((type_of(P_from) == PAWN) && (abs(from-to)==16)){
         // check for enpassant
-        Square epSquare = to  + square_bw[whoMoves];
+        epSquare = to  + square_bw[whoMoves];
+        Bitboard toBB = make_bitboard(to);
+        Bitboard ThisRank = Ranks[to/8];
         Bitboard epBB = make_bitboard(epSquare);
+        Bitboard ThreatningEP = (pieces(Color(!whoMoves),PAWN) & ThisRank & (  (toBB >>1) | (toBB << 1) ) );
         // enpassant rules
-        // a) side to move has a pawn threatening epSquare
+        // a) side to move has 1or2 pawns threatening epSquare
         // b) there is an enemy pawn in front of epSquare --> Granted, we just moved a pawn there
         // c) there is no piece on epSquare or behind epSquare
-        
-        if ((pieces(Color(!whoMoves),PAWN) && (  (epBB >>1) | (epBB << 1) ) )                            //a)
-            &&(Position::board[epSquare] == NO_PIECE) & (Position::board[epSquare+square_bw[whoMoves]] == NO_PIECE))  //c)
-            Position::st.epSquare = epSquare;
-        else
-            Position::st.epSquare = ENPSNT_UNAVAILABLE;
+        // d) Enpassant wouldn't leave the king in check
+        if ( ThreatningEP                           //a)
+            &&(Position::board[epSquare] == NO_PIECE) & (Position::board[epSquare+square_bw[whoMoves]] == NO_PIECE)){  //c)
+            // d) We are looking for discovery check after enpassant
+            // let's consider KO and PO the king and the pawn of the opponent.
+            // Let's call PUs our Pawn, the one that just moved 2 squares
+            // the candidate side who could do enpassant next move
+            // Let's build a ray from KO to PO
+            // Let's move from KO to PO along the ray
+            // Check which pieces are encountered first excluding PUs
+            // if the first piece to be encounter is a Sliding opponent piece
+            // then forbid enpassant
+            
+            Bitboard KOBB = pieces(Color(!whoMoves),KING);
+            Square KOSq = get_LSB(KOBB);
+            Bitboard discoveryCheckers = pieces(whoMoves,QUEEN,ROOK) & ThisRank;
+            // if there are 2 pawns threatning EP, then there is no discovery check
+            // as the pawn that wouldn't capture EP, will block
+            // also if there are no queens nor rooks of the right color, there is no problem
+            // also if the king is not on thisRank there is not risk
+            epLegal = true;
+            if(countBitsOn(ThreatningEP)!=1 | discoveryCheckers==0ULL | (KOBB & ThisRank)==0ULL );
+            else{
+                
+                Square POSq = get_LSB(ThreatningEP);
+                while (discoveryCheckers){
+                    Square enemySq = pop_LSB(discoveryCheckers);
+                    // not on the same rank
+                    if(BetweenBB[KOSq][enemySq] == 0)
+                        continue;
+                    // there are no blockers
+                    if( (BetweenBB[KOSq][enemySq] & ( pieces() &  (~make_bitboard(to) & ~ThreatningEP) )) == 0){
+                        epLegal = false;
+                        break;
+                    }
+                }
+            }
+        }
     }
+
+    if (epLegal)
+        Position::st.epSquare = epSquare;
     else
         Position::st.epSquare = ENPSNT_UNAVAILABLE;
-
 
 
     Position::UpdatePosition();
@@ -259,14 +297,10 @@ void UndoMove(Move mv){
 
 
     // LAST STEP
-    // std::cout<<"Position::st.rule50\t"<<Position::st.rule50<<std::endl;
-    // std::cout<<"Position::st.previous->rule50\t"<<Position::st.previous->rule50<<std::endl;
     // re assign previous state
     Position::st = *(Position::st.previous);
     // emptying previous state
     std::memset(Position::st.previous, 0, sizeof(StateInfo));
-    // std::cout<<"Position::st.rule50\t"<<Position::st.rule50<<std::endl;
-    // std::cout<<"Position::st.previous->rule50\t"<<Position::st.previous->rule50<<std::endl;
 
     Position::UpdatePosition();   
 }

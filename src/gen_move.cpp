@@ -130,12 +130,14 @@ MoveList PawnAnyEvasionsMoves(MoveList& moveList, Color c, Square s, Bitboard Ch
             Bitboard Step1_nonPromotional_captures = PawnAttacks[c][s] & (westAttack_bb | eastAttack_bb) & Position::BitboardsByColor[!c] & Checkers;
             while(Step1_nonPromotional_captures)
             moveList.Add(make_move(s, Square(pop_LSB(Step1_nonPromotional_captures))));
+            
+            // Capture enpassant the opponent checker (of course without promotion)
+            if (Position::st.epSquare != ENPSNT_UNAVAILABLE){
+                Step1_enpassant |= (c == Position::sideToMove)*(PawnAttacks[c][s] & make_bitboard(Position::st.epSquare) & CheckerEnpassant);
+            }
         }
 
-        // Capture enpassant the opponent checker enpassant(of course without promotion)
-        if (Position::st.epSquare != ENPSNT_UNAVAILABLE){
-            Step1_enpassant |= (c == Position::sideToMove)*(PawnAttacks[c][s] & make_bitboard(Position::st.epSquare) & CheckerEnpassant);
-        }
+        
         
         while(Step1_fw1)
             moveList.Add(make_move(s, pop_LSB(Step1_fw1)));
