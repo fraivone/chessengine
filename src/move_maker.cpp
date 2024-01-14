@@ -23,6 +23,7 @@ void MakeMove(Move mv){
     // update the board with the new move
     // put/remove/move piece automatically update the pinners[],checkersBB,pinmap
     // i need to update
+    // [DONE] Update the number of repetitions
     // [DONE] pointer to the previous state info 
     // [DONE] captured piece
     // [DONE] castling rights 
@@ -259,7 +260,31 @@ void MakeMove(Move mv){
 
 
 
-    Position::UpdatePosition();
+    Position::UpdatePosition(); 
+
+     // Calculate the repetition info. It is the ply distance from the previous
+    // occurrence of the same position, negative in the 3-fold case, or zero
+    // if the position was not repeated.
+    // https://github.com/official-stockfish/Stockfish/blob/b5e8169a85f6937d7d9d90612863fe5eec72d6ca/src/position.cpp#L841
+    Position::st.repetition = 0;
+    int PliesWithoutChanges  = Position::st.rule50;
+    if (PliesWithoutChanges >= 4)
+    {
+        StateInfo* stp = Position::st.previous->previous;
+        // loop in steps of 2, repetition must have the same color
+        for (int i = 4; i <= PliesWithoutChanges; i += 2)
+        {
+            // state info of this color, i plies ago 
+            stp = stp->previous->previous;
+            // there is a repetition
+            if (stp->ZobristHash == Position::st.ZobristHash)
+            {
+                Position::st.repetition = stp->repetition ? -i : i;
+                break;
+            }
+        }
+    }
+
 }
 
 void UndoMove(Move mv){    
