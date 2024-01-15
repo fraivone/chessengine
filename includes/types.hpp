@@ -6,6 +6,7 @@
 #include <array>
 #include <bitset>
 #include <cassert> // for assert
+#include <vector> // for assert
 const std::string VERSION = "0.1";
 const std::string engineName ="ThePaunch";
 const std::string author ="Francesco Ivone";
@@ -31,6 +32,7 @@ typedef uint8_t Square;
 typedef std::array<Bitboard,64> LUT;
 /// Hash key for hashtables
 typedef uint64_t Hashkey;
+typedef std::vector<Hashkey> History;
 
 /// A move needs 16 bits to be stored
 ///

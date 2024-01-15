@@ -35,6 +35,7 @@ namespace Position{
     extern Square PinMap[COLOR_NB][nRows*nCols];
     /// Tempstate as helper to init StateInfo* Position::st.previous
     extern StateInfo tempState;
+    extern History GameHistory;
 }
 
 
@@ -129,3 +130,26 @@ std::string MakeFEN();
 
 /// calculate the zobrist hash from scracth
 Hashkey CalculateZobristHash();
+
+
+inline void AddToHistory(Hashkey k){
+    Position::GameHistory.push_back(k);
+}
+
+inline int NumberOfOccurrences(Hashkey k){
+    return std::count(Position::GameHistory.begin(), Position::GameHistory.end(), k);
+}
+inline std::size_t HistorySize(){
+    return  Position::GameHistory.size();
+}
+
+inline void RemoveLatestInHistory(Hashkey k){
+    auto reverseIt = std::find(Position::GameHistory.rbegin(), Position::GameHistory.rend(), k);
+    // reverseIt is a reverse iterator
+    // the forward iterator point to the same 
+    // object is (reverseIt+1).base()
+
+    // k was found in the game history
+    if (reverseIt != Position::GameHistory.rend())
+                Position::GameHistory.erase((reverseIt+1).base());
+}

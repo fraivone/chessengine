@@ -10,6 +10,7 @@ namespace Position {
     Bitboard pinnedPieces[COLOR_NB];
     Square PinMap[COLOR_NB][nRows*nCols];
     StateInfo tempState;
+    History GameHistory;
 
     void init(){
         // squares are empty
@@ -27,6 +28,8 @@ namespace Position {
         std::memset(&tempState, 0, sizeof(StateInfo));
         st.previous = &tempState;
         gamePly = 0;
+        // empty the game history
+        GameHistory.clear();
     }
 
     void UpdatePosition(){
@@ -46,6 +49,7 @@ void init_position(std::string FEN){
     setBBFromFEN(FEN);
     Position::UpdatePosition();
     Position::st.ZobristHash = CalculateZobristHash();
+    AddToHistory(Position::st.ZobristHash);
     // calc and store material count
     CalculateMaterial();
     // calc and store PST score

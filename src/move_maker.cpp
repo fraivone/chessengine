@@ -23,7 +23,8 @@ void MakeMove(Move mv){
     // update the board with the new move
     // put/remove/move piece automatically update the pinners[],checkersBB,pinmap
     // i need to update
-    // [DONE] Update the number of repetitions
+    
+       
     // [DONE] pointer to the previous state info 
     // [DONE] captured piece
     // [DONE] castling rights 
@@ -41,6 +42,8 @@ void MakeMove(Move mv){
         //[DONE] 4. if it was a enpassant, unhash the victim piece 
         // if it was promotion, unhash the pawn on square to, hash the promoted piece on to
     // [DONE] Hash new side to move
+    // [DONE] With the new Zobrist hash, count the repetitions of this position
+    // [DONE] After updating the Zobrist hash and counted repetitions, update the gamehistory
 
     
     if(mv == MOVE_NULL)
@@ -258,38 +261,24 @@ void MakeMove(Move mv){
     if (P_to != NO_PIECE)
         Position::st.ZobristHash ^= HashTables::PRN_pieces[P_to][to];
 
+    
+    // count the repetitions of this position in history
+    // if no occurrences, 0 repetitions
+    // if occ > 0, then this is the occ+1 repetition
+    int occ = NumberOfOccurrences(Position::st.ZobristHash);
+    Position::st.repetition =  occ == 0? 0:occ+1 ;
+    // update the history
+    AddToHistory(Position::st.ZobristHash);
+    
 
 
-    Position::UpdatePosition(); 
-
-     // Calculate the repetition info. It is the ply distance from the previous
-    // occurrence of the same position, negative in the 3-fold case, or zero
-    // if the position was not repeated.
-    // https://github.com/official-stockfish/Stockfish/blob/b5e8169a85f6937d7d9d90612863fe5eec72d6ca/src/position.cpp#L841
-    Position::st.repetition = 0;
-    int PliesWithoutChanges  = Position::st.rule50;
-    if (PliesWithoutChanges >= 4)
-    {
-        StateInfo* stp = Position::st.previous->previous;
-        // loop in steps of 2, repetition must have the same color
-        for (int i = 4; i <= PliesWithoutChanges; i += 2)
-        {
-            // state info of this color, i plies ago 
-            stp = stp->previous->previous;
-            // there is a repetition
-            if (stp->ZobristHash == Position::st.ZobristHash)
-            {
-                Position::st.repetition = stp->repetition ? -i : i;
-                break;
-            }
-        }
-    }
-
+    Position::UpdatePosition();
 }
 
 void UndoMove(Move mv){    
     // [DONE] sideToMove(in position::)
     // [DONE] gamePly (in position::)
+    // [DONE] Remove this position from the game history
     // [DONE] lastly I update the board moving the pieces
     
 
@@ -297,12 +286,14 @@ void UndoMove(Move mv){
     // [DONE] captured piece
     // [DONE] castling rights 
     // [DONE] rule50 
-    // [DONE] Square epSquare   
+    // [DONE] Square epSquare  
     
     // I have to undo the move for this color!
     Position::sideToMove = Color(!Position::sideToMove);
     Color whoMoved = Position::sideToMove;
     Position::gamePly--;
+    // Remove the current position from the gamehistory
+    RemoveLatestInHistory(Position::st.ZobristHash);
 
     // recreate board as it was
     Square from = mv_from(mv);
@@ -356,7 +347,8 @@ void UndoMove(Move mv){
 
 
 
-    // LAST STEP
+
+    // LAST STEPs
     // re assign previous state
     Position::st = *(Position::st.previous);
     // emptying previous state

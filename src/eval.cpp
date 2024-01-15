@@ -107,7 +107,7 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
     MoveList legal = generate_legal(Us);
     
     // this is draw by repetition
-    if(Position::st.repetition <0){
+    if(Position::st.repetition >=3){
         bestMove.value = 0;
         return bestMove;
     }
