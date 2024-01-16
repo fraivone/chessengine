@@ -135,29 +135,31 @@ Therefore, when searching for the best move, it is smart to keep track of the po
 Current transposition table:
 1. Zobrist hashing function
 1. Index calculated as `Zobrist_Key MOD HashTableEntries` 
-1. Each entry has size , contains
-    1. The full `Zobrist_Key`  64
-    1. The `depth` searched     5
-    1. The `evaluation` of the position 20
-    1. The `BestMove` of the position 16
+1. Each entry is 12 bytes in size. It contains
+    1. The 48 most significative bits of the `Zobrist_Hash`, because the lower 16bits get checked when accessing the hash table
+    1. The `depth` searched
+    1. The `evaluation` of the position
+    1. The `BestMove` of the position
     1. The `ScoreType` (Exact, prunedBeta, prunedAlpha ) 2
     ~~ 1. The `Age` of the entry in the table. ~~ 
     1. Padding i.e. bits to make the entry's size a whole number of bytes size.
-1. Replace "ALWAYS"
+1. Replace "ALWAYS", i.e. only keep the highest depth
+1. In case of collisions, ignore
 
 |  Variable  | #Bit | #Byte |
 | ---------- | ---- | ----- |
-| Zobrist_key|  64  |   8   | 
-|   depth    |   5  |  5/8  | 
+|Zobrist48MSB|  48  |   6   | 
+|   depth    |   6  |  6/8  | 
 | evaluation |  20  | 2+1/2 | 
+| eval sign  |   1  |  1/8  | 
 |  BestMove  |  16  |   2   | 
 | ScoreType  |   2  |  2/8  | 
-|  Padding   |   5  |  2/8  | 
+|  Padding   |   3  |  3/8  | 
 |            |      |       |
-|    Total   |  112 |   14  |
+|    Total   |  96  |   12  |
 
-
-### Not on the ScoreType
+Where `Zobrist48MSB
+### Note on the ScoreType
 * **Exact**: this node was fully searched in all its children nodes. The node's score is `== score`
 * **prunedBeta**: this node was only partially searched. At some point the condition `score > beta` occurred. Therefore this node's score is `>=score`.
     Here is an example:

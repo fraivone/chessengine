@@ -23,3 +23,64 @@ namespace HashTables{
     // in order to tell what is the pawn strucutre
     // For now I don't need that
 }
+
+
+namespace TranspositionTable{
+    /// mask to get the sign from the SearcSummary
+    /// corresponds to the 28th bit
+    const int SignMask = 0x10000000;
+    /// mask to get the evaluation from the SearcSummary
+    /// corresponds to the bits [8,27]
+    const int EvaluationMask = 0xFFFFF00;
+    /// mask to get the scoretype from the SearcSummary
+    /// corresponds to the bits [6,7]
+    const int ScoreTypeMask = 0xC0;
+    /// mask to get the depth from the SearcSummary
+    /// corresponds to the bits [0,5]
+    const int DepthMask = 0x3F;
+
+    /// mask to get the first 48 MostSignificantBit of a uint64
+    const uint64_t MaskZobrist48MSB1 = 0xFFFFFFFFFFFF0000;
+
+    /// struct to hold 48 bits
+    struct MS48B {
+
+        uint64_t value:48;
+        MS48B(uint64_t v){
+            value = (v & MaskZobrist48MSB1) >> 16;
+        }
+        MS48B(){
+            value = 0;
+        }
+    } __attribute__((packed));
+    
+    /// single entry in of a transposition table
+    /// It is packed so it won't get padded
+    /// It should be 12bytes
+    #pragma pack(push, 1)
+    struct TableEntry {
+        
+        MS48B z;
+        Move BestMove;
+        SearchSummary DSE;
+        
+        
+        uint64_t ms48b_zobrist() const {return z.value;}
+        Move move() const {return BestMove;}
+        SearchSummary ssummary() const {return DSE;}
+
+        bool sign() const {return bool( (DSE & SignMask) >> 28 );}
+        uint8_t depth() const {return uint8_t(DSE & DepthMask);}
+        Value eval() const {return Value( (sign()?1:-1) *  ( (DSE & EvaluationMask) >> 8)  );}
+        ScoreType scoretype() const {return ScoreType( (DSE & ScoreTypeMask) >> 6 );}
+        
+        
+
+
+        // empty constructor
+        TableEntry() : z(0ULL), BestMove(MOVE_NONE), DSE(0) {}
+        // constructor
+        TableEntry(Hashkey ZobristHash, Move theMove, uint8_t depth, Value evaluation, ScoreType st) : z(ZobristHash),BestMove(theMove),DSE( ( bool(evaluation > 0)<<28) | ((abs(evaluation)<<8) &  EvaluationMask) | ((st<<6)&ScoreTypeMask) | (depth & DepthMask) ){}
+    };
+    #pragma pack(pop)
+}
