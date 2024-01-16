@@ -120,3 +120,33 @@ For the **UnitTest** performance test I am storing, for each test, the depth, th
 
 #### A note on Nodes Searched
 `Nodes searched` is the count of all nodes that were searched while looking for the best algorithm. I have decided to include also the leaf nodes (i.e. nodes searched at depth = 0).
+
+
+## Hash Tables (Transpositions)
+Hash tables are just dictionaries. 
+The `hash` is just a convenient way to transform a complex and non-numeric dictionary key into a number. A number that can be used as it is, or further transformed, to be the index of an array.
+Basic example:
+Want to have a dictionary that maps a car to owner class. Hash the license plates and create a hash table.
+### Transposition tables
+Transposition tables are a specific applicaiton of hash tables.
+Once playing legal moves, a chess engine can improve its performance by the game tree at a higher depth. In other words, when it can see more moves into the future.
+While scanning the game tree, the very same position can be reached with different moves. These are called transpositions. 
+Therefore, when searching for the best move, it is smart to keep track of the positions already searched together with their outcome. 
+Current transposition table:
+1. Zobrist hashing function
+1. Index calculated as `Zobrist_Hash MOD HashTableEntries` 
+1. Each entry contains
+    1. The full `Zobrist_Hash`
+    1. The `depth` searched
+    1. The `evaluation` of the position
+    1. The `BestMove` of the position
+    1. The `ScoreType` (Exact, prunedBeta, prunedAlpha ) 
+    1. The `Age` of the entry in the table.
+1. Replace "ALWAYS"
+
+### Not on the ScoreType
+* **Exact**: this node was fully searched in all its children nodes. The node's score is `== score`
+* **prunedBeta**: this node was only partially searched. At some point the condition `score > beta` occurred. Therefore this node's score is `>=score`.
+    Here is an example:
+    > This node is a `WHITE` node, we call it `this`. It was being searched from a parent `BLACK` node called `paren`. The parent `BLACK` node had already had some of his children searched. During the search, he had already found one node which guaranteed a score of `beta`. The searched node instead (`WHITE`), even if fully searched, would return something > `beta`. Indeed `this` is a `WHITE` node which will pick the highest value. Therefore, the search for `this` can stop here and this node's score is `>=score`.
+* **prunedAlpha** this node was only partially searched. At some point the condition `score < alpha` occurred. Therefore this node's score is `<=score`.
