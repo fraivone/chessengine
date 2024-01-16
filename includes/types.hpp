@@ -12,6 +12,14 @@ const std::string engineName ="ThePaunch";
 const std::string author ="Francesco Ivone";
 const int defaultDepth = 7;
 
+/// min size of hash table
+/// corresponds to guarantee that 
+/// the 16 LSB bits of the Zobrist hash
+/// are already compared when accessing the table
+/// so in a table entry I can store only the 
+/// 48 MSB of the ZobristHash
+const int MIN_TABLE_SIZE = 65535;
+
 /// Verbose variable to control couts. Ranges from [0,...,5]
 extern unsigned VERBOSE;
 
@@ -33,6 +41,14 @@ typedef std::array<Bitboard,64> LUT;
 /// Hash key for hashtables
 typedef uint64_t Hashkey;
 typedef std::vector<Hashkey> History;
+// Stores  | empty (3) | evalutation sign (1) | evalutation (20) | score tpye (2) | depth (6) | 
+typedef uint32_t SearchSummary;
+// The evaluation of a node can be Exact, prunedBeta, prunedAlpha
+enum ScoreType {
+  P_BETA = 1,
+  P_ALPHA = 2,
+  EXACT = 3
+};
 
 /// A move needs 16 bits to be stored
 ///
@@ -46,7 +62,7 @@ typedef std::vector<Hashkey> History;
 /// any normal move destination square is always different from origin square
 /// while MOVE_NONE and MOVE_NULL have the same origin and destination square.
 
-enum Move {
+enum Move: uint16_t {
   MOVE_NONE,
   MOVE_NULL = 65
 };
