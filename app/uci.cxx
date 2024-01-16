@@ -204,7 +204,7 @@ int main(int argc, char **argv){
 			ExtMove theBest;
 			move_counter = 0;
 			theBest = minmax(Position::sideToMove,-10000000, +10000000, depth,depth,move_counter, false);
-			if (move_counter < 6000000){
+			while (move_counter < 6000000){
 				depth +=1;
 				move_counter = 0;
 				theBest = minmax(Position::sideToMove,-10000000, +10000000, depth+1,depth+1,move_counter, false);
@@ -251,6 +251,9 @@ int main(int argc, char **argv){
 		if (command == "getfen"){
 			std::cout<<"Current fen"<<std::endl;
 			std::cout<<MakeFEN()<<std::endl;
+		}
+		if (command == "getrepetition"){
+			std::cout<<"Current number of repetitions "<<Position::st.repetition<<std::endl;
 		}
 		if (command == "quit"){
 			return 0;
