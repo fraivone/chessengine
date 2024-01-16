@@ -134,15 +134,28 @@ While scanning the game tree, the very same position can be reached with differe
 Therefore, when searching for the best move, it is smart to keep track of the positions already searched together with their outcome. 
 Current transposition table:
 1. Zobrist hashing function
-1. Index calculated as `Zobrist_Hash MOD HashTableEntries` 
-1. Each entry contains
-    1. The full `Zobrist_Hash`
-    1. The `depth` searched
-    1. The `evaluation` of the position
-    1. The `BestMove` of the position
-    1. The `ScoreType` (Exact, prunedBeta, prunedAlpha ) 
-    1. The `Age` of the entry in the table.
+1. Index calculated as `Zobrist_Key MOD HashTableEntries` 
+1. Each entry has size , contains
+    1. The full `Zobrist_Key`  64
+    1. The `depth` searched     5
+    1. The `evaluation` of the position 20
+    1. The `BestMove` of the position 16
+    1. The `ScoreType` (Exact, prunedBeta, prunedAlpha ) 2
+    ~~ 1. The `Age` of the entry in the table. ~~ 
+    1. Padding i.e. bits to make the entry's size a whole number of bytes size.
 1. Replace "ALWAYS"
+
+|  Variable  | #Bit | #Byte |
+| ---------- | ---- | ----- |
+| Zobrist_key|  64  |   8   | 
+|   depth    |   5  |  5/8  | 
+| evaluation |  20  | 2+1/2 | 
+|  BestMove  |  16  |   2   | 
+| ScoreType  |   2  |  2/8  | 
+|  Padding   |   5  |  2/8  | 
+|            |      |       |
+|    Total   |  112 |   14  |
+
 
 ### Not on the ScoreType
 * **Exact**: this node was fully searched in all its children nodes. The node's score is `== score`
