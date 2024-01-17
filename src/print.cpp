@@ -167,7 +167,10 @@ void PrintPinMap(Color Us){
 
 
 void PrintTranspositionTable(){
-    for(int i = 0; i<HashTables::TABLE_SIZE; i++){
+    for(int i = 0; i<TABLE_SIZE; i++){
+        // don't print empty entries
+        if(HashTables::table[i].move()==MOVE_NONE)
+            continue;
         std::cout<<"Zobrist 48MSB "<<std::hex<<HashTables::table[i].ms48b_zobrist()<<std::dec<<std::endl;
         std::cout<<"Best move "<<mvhuman(HashTables::table[i].move())<<std::endl;
         std::cout<<"Depth "<<+HashTables::table[i].depth()<<std::endl;

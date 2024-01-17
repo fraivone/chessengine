@@ -606,12 +606,12 @@ BOOST_AUTO_TEST_SUITE(Methods)
                     }
                         
                 }
-                table[index] = HashTables::TableEntry(Position::st.ZobristHash, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
+                table[index] = HashTables::TableEntry(Position::st.ZobristHash, mvl.list[i].move, uint8_t(3), EvalPosition(), EXACT);
                 BOOST_CHECK_EQUAL(table[index].ms48b_zobrist(), Position::st.ZobristHash>>16);
                 BOOST_CHECK_EQUAL(table[index].move(), mvl.list[i].move);
                 BOOST_CHECK_EQUAL(table[index].sign(), EvalPosition()>0 );
                 BOOST_CHECK_EQUAL(table[index].depth(), uint8_t(3) );
-                BOOST_CHECK_EQUAL(table[index].eval(), Value(EvalPosition()) );
+                BOOST_CHECK_EQUAL(table[index].eval(), EvalPosition() );
                 BOOST_CHECK_EQUAL(table[index].scoretype(), EXACT );
                 
                 UndoMove(mvl.list[i]);
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_SUITE(Methods)
             for(int i = 0; i<mvl.size; i++){
                 MakeMove(mvl.list[i].move);
                 Hashkey zob = Position::st.ZobristHash;
-                HashTables::table[(zob % HashTables::TABLE_SIZE)] = HashTables::TableEntry(zob, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
+                HashTables::table[(zob % TABLE_SIZE)] = HashTables::TableEntry(zob, mvl.list[i].move, uint8_t(3), EvalPosition(), EXACT);
                 
                 BOOST_CHECK_EQUAL(HashTables::tableKey(zob),true);
                 BOOST_CHECK_EQUAL(HashTables::tableMatch(zob+3),false);

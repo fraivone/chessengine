@@ -3,9 +3,11 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import mplhep as hep
 import time
-plt.style.use(hep.style.CMS)
+import matplotlib.ticker as mtick
+# plt.style.use(hep.style.CMS)
 ExecutablePath = "/home/francesco/Programs/engine/build/test/_unit_tests"
 outputFolder = "/home/francesco/Programs/engine/python/performance"
+CSVPath = f"{outputFolder}/SearchResults.csv"
 
 results = []
 MAX_DEPTH = 8
@@ -37,14 +39,40 @@ for depth in range(1,MAX_DEPTH+1):
     results.append([depth,searchedMoves,TestingTime])
 
 df = pd.DataFrame(results, columns=["Depth","Nodes","Time"])
-fig, ax1 = plt.subplots()
-ax1.set_yscale('log')
-ax1.set_xlabel("Depth")
-ax1.plot(df.Depth, df.Time,label="Time(us)",linestyle='dashed', marker='s')
-ax1.plot(df.Depth, df.Nodes,label="Nodes",linestyle='dashed', marker='s')
-ax1.plot(df.Depth, 10**(6)*df.Nodes/df.Time,label="Nodes/s",color="g",linestyle='dashed', marker='s')
-ax1.legend()
-ax1.set_ylim(10**3,)
-fig.savefig(f"{outputFolder}/SearchTest{time.strftime('_%-y%m%d%H%M')}.pdf")
-fig.savefig(f"{outputFolder}/SearchTest{time.strftime('_%-y%m%d%H%M')}.png")
-df.to_csv(f"{outputFolder}/SearchTest{time.strftime('_%-y%m%d%H%M')}.csv",index=False)
+df["Date"] = pd.Timestamp.now()
+
+try:
+    dfold = pd.read_csv(CSVPath)
+    df = pd.concat([dfold, df], ignore_index=True)
+    # else skip append
+except:
+    pass
+df.to_csv(CSVPath,index=False)
+
+
+
+### PLOTTING
+fig, ax = plt.subplots(4,2, figsize=(20,15),sharex=True)
+ax = ax.flatten()
+ax2 = []
+df = pd.read_csv(CSVPath)
+df['DateTime'] = df['Date'].apply(lambda x: pd.Timestamp(x).to_pydatetime())
+df.sort_values(by=['DateTime'], inplace=True)
+
+for k in df['Depth'].to_list():
+    ax[k-1].set_title(f"Search depth {k}")
+    ax2 = ax[k-1].twinx()
+    ax[k-1].set_xlabel("Date")
+    ax[k-1].set_ylabel("Time(us)")
+    ax2.set_ylabel("Nodes")
+    ax[k-1].plot(df[df['Depth'] == k].DateTime, df[df['Depth'] == k].Time,label=f"Time(us)",linestyle='dashed', marker='s',c="b")
+    ax2.plot(df[df['Depth'] == k].DateTime, df[df['Depth'] == k].Nodes,label=f"Nodes",linestyle='dashed',c="r")
+    # ax[k-1].yaxis.set_major_formatter(formatter)
+    ax[k-1].grid()
+    ax[k-1].grid()
+    ax2.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.0e'))
+# fig.legend(loc="center left",fontsize='x-small',handleheight=2.4, labelspacing=0.05)
+fig.autofmt_xdate(rotation=45)
+fig.tight_layout()
+fig.savefig(f"{outputFolder}/SearchResults.png")
+fig.savefig(f"{outputFolder}/SearchResults.pdf")

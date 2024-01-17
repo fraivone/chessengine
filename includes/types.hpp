@@ -11,6 +11,8 @@ const std::string VERSION = "0.1";
 const std::string engineName ="ThePaunch";
 const std::string author ="Francesco Ivone";
 const int defaultDepth = 7;
+/// Number of entries in the hash table
+const int TABLE_SIZE = 70000;
 
 /// min size of hash table
 /// corresponds to guarantee that 

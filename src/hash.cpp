@@ -5,7 +5,8 @@ namespace HashTables{
     Hashkey PRN_enpassant[nCols];
     Hashkey PRN_castling[CASTLING_RIGHT_NB];
     Hashkey whomoves;
-    std::vector<TableEntry> table(TABLE_SIZE);
+    std::vector<TableEntry> table;
+    int tableLoadFactor;
     void init(){
         // As stockfish https://github.com/official-stockfish/Stockfish/blob/b5e8169a85f6937d7d9d90612863fe5eec72d6ca/src/position.cpp#L117
         PRNG rng(1070372);
@@ -28,6 +29,15 @@ namespace HashTables{
         whomoves = rng.rand<Hashkey>();
     }
 
+    void init_transposition_table(){
+        assert(TABLE_SIZE>MIN_TABLE_SIZE);
+        table.clear();
+        tableLoadFactor = 0;
+        for(int i=0; i<TABLE_SIZE; i++)
+            table.push_back(TableEntry());
+    }
+
+
     bool tableKey(Hashkey zob){
         return table[(zob%TABLE_SIZE)].move() != MOVE_NONE;
     }
@@ -38,6 +48,18 @@ namespace HashTables{
 
     bool tableMatch(Hashkey zob, int depth){
         return ( tableMatch(zob) && table[(zob%TABLE_SIZE)].depth() >= depth);
+    }
+
+    void addToTable(Hashkey ZobristHash, Move theMove, int depth, int evaluation, ScoreType st){
+        // only accept calls for positions that are either not in the table,
+        // or insufficient depth
+        // or score not exact        
+        assert( (tableMatch(ZobristHash, depth) == false) |  (  (tableMatch(ZobristHash, depth) == true) & (table[ZobristHash%TABLE_SIZE].scoretype()!=EXACT)  )  );
+        // element is empty
+        if (!tableKey(ZobristHash))
+            tableLoadFactor++;
+
+        table[ZobristHash%TABLE_SIZE] = TableEntry(ZobristHash, theMove, uint8_t(depth), evaluation, st);
     }
 
 

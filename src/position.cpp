@@ -54,6 +54,8 @@ void init_position(std::string FEN){
     CalculateMaterial();
     // calc and store PST score
     CalculatePSTScore();
+    // clear the transposition table
+    HashTables::init_transposition_table();
 }
 
 void put_piece(Square square, Piece PP){

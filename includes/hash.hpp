@@ -20,8 +20,6 @@ namespace HashTables{
     // in order to tell what is the pawn strucutre
     // For now I don't need that
 
-    /// Number of entries in the hash table
-    const int TABLE_SIZE = 4000;
     /// mask to get the sign from the SearcSummary
     /// corresponds to the 28th bit
     const int SignMask = 0x10000000;
@@ -67,7 +65,7 @@ namespace HashTables{
 
         bool sign() const {return bool( (DSE & SignMask) >> 28 );}
         uint8_t depth() const {return uint8_t(DSE & DepthMask);}
-        Value eval() const {return Value( (sign()?1:-1) *  ( (DSE & EvaluationMask) >> 8)  );}
+        int eval() const {return int( (sign()?1:-1) *  ( (DSE & EvaluationMask) >> 8)  );}
         ScoreType scoretype() const {return ScoreType( (DSE & ScoreTypeMask) >> 6 );}
         
         
@@ -76,15 +74,18 @@ namespace HashTables{
         // empty constructor
         TableEntry() : z(0ULL), BestMove(MOVE_NONE), DSE(0) {}
         // constructor
-        TableEntry(Hashkey ZobristHash, Move theMove, uint8_t depth, Value evaluation, ScoreType st) : z(ZobristHash),BestMove(theMove),DSE( ( bool(evaluation > 0)<<28) | ((abs(evaluation)<<8) &  EvaluationMask) | ((st<<6)&ScoreTypeMask) | (depth & DepthMask) ){}
+        TableEntry(Hashkey ZobristHash, Move theMove, uint8_t depth, int evaluation, ScoreType st) : z(ZobristHash),BestMove(theMove),DSE( ( bool(evaluation > 0)<<28) | ((abs(evaluation)<<8) &  EvaluationMask) | ((st<<6)&ScoreTypeMask) | (depth & DepthMask) ){}
     };
     #pragma pack(pop)
     extern std::vector<TableEntry> table;
-
+    // number of entries in the table
+    extern int tableLoadFactor;
 
     /// init function to be called at startup 
     /// to initialize the hash variables with PRNs
     void init();
+
+    void init_transposition_table();
 
     /// Checks whether this zobrist has a key in the table
     /// If true it can be either: 1. Same position 2. Different position Collision
@@ -97,6 +98,9 @@ namespace HashTables{
     /// Checks whether this position is stored in the table
     /// at a depth greater or equal than depth
     bool tableMatch(Hashkey zob, int depth);
+    
+    /// Add a table entry to the transposition table
+    void addToTable(Hashkey ZobristHash, Move theMove, int depth, int evaluation, ScoreType st);
     
     
 }

@@ -102,17 +102,53 @@ bool white_sorter(ExtMove const& lhs, ExtMove const& rhs) {
 
 
 ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t& counter, bool verbose){
+    Hashkey zob = Position::st.ZobristHash;
+    int index = zob % TABLE_SIZE;
     ExtMove bestMove,newMove;
+    int alphaOrig = alpha;
+    int alphaBeta = beta;
+    // check for useful info in the transposition table
+    if( HashTables::tableMatch(zob,depth)){
+        if(HashTables::table[index].scoretype() == EXACT){
+            bestMove = HashTables::table[index].move();
+            bestMove.value = HashTables::table[index].eval();
+            return bestMove;
+        }
+        // Not all move in this position where searched
+        // all we know is that the score is at least "eval()"
+        // which means updating alpha if possible
+        else if(HashTables::table[index].scoretype() == P_BETA){
+            alpha = std::max(alpha, HashTables::table[index].eval());
+        }
+        // Not all move in this position where searched
+        // all we know is that the score is no more than "eval()"
+        // which means updating beta if possible
+        else if(HashTables::table[index].scoretype() == P_ALPHA){
+            beta = std::min(beta, HashTables::table[index].eval());
+        }
+
+        if (alpha >= beta){
+            bestMove = HashTables::table[index].move();
+            bestMove.value = HashTables::table[index].eval();
+            return bestMove;
+        }
+    }
+    
     bestMove = Move(0);
     MoveList legal = generate_legal(Us);
     
     // this is draw by repetition
+    // don't store it in the transposition table
+    // as the same it is not always a draw
+    // but depends on the game history
     if(Position::st.repetition >=3){
         bestMove.value = 0;
         return bestMove;
     }
     
     // this is either checkmate or stalemate
+    // this referes to the move previously mate
+    // so I won't store anything in the Transp Table
     if (legal.size == 0){    
         if(Position::st.checkersBB == 0ULL)
             bestMove.value = 0; // stalemate
@@ -158,10 +194,22 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
                 bestMove = legal.list[i].move;
                 bestMove.value = newMove.value;
             }
+            
+            // Searching as white, I found a move that
+            // scores more than the best move my father BLACK
+            // has found. There is no need to keep searching
+            // My father node BLACK will prune me as node
             if (bestMove.value > beta)
                 break;
             alpha = std::max(alpha, bestMove.value);    
-        }
+        } // searched all moves
+
+        if (bestMove.value > beta)
+            HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, P_BETA);
+        else
+            HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, EXACT);
+
+
         if(verbose)
             std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
@@ -195,10 +243,21 @@ ExtMove minmax(Color Us, int alpha, int beta, int depth, int maxdepth, uint64_t&
                 bestMove = legal.list[i].move;
                 bestMove.value = newMove.value;
             }
+
+            // Searching as black, I found a move that
+            // scores less than the best move my father node WHITE
+            // has found. There is no need to keep searching
+            // My father node WHITE will prune me as node
             if (bestMove.value < alpha)
                 break;
             beta  = std::min(beta , bestMove.value);    
-        }
+        } // searched all moves
+        
+        if (bestMove.value < alpha)
+            HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, P_ALPHA);
+        else
+            HashTables::addToTable(zob, bestMove.move, depth, bestMove.value, EXACT);
+        
         if(verbose)
             std::cout<<std::string(maxdepth-depth, '\t')<<"Depth "<<+depth<<"\tBEST IS "<<mvhuman(bestMove)<<" e:"<<bestMove.value<<std::endl;
         return bestMove;
