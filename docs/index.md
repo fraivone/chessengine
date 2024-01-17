@@ -129,7 +129,7 @@ Basic example:
 Want to have a dictionary that maps a car to owner class. Hash the license plates and create a hash table.
 ### Transposition tables
 Transposition tables are a specific applicaiton of hash tables.
-Once playing legal moves, a chess engine can improve its performance by the game tree at a higher depth. In other words, when it can see more moves into the future.
+Once playing legal moves, a chess engine can improve its performance by searching the game tree at a higher depth. In other words, when it can see more moves into the future.
 While scanning the game tree, the very same position can be reached with different moves. These are called transpositions. 
 Therefore, when searching for the best move, it is smart to keep track of the positions already searched together with their outcome. 
 Current transposition table:
@@ -158,7 +158,6 @@ Current transposition table:
 |            |      |       |
 |    Total   |  96  |   12  |
 
-Where `Zobrist48MSB
 ### Note on the ScoreType
 * **Exact**: this node was fully searched in all its children nodes. The node's score is `== score`
 * **prunedBeta**: this node was only partially searched. At some point the condition `score > beta` occurred. Therefore this node's score is `>=score`.

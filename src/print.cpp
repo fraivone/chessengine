@@ -164,3 +164,15 @@ void PrintPinMap(Color Us){
             std::cout<<"Square "<<+attacker<<" is pinning square "<<+pinned<<std::endl;
     }
 }
+
+
+void PrintTranspositionTable(){
+    for(int i = 0; i<HashTables::TABLE_SIZE; i++){
+        std::cout<<"Zobrist 48MSB "<<std::hex<<HashTables::table[i].ms48b_zobrist()<<std::dec<<std::endl;
+        std::cout<<"Best move "<<mvhuman(HashTables::table[i].move())<<std::endl;
+        std::cout<<"Depth "<<+HashTables::table[i].depth()<<std::endl;
+        std::cout<<"Eval "<<HashTables::table[i].eval()<<std::endl;
+        std::cout<<"ScoreType "<<HashTables::table[i].scoretype()<<std::endl;
+        std::cout<<"-----------------------"<<std::dec<<std::endl;
+    }
+}

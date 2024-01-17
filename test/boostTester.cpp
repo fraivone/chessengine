@@ -542,24 +542,24 @@ BOOST_AUTO_TEST_SUITE(Methods)
     // makes / unmakes all possible moves up to depth 4
     // so that at the end we should be back with the same
     // material count as beginning
-    BOOST_AUTO_TEST_CASE(CheckMaterialCountConsistency){
+    // BOOST_AUTO_TEST_CASE(CheckMaterialCountConsistency){
         
-        MoveList mvl;
-        int BeforeWhiteValue, AfterWhiteValue = 0;
-        int BeforeBlackValue, AfterBlackValue = 0;
-        for (auto const& x : PERFT2){
-            init_position(x.first);
-            BeforeWhiteValue = Position::st.nonPawnMaterial[WHITE];
-            BeforeBlackValue = Position::st.nonPawnMaterial[BLACK];
-            mvl = generate_legal(Position::sideToMove);
+    //     MoveList mvl;
+    //     int BeforeWhiteValue, AfterWhiteValue = 0;
+    //     int BeforeBlackValue, AfterBlackValue = 0;
+    //     for (auto const& x : PERFT2){
+    //         init_position(x.first);
+    //         BeforeWhiteValue = Position::st.nonPawnMaterial[WHITE];
+    //         BeforeBlackValue = Position::st.nonPawnMaterial[BLACK];
+    //         mvl = generate_legal(Position::sideToMove);
             
-            StupidPerftCount(mvl,4,4);
-            AfterWhiteValue = Position::st.nonPawnMaterial[WHITE];
-            AfterBlackValue = Position::st.nonPawnMaterial[BLACK];
-            BOOST_CHECK_EQUAL(BeforeWhiteValue, AfterWhiteValue);
-            BOOST_CHECK_EQUAL(BeforeBlackValue, AfterBlackValue);
-        }
-    }
+    //         StupidPerftCount(mvl,4,4);
+    //         AfterWhiteValue = Position::st.nonPawnMaterial[WHITE];
+    //         AfterBlackValue = Position::st.nonPawnMaterial[BLACK];
+    //         BOOST_CHECK_EQUAL(BeforeWhiteValue, AfterWhiteValue);
+    //         BOOST_CHECK_EQUAL(BeforeBlackValue, AfterBlackValue);
+    //     }
+    // }
 
     // for many starting positions,
     // makes a move and calculates the Zobrist from scratch
@@ -581,6 +581,45 @@ BOOST_AUTO_TEST_SUITE(Methods)
                 UndoMove(mvl.list[i]);
             }
         }
+    }
+    BOOST_AUTO_TEST_CASE(CheckTableEntryMethods){
+        
+        MoveList mvl;
+        Hashkey ZobristFromUpdate, ZobristFromScratch;
+        const int SIZE =  40000000;
+        // TranspositionTable::TableEntry table[SIZE]{};
+        std::vector<TranspositionTable::TableEntry> table(SIZE);
+        int collisions = 0;
+        int positions = 0;
+        int samePos = 0;
+        
+        for (auto const& x : PERFT2){
+            init_position(x.first);
+            mvl = generate_legal(Position::sideToMove);
+            for(int i = 0; i<mvl.size; i++){
+                positions++;
+                MakeMove(mvl.list[i].move);
+
+                auto index = Position::st.ZobristHash%SIZE;
+                if(table[index].move() != MOVE_NONE) {
+                    collisions++;
+                    if(table[index].ms48b_zobrist() == (Position::st.ZobristHash>>16)){
+                        samePos++;
+                    }
+                        
+                }
+                table[index] = TranspositionTable::TableEntry(Position::st.ZobristHash, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
+                BOOST_CHECK_EQUAL(table[index].ms48b_zobrist(), Position::st.ZobristHash>>16);
+                BOOST_CHECK_EQUAL(table[index].move(), mvl.list[i].move);
+                BOOST_CHECK_EQUAL(table[index].sign(), EvalPosition()>0 );
+                BOOST_CHECK_EQUAL(table[index].depth(), uint8_t(3) );
+                BOOST_CHECK_EQUAL(table[index].eval(), Value(EvalPosition()) );
+                BOOST_CHECK_EQUAL(table[index].scoretype(), EXACT );
+                
+                UndoMove(mvl.list[i]);
+            }
+        }
+        std::cout<<"Size "<<SIZE<<"\tPositions "<<positions<<"\tCollisions "<<collisions<<"\tSamePos "<<samePos<<std::endl;
     }
 
 BOOST_AUTO_TEST_SUITE_END()

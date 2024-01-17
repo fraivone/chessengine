@@ -7,6 +7,7 @@
 # include "pst.hpp"
 #include "gen_move.hpp" //movelist
 #include "eval.hpp"
+#include "hash.hpp"
 #include <iomanip> //method setw
 /*! Prints the given bitboard with # in place of the set bits.
     \param Bitboard 
@@ -33,3 +34,6 @@ void PrintPinMap(Color Us);
 
 /// Print a Piece Square Table to ease the dev
 void PrintPST(Color c, PieceType pt);
+
+/// Print the hash table
+void PrintTranspositionTable();
