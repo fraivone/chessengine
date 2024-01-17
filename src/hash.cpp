@@ -5,6 +5,7 @@ namespace HashTables{
     Hashkey PRN_enpassant[nCols];
     Hashkey PRN_castling[CASTLING_RIGHT_NB];
     Hashkey whomoves;
+    std::vector<TableEntry> table(TABLE_SIZE);
     void init(){
         // As stockfish https://github.com/official-stockfish/Stockfish/blob/b5e8169a85f6937d7d9d90612863fe5eec72d6ca/src/position.cpp#L117
         PRNG rng(1070372);
@@ -26,4 +27,22 @@ namespace HashTables{
         // init color
         whomoves = rng.rand<Hashkey>();
     }
+
+    bool tableKey(Hashkey zob){
+        return table[(zob%TABLE_SIZE)].move() != MOVE_NONE;
+    }
+
+    bool tableMatch(Hashkey zob){
+        return (tableKey(zob) && (table[(zob%TABLE_SIZE)].ms48b_zobrist() == zob>>16));
+    }
+
+    bool tableMatch(Hashkey zob, int depth){
+        return ( tableMatch(zob) && table[(zob%TABLE_SIZE)].depth() >= depth);
+    }
+
+
+
+
 }
+
+

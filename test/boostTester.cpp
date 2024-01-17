@@ -585,10 +585,8 @@ BOOST_AUTO_TEST_SUITE(Methods)
     BOOST_AUTO_TEST_CASE(CheckTableEntryMethods){
         
         MoveList mvl;
-        Hashkey ZobristFromUpdate, ZobristFromScratch;
         const int SIZE =  40000000;
-        // TranspositionTable::TableEntry table[SIZE]{};
-        std::vector<TranspositionTable::TableEntry> table(SIZE);
+        std::vector<HashTables::TableEntry> table(SIZE);
         int collisions = 0;
         int positions = 0;
         int samePos = 0;
@@ -608,7 +606,7 @@ BOOST_AUTO_TEST_SUITE(Methods)
                     }
                         
                 }
-                table[index] = TranspositionTable::TableEntry(Position::st.ZobristHash, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
+                table[index] = HashTables::TableEntry(Position::st.ZobristHash, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
                 BOOST_CHECK_EQUAL(table[index].ms48b_zobrist(), Position::st.ZobristHash>>16);
                 BOOST_CHECK_EQUAL(table[index].move(), mvl.list[i].move);
                 BOOST_CHECK_EQUAL(table[index].sign(), EvalPosition()>0 );
@@ -620,6 +618,29 @@ BOOST_AUTO_TEST_SUITE(Methods)
             }
         }
         std::cout<<"Size "<<SIZE<<"\tPositions "<<positions<<"\tCollisions "<<collisions<<"\tSamePos "<<samePos<<std::endl;
+    }
+
+
+    BOOST_AUTO_TEST_CASE(CheckTableMethods){
+        
+        MoveList mvl;        
+        for (auto const& x : PERFT2){
+            init_position(x.first);
+            mvl = generate_legal(Position::sideToMove);
+            for(int i = 0; i<mvl.size; i++){
+                MakeMove(mvl.list[i].move);
+                Hashkey zob = Position::st.ZobristHash;
+                HashTables::table[(zob % HashTables::TABLE_SIZE)] = HashTables::TableEntry(zob, mvl.list[i].move, uint8_t(3), Value(EvalPosition()), EXACT);
+                
+                BOOST_CHECK_EQUAL(HashTables::tableKey(zob),true);
+                BOOST_CHECK_EQUAL(HashTables::tableMatch(zob+3),false);
+                BOOST_CHECK_EQUAL(HashTables::tableMatch(zob,2),true);
+                BOOST_CHECK_EQUAL(HashTables::tableMatch(zob,3),true);
+                BOOST_CHECK_EQUAL(HashTables::tableMatch(zob,4),false);
+                
+                UndoMove(mvl.list[i]);
+            }
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()

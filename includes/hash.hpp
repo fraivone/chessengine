@@ -7,9 +7,6 @@
 /// So we need all pieces positions + enpassant + castling rights + whomoves
 /// basically a FEN without the clock numbers
 namespace HashTables{
-    /// init function to be called at startup 
-    /// to initialize the hash variables with PRNs
-    void init();
     /// pseudo random numbers for each piece (color+type), each square
     extern Hashkey PRN_pieces[PIECE_NB][nRows*nCols];
     /// pseudo random numbers for each column 
@@ -22,10 +19,9 @@ namespace HashTables{
     // Stockfish uses another PRN for the pawns
     // in order to tell what is the pawn strucutre
     // For now I don't need that
-}
 
-
-namespace TranspositionTable{
+    /// Number of entries in the hash table
+    const int TABLE_SIZE = 4000;
     /// mask to get the sign from the SearcSummary
     /// corresponds to the 28th bit
     const int SignMask = 0x10000000;
@@ -83,4 +79,24 @@ namespace TranspositionTable{
         TableEntry(Hashkey ZobristHash, Move theMove, uint8_t depth, Value evaluation, ScoreType st) : z(ZobristHash),BestMove(theMove),DSE( ( bool(evaluation > 0)<<28) | ((abs(evaluation)<<8) &  EvaluationMask) | ((st<<6)&ScoreTypeMask) | (depth & DepthMask) ){}
     };
     #pragma pack(pop)
+    extern std::vector<TableEntry> table;
+
+
+    /// init function to be called at startup 
+    /// to initialize the hash variables with PRNs
+    void init();
+
+    /// Checks whether this zobrist has a key in the table
+    /// If true it can be either: 1. Same position 2. Different position Collision
+    bool tableKey(Hashkey zob);
+    
+    /// Checks whether this position is stored in the table
+    /// Match on:  Zobrist key (16LSB Zobrist) && Zobrist hash (48LSB Zobrist)
+    bool tableMatch(Hashkey zob);
+    
+    /// Checks whether this position is stored in the table
+    /// at a depth greater or equal than depth
+    bool tableMatch(Hashkey zob, int depth);
+    
+    
 }
