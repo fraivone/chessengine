@@ -1,11 +1,12 @@
 NOTES
 ---
 # Next Steps
-1. UCI interface
-1. Negamax instead of minmax
-1. Build transposition tables for the search algorithm hash
-1. Iterative deepening
-1. Put it on lichess
+1. Negamax instead of minmax [PENDING]
+1. Quiescence search [PENDING]
+1. UCI interface [DONE]
+1. Build transposition tables for the search algorithm hash [DONE]
+1. Iterative deepening [DONE]
+1. Put it on lichess [DONE] --> https://lichess.org/@/ThePaunch
 ---
 ### Current steps for generating moves
 1. Calculate pinned pieces, calculate if there are checks <sup>[1](#myfootnote1)</sup>
