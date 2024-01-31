@@ -3,6 +3,7 @@ NOTES
 # Next Steps
 1. Negamax instead of minmax [PENDING]
 1. Quiescence search [PENDING]
+1. Time control [PENDING]
 1. UCI interface [DONE]
 1. Build transposition tables for the search algorithm hash [DONE]
 1. Iterative deepening [DONE]
@@ -33,7 +34,7 @@ Move generated only taking into account the allowed piece movements, ignoring:
 * Is enpassant actually allowed?
 * Can I still castle?
 
-### What is a Pseudomove?
+### What is a Pseudo/move?
 Move generated only taking into account the allowed piece movements, ignoring:
 * Do I leave my king in check?
 * Am I in check?
@@ -165,3 +166,20 @@ Current transposition table:
     Here is an example:
     > This node is a `WHITE` node, we call it `this`. It was being searched from a parent `BLACK` node called `paren`. The parent `BLACK` node had already had some of his children searched. During the search, he had already found one node which guaranteed a score of `beta`. The searched node instead (`WHITE`), even if fully searched, would return something > `beta`. Indeed `this` is a `WHITE` node which will pick the highest value. Therefore, the search for `this` can stop here and this node's score is `>=score`.
 * **prunedAlpha** this node was only partially searched. At some point the condition `score < alpha` occurred. Therefore this node's score is `<=score`.
+
+
+### Iterative deepening [partial]
+Given a search to a level >1, the last level will always contain most of the moves to be checked. Iterative deepening takes advantage of this idea.
+1. Given a search to depth `d` it starts searching at `depth = 1`, consequently updating the transposition table.
+1. Then it searches at the deeper tree level. However, now it takes advantage of the transposition table:
+    1. If the transposition table has info on this position at a sufficient depth (`d-2`), return that move and saves time
+    1. If the transposition table has info on this position *but* at a *shallower* depth, use the info to order to moves. Possibly pruning more moves.
+    1. **TOTHINK** If the transposition table stored not only the best move, but let's say the first n best moves, I could order even better
+1. In the end, it returns the best move when depth `d` is reached.
+
+In my code, this has proven to be only 10% slower than a normal minmax search.
+The huge advantage is that I can now search with a time constraint:
+1. Assign `x` seconds for the search and a max depth of `d`
+1. Start a clock and a search with the iterative deepening.
+    1. If `d` is reached, return the best move.
+    1. If `x` seconds have passed, return the best move found at whichever depth.
